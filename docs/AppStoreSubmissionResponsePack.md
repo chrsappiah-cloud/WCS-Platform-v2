@@ -135,8 +135,8 @@ Use in internal release notes or reviewer clarification if requested:
 Use this in release notes or review communication:
 
 - Bundle ID: `wcs.WCS-Platform`
-- Version: `1.0.0`
-- Build: increment per upload (current repo config was previously set to build `2`; update if a newer uploaded build is selected)
+- Version: `1.0.1`
+- Build: `4`
 
 ---
 

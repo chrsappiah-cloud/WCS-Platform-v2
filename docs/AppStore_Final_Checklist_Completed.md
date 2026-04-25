@@ -1,6 +1,6 @@
 # App Store Final Checklist (Completed)
 
-Release target: `1.0.0 (3)`  
+Release target: `1.0.1 (4)`  
 Bundle ID: `wcs.WCS-Platform`
 
 - Build selected and attached: YES
