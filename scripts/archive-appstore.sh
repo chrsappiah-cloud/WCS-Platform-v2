@@ -9,6 +9,7 @@ CONFIGURATION="Release"
 ARCHIVE_PATH="${ARCHIVE_PATH:-$REPO_ROOT/build/WCS-Platform-AppStore.xcarchive}"
 EXPORT_PATH="${EXPORT_PATH:-$REPO_ROOT/build/AppStoreExport}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$REPO_ROOT/scripts/ExportOptions-AppStore.plist}"
+FALLBACK_EXPORT_OPTIONS_PLIST="${FALLBACK_EXPORT_OPTIONS_PLIST:-$REPO_ROOT/scripts/ExportOptions-AppStore-no-symbols.plist}"
 
 echo "==> Archiving App Store build"
 echo "Project: $PROJECT_PATH"
@@ -26,12 +27,31 @@ xcodebuild \
 
 echo "==> Exporting IPA (optional for CI/distribution)"
 if [[ -f "$EXPORT_OPTIONS_PLIST" ]]; then
+  set +e
   xcodebuild \
     -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
     -exportOptionsPlist "$EXPORT_OPTIONS_PLIST"
-  echo "Export complete: $EXPORT_PATH"
+  primary_export_status=$?
+  set -e
+
+  if [[ $primary_export_status -ne 0 ]]; then
+    if [[ -f "$FALLBACK_EXPORT_OPTIONS_PLIST" ]]; then
+      echo "Primary export failed (status $primary_export_status). Retrying with no-symbols export options."
+      xcodebuild \
+        -exportArchive \
+        -archivePath "$ARCHIVE_PATH" \
+        -exportPath "$EXPORT_PATH" \
+        -exportOptionsPlist "$FALLBACK_EXPORT_OPTIONS_PLIST"
+      echo "Export complete using fallback options: $EXPORT_PATH"
+    else
+      echo "Primary export failed and fallback options plist was not found: $FALLBACK_EXPORT_OPTIONS_PLIST"
+      exit $primary_export_status
+    fi
+  else
+    echo "Export complete: $EXPORT_PATH"
+  fi
 else
   echo "Export options plist not found at $EXPORT_OPTIONS_PLIST"
   echo "Skipping export. Archive is ready for Xcode Organizer upload."
