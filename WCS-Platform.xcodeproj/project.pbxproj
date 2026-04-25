@@ -28,15 +28,14 @@
 		5E4287522F9C54E300FC1A03 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42875C2F9C54E300FC1A03 /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E42BF472F9CF56D00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		5E4287642F9C54E300FC1A03 /* Exceptions for "WCS-Platform" folder in "WCS-Platform" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				build,
 				Info.plist,
+				build,
 				Logs,
 				LogStoreManifest.plist,
 			);
@@ -111,13 +110,6 @@
 			sourceTree = "<group>";
 		};
 		5E42882D2F9CB71C00FC1A03 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E42BF482F9CF56D00FC1A03 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -232,10 +224,6 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 5E42BF482F9CF56D00FC1A03 /* Products */;
-					ProjectRef = 5E42BF472F9CF56D00FC1A03 /* WCS-Platform.xcodeproj */;
-				},
-				{
 					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
 					ProjectRef = 5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */;
 				},
@@ -321,6 +309,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
+				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
+				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
@@ -337,13 +327,13 @@
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = "$(BUILD_DIR)/Products";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -358,6 +348,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
+				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
+				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
@@ -374,13 +366,13 @@
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = "$(BUILD_DIR)/Products";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -446,9 +438,9 @@
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SYMROOT = "$(BUILD_DIR)/Products";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SYMROOT = "$(BUILD_DIR)/Products";
 			};
 			name = Debug;
 		};
@@ -506,8 +498,8 @@
 				MTL_FAST_MATH = YES;
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				SYMROOT = "$(BUILD_DIR)/Products";
+				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
