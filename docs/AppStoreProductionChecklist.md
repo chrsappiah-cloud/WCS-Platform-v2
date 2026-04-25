@@ -1,6 +1,7 @@
 # WCS iOS App Store Production Checklist
 
 Use this checklist to move from local build to App Store submission.
+Use `docs/AppStoreSubmissionResponsePack.md` for copy-ready App Store Connect text and compliance answers.
 
 ## 1) Product Identity
 
@@ -13,6 +14,7 @@ Use this checklist to move from local build to App Store submission.
 
 - App icon: configured in `Assets.xcassets/AppIcon.appiconset`
 - Launch image: configured via `Info.plist` using `LaunchBrand`
+- Verify all App Store icon variants have no alpha channel
 - Screenshots: capture all required device classes in English (and other target locales)
 
 ## 3) Signing and Distribution
@@ -49,6 +51,7 @@ Use this checklist to move from local build to App Store submission.
 - Validate archive
 - Upload to App Store Connect
 - Confirm build appears under TestFlight / App version
+- If upload fails on icon alpha or iCloud entitlement validation, apply fixes captured in `docs/AppStoreSubmissionResponsePack.md`
 - Optional CLI archive/export script:
   - `chmod +x scripts/archive-appstore.sh`
   - `scripts/archive-appstore.sh`
@@ -79,3 +82,4 @@ Use this checklist to move from local build to App Store submission.
 - Current app icon and launch branding were generated and wired in assets.
 - Release-candidate versioning is set to `1.0.0` build `2`.
 - Before final submission, replace placeholders with final brand-approved artwork if needed.
+- Production submission responses are maintained in `docs/AppStoreSubmissionResponsePack.md`.

@@ -1,5 +1,7 @@
 # App Store Metadata Template (WCS)
 
+For full copy-paste reviewer/compliance responses, use `docs/AppStoreSubmissionResponsePack.md`.
+
 ## App Name
 World Class Scholars
 
@@ -33,15 +35,16 @@ Education
 Productivity
 
 ## Support URL
-https://example.com/support
+<PRODUCTION_SUPPORT_URL>
 
 ## Marketing URL (optional)
-https://example.com
+<PRODUCTION_MARKETING_URL>
 
 ## Privacy Policy URL
-https://example.com/privacy
+<PRODUCTION_PRIVACY_POLICY_URL>
 
 ## Review Notes
 - Login is optional for browsing courses.
 - Admin studio is restricted behind admin access flow and not required for standard review.
 - Core learner path: Discover -> open a course -> enroll -> open lessons.
+- If login is required in production, replace this section with reviewer test credentials and steps.
