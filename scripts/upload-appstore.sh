@@ -35,5 +35,22 @@ xcrun altool \
   --show-progress
 
 echo "Upload command submitted successfully."
+
+APPLE_ID=""
+ID_FILE="$REPO_ROOT/docs/AppStoreNumericAppleId.txt"
+if [[ -f "$ID_FILE" ]]; then
+  APPLE_ID="$(grep -E '^[0-9]+$' "$ID_FILE" | head -n1 || true)"
+fi
+if [[ -z "$APPLE_ID" ]]; then
+  echo "Numeric Apple ID not found in docs/AppStoreNumericAppleId.txt"
+  echo "Refresh it with: ASC_API_KEY_ID=... ASC_API_ISSUER_ID=... bash scripts/fetch-appstore-apple-id.sh"
+else
+  echo "Numeric Apple ID (from docs): $APPLE_ID"
+fi
+
 echo "Check processing status in App Store Connect or run:"
-echo "  xcrun altool --build-status --apple-id <APP_ID> --bundle-version 4 --bundle-short-version-string 1.0.1 --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
+if [[ -n "$APPLE_ID" ]]; then
+  echo "  xcrun altool --build-status --apple-id $APPLE_ID --bundle-version 4 --bundle-short-version-string 1.0.1 --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
+else
+  echo "  xcrun altool --build-status --apple-id <APP_ID> --bundle-version 4 --bundle-short-version-string 1.0.1 --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
+fi

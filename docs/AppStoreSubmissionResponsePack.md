@@ -137,6 +137,7 @@ Use this in release notes or review communication:
 - Bundle ID: `wcs.WCS-Platform`
 - Version: `1.0.1`
 - Build: `4`
+- Numeric App Store Connect Apple ID (for `altool --build-status`, not Team ID): see `docs/AppStoreNumericAppleId.txt` (refresh with `bash scripts/fetch-appstore-apple-id.sh` after setting `ASC_API_KEY_ID` and `ASC_API_ISSUER_ID`). To copy the ID to the clipboard on macOS: `COPY_TO_CLIPBOARD=1 bash scripts/fetch-appstore-apple-id.sh`
 
 ---
 
@@ -163,3 +164,14 @@ ASC_API_KEY_ID=<KEY_ID> ASC_API_ISSUER_ID=<ISSUER_ID> bash scripts/upload-appsto
 Default IPA path expected:
 
 `build/AppStoreExport/WCS-Platform.ipa`
+
+### Numeric Apple ID (automate, save, copy)
+
+- Saved in-repo: `docs/AppStoreNumericAppleId.txt` (digits-only line is the ID).
+- Refresh from App Store Connect:
+
+```bash
+ASC_API_KEY_ID=<KEY_ID> ASC_API_ISSUER_ID=<ISSUER_ID> bash scripts/fetch-appstore-apple-id.sh
+```
+
+- Copy ID to clipboard (macOS): `COPY_TO_CLIPBOARD=1 ASC_API_KEY_ID=... ASC_API_ISSUER_ID=... bash scripts/fetch-appstore-apple-id.sh`

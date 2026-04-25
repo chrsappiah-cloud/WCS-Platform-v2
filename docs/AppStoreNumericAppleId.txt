@@ -1,0 +1,5 @@
+# Numeric App Store Connect Apple ID (not Team ID).
+# Bundle ID: wcs.WCS-Platform
+# Provider (Team) public ID: TM2WG7HH96
+# Regenerate: ASC_API_KEY_ID=... ASC_API_ISSUER_ID=... bash scripts/fetch-appstore-apple-id.sh
+6763751751
