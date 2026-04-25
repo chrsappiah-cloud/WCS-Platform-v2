@@ -209,4 +209,20 @@ final class NetworkClient {
         }
         return try await request("system/pipeline-health", method: "GET")
     }
+
+    /// Cloudflare + iCloud storage readiness for admin/user data flows.
+    func fetchStorageBackendsStatus() async throws -> StorageBackendsStatus {
+        if useMocks {
+            return StorageArchitectureMockFactory.makeStatus()
+        }
+        return try await request("system/storage-backends", method: "GET")
+    }
+
+    /// Canonical database layout the backend publishes for app compatibility.
+    func fetchDatabaseBlueprint() async throws -> DatabaseBlueprint {
+        if useMocks {
+            return StorageArchitectureMockFactory.makeBlueprint()
+        }
+        return try await request("system/database-blueprint", method: "GET")
+    }
 }

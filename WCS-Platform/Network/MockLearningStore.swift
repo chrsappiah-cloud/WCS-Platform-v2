@@ -100,6 +100,19 @@ actor MockLearningStore {
         )
     }
 
+    func generatedVideoAssets(for draft: AdminCourseDraft) async -> [GeneratedVideoAsset] {
+        let videoLessonIDs = Set(
+            draft.modules
+                .flatMap(\.lessons)
+                .filter { $0.kind == .video || $0.kind == .live }
+                .map(\.id)
+        )
+        let cachedAssets = await videoGenerator.cachedVideoAssets(for: draft)
+        return cachedAssets.values
+            .filter { videoLessonIDs.contains($0.lessonId) }
+            .sorted(by: { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending })
+    }
+
     func regenerateVideoAssets(for draft: AdminCourseDraft, clearCache: Bool) async {
         if clearCache {
             await videoGenerator.clearCachedVideoAssets(for: draft.id)
@@ -327,15 +340,19 @@ actor MockLearningStore {
                 guard lesson.id == asset.lessonId && lesson.type == .video else { return lesson }
                 let previousSubtitle = lesson.subtitle ?? ""
                 let isGenerationMessage = previousSubtitle.contains("Generating AI lesson video in real time")
+                let safePlaybackURL = (asset.uploadSafetyReport?.isUploadSafe ?? false) ? asset.playbackURL : ""
+                let safeVideoURL = safePlaybackURL.isEmpty ? nil : safePlaybackURL
                 let mergedSubtitle = isGenerationMessage || previousSubtitle.isEmpty
-                    ? asset.productionNotes
+                    ? [asset.productionNotes, asset.uploadSafetyReport?.rationale]
+                        .compactMap { $0 }
+                        .joined(separator: " ")
                     : [previousSubtitle, asset.productionNotes].joined(separator: " ")
                 return Lesson(
                     id: lesson.id,
                     title: lesson.title,
                     subtitle: mergedSubtitle,
                     type: lesson.type,
-                    videoURL: asset.playbackURL,
+                    videoURL: safeVideoURL,
                     durationSeconds: lesson.durationSeconds,
                     isCompleted: lesson.isCompleted,
                     isAvailable: lesson.isAvailable,

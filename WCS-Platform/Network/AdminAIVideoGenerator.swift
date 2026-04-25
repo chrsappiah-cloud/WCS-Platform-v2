@@ -20,6 +20,18 @@ struct GeneratedVideoAsset: Codable, Hashable {
     let microphoneChecklist: [String]?
     let audioSystemStatus: String?
     let openAIRecommendedPipeline: [String]?
+    let moduleSyllabus: [String]?
+    let lecturePresentationOutline: [String]?
+    let uploadSafetyReport: VideoUploadSafetyReport?
+}
+
+struct VideoUploadSafetyReport: Codable, Hashable {
+    let isUploadSafe: Bool
+    let deliveryProtocol: String
+    let mimeType: String
+    let checksum: String
+    let uploadStatus: String
+    let rationale: String
 }
 
 protocol AIVideoGenerating {
@@ -76,6 +88,14 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     draft: draft,
                     scriptSegments: scriptSegments
                 )
+                let syllabus = makeModuleSyllabus(for: module, draft: draft)
+                let lectureOutline = makeLecturePresentationOutline(
+                    lesson: lesson,
+                    module: module,
+                    draft: draft
+                )
+                let uploadSafety = makeUploadSafetyReport(playbackURL: url, lesson: lesson)
+                let apiPipeline = makeAPIPipeline()
 
                 let asset = GeneratedVideoAsset(
                     lessonId: lesson.id,
@@ -89,9 +109,12 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     """,
                     productionNotes: """
                     AI-generated in real time and archived for replay. Source grounding: \(sourceHint).
+                    Module syllabus: \(syllabus.joined(separator: " | "))
+                    Lecture presentation: \(lectureOutline.joined(separator: " | "))
                     YouTube companion: \(youtubeURL ?? "Unavailable")
                     Audio system: \(audioReadiness.audioSystemStatus)
                     Mic readiness: \(audioReadiness.microphoneChecklist.joined(separator: " | "))
+                    Upload safety: \(uploadSafety.uploadStatus) (\(uploadSafety.rationale))
                     """,
                     confidence: draft.sourceReferences.isEmpty ? 0.65 : 0.86,
                     generatedAt: Date(),
@@ -101,12 +124,10 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     tutorialNarrationText: narration,
                     microphoneChecklist: audioReadiness.microphoneChecklist,
                     audioSystemStatus: audioReadiness.audioSystemStatus,
-                    openAIRecommendedPipeline: [
-                        "POST /v1/videos (sora-2 or sora-2-pro) for generated lesson video jobs",
-                        "GET /v1/videos/{id} polling then GET /v1/videos/{id}/content for MP4 retrieval",
-                        "POST /v1/audio/speech for narration (gpt-4o-mini-tts)",
-                        "POST /v1/audio/transcriptions for microphone transcript QA (gpt-4o-transcribe)"
-                    ]
+                    openAIRecommendedPipeline: apiPipeline,
+                    moduleSyllabus: syllabus,
+                    lecturePresentationOutline: lectureOutline,
+                    uploadSafetyReport: uploadSafety
                 )
                 assets[lesson.id] = asset
                 await cache.upsert(asset: asset, for: draft.id)
@@ -185,6 +206,63 @@ struct MockAIVideoGenerator: AIVideoGenerating {
         return """
         Welcome to World Class Scholars. In this unit, \(lesson.title), part of \(module.title), we focus on practical mastery for \(draft.targetAudience). \(body)
         """
+    }
+
+    private func makeModuleSyllabus(for module: AdminModuleDraft, draft: AdminCourseDraft) -> [String] {
+        var syllabus: [String] = [
+            "Course: \(draft.title)",
+            "Module: \(module.title)",
+            "Audience: \(draft.targetAudience)",
+            "Level: \(draft.level)"
+        ]
+        syllabus.append(contentsOf: module.goals.prefix(3).map { "Goal: \($0)" })
+        syllabus.append("Assessment: quiz and assignment checkpoints per module design.")
+        return syllabus
+    }
+
+    private func makeLecturePresentationOutline(
+        lesson: AdminLessonDraft,
+        module: AdminModuleDraft,
+        draft: AdminCourseDraft
+    ) -> [String] {
+        [
+            "Lecture title: \(lesson.title)",
+            "Module context: \(module.title)",
+            "Slide 1: Learning outcomes and syllabus alignment",
+            "Slide 2: Core concept walkthrough",
+            "Slide 3: Applied case and demo",
+            "Slide 4: Recap, API-backed video recap, and learner action"
+        ]
+    }
+
+    private func makeAPIPipeline() -> [String] {
+        [
+            "POST /v1/videos (sora-2 or sora-2-pro) for generated lesson video jobs",
+            "GET /v1/videos/{id} polling then GET /v1/videos/{id}/content for MP4 retrieval",
+            "POST /v1/audio/speech for narration (gpt-4o-mini-tts)",
+            "POST /v1/audio/transcriptions for microphone transcript QA (gpt-4o-transcribe)",
+            "Use signed HTTPS object-storage upload endpoint for MP4 persistence (production backend)",
+            "Validate MIME type, checksum, and moderation policy before module publication"
+        ]
+    }
+
+    private func makeUploadSafetyReport(playbackURL: String, lesson: AdminLessonDraft) -> VideoUploadSafetyReport {
+        let isHTTPS = playbackURL.lowercased().hasPrefix("https://")
+        let mimeType = "video/mp4"
+        let checksumSeed = "\(lesson.id.uuidString)|\(playbackURL)"
+        let checksum = checksumSeed.unicodeScalars
+            .reduce(into: 0) { partial, scalar in partial = (partial &* 31) &+ Int(scalar.value) }
+        let checksumHex = String(format: "%08X", checksum)
+        return VideoUploadSafetyReport(
+            isUploadSafe: isHTTPS,
+            deliveryProtocol: isHTTPS ? "HTTPS" : "UNSAFE",
+            mimeType: mimeType,
+            checksum: checksumHex,
+            uploadStatus: isHTTPS ? "validated-and-archived" : "blocked",
+            rationale: isHTTPS
+                ? "Playback URL passed HTTPS policy and checksum generation."
+                : "Blocked because non-HTTPS URLs are not allowed for module delivery."
+        )
     }
 
     func clearCachedVideoAssets(for courseID: UUID) async {

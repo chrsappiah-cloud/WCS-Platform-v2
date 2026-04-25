@@ -29,6 +29,7 @@ final class AdminCourseCreatorViewModel: ObservableObject {
     @Published var isGenerating = false
     @Published var drafts: [AdminCourseDraft] = []
     @Published var videoStatusByDraftID: [UUID: DraftVideoStatus] = [:]
+    @Published var generatedAssetsByDraftID: [UUID: [GeneratedVideoAsset]] = [:]
     @Published var errorMessage: String?
 
     func unlock() {
@@ -85,6 +86,7 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         await AdminCourseDraftStore.shared.clearAll()
         drafts = await AdminCourseDraftStore.shared.allDrafts()
         videoStatusByDraftID = [:]
+        generatedAssetsByDraftID = [:]
     }
 
     func regenerateVideos(for draftID: UUID, clearCache: Bool) async {
@@ -108,16 +110,20 @@ final class AdminCourseCreatorViewModel: ObservableObject {
 
     func refreshVideoStatuses() async {
         var updated: [UUID: DraftVideoStatus] = [:]
+        var assetsUpdated: [UUID: [GeneratedVideoAsset]] = [:]
         for draft in drafts {
             let status = await MockLearningStore.shared.videoGenerationStatus(for: draft)
+            let assets = await MockLearningStore.shared.generatedVideoAssets(for: draft)
             updated[draft.id] = DraftVideoStatus(
                 totalVideoLessons: status.totalVideoLessons,
                 generatedVideoLessons: status.generatedVideoLessons,
                 isGenerating: status.isGenerating,
                 latestGeneratedAt: status.latestGeneratedAt
             )
+            assetsUpdated[draft.id] = assets
         }
         videoStatusByDraftID = updated
+        generatedAssetsByDraftID = assetsUpdated
     }
 
     private func buildKajabiStylePrompt() -> String {

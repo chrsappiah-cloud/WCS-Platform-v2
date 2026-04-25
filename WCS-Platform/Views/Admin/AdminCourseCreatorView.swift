@@ -183,6 +183,7 @@ struct AdminCourseCreatorView: View {
                         DraftCard(
                             draft: draft,
                             videoStatus: viewModel.videoStatusByDraftID[draft.id],
+                            generatedAssets: viewModel.generatedAssetsByDraftID[draft.id] ?? [],
                             onPublish: {
                             Task { await viewModel.publish(draft.id) }
                             },
@@ -207,6 +208,7 @@ struct AdminCourseCreatorView: View {
 private struct DraftCard: View {
     let draft: AdminCourseDraft
     let videoStatus: AdminCourseCreatorViewModel.DraftVideoStatus?
+    let generatedAssets: [GeneratedVideoAsset]
     let onPublish: () -> Void
     let onRegenerateVideos: (_ clearCache: Bool) -> Void
     @State private var showingRegenerateConfirmation = false
@@ -237,109 +239,9 @@ private struct DraftCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if !draft.sourceReferences.isEmpty {
-                Text("Sources: \(draft.sourceReferences.joined(separator: ", "))")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-
-            if let funnel = draft.funnelPreview {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Funnel preview")
-                        .font(.caption.weight(.semibold))
-                    Text(funnel.headline)
-                        .font(.caption)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("CTA: \(funnel.callToAction)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    NavigationLink {
-                        FunnelPreviewDetailView(draft: draft)
-                    } label: {
-                        Label("Open funnel preview", systemImage: "megaphone.fill")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            if let reasoning = draft.reasoningReport {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Reasoning analysis")
-                            .font(.caption.weight(.semibold))
-                        Spacer()
-                        ConfidenceChip(score: reasoning.confidenceScore)
-                    }
-                    Text(reasoning.focusQuestion)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    ForEach(reasoning.reasoningSteps.prefix(2)) { step in
-                        AnswerStepRow(step: step)
-                    }
-                    NavigationLink {
-                        ReasoningDetailView(draft: draft)
-                    } label: {
-                        Label("Open full reasoning report", systemImage: "brain.head.profile")
-                            .font(.caption.weight(.semibold))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            if let research = draft.researchTrace {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Sources")
-                        .font(.caption.weight(.semibold))
-                    Text(research.retrievalMode)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    ForEach(research.evidenceCards.prefix(2)) { card in
-                        EvidenceCardMiniRow(card: card)
-                    }
-                    Text("Quality gate: \(research.qualityGate.score * 100, specifier: "%.0f%%") (\(research.qualityGate.passed ? "pass" : "fallback"))")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if !draft.reportFindings.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Course report findings")
-                        .font(.caption.weight(.semibold))
-                    ForEach(draft.reportFindings.prefix(3)) { finding in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(finding.title)
-                                .font(.caption.weight(.semibold))
-                            Text(finding.detail)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(8)
-                        .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    }
-                    Text("Cohort: \(draft.cohortSelection.cohortType.label) · recommended size \(draft.cohortSelection.recommendedSize)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if !draft.modules.isEmpty {
-                Text("Modules")
-                    .font(.caption.weight(.semibold))
-                ForEach(draft.modules) { module in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(module.title)
-                            .font(.subheadline.weight(.semibold))
-                        Text(module.lessons.map { $0.title }.joined(separator: " • "))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-            }
+            Text("Modules: \(draft.modules.count) · Findings: \(draft.reportFindings.count)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
 
             if let status = videoStatus, status.totalVideoLessons > 0 {
                 VStack(alignment: .leading, spacing: 4) {
@@ -360,7 +262,7 @@ private struct DraftCard: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    HStack(spacing: 8) {
+                    HStack {
                         Button("Resume generation") {
                             onRegenerateVideos(false)
                         }
@@ -374,6 +276,9 @@ private struct DraftCard: View {
                         .font(.caption)
                     }
                 }
+                Text("Debug assets: \(generatedAssets.count)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
 
             if draft.status != .published {
@@ -612,6 +517,20 @@ private struct EvidenceCardMiniRow: View {
         }
         .padding(8)
         .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}
+
+private struct BulletListView: View {
+    let items: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                Text(verbatim: "• \(item)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 
