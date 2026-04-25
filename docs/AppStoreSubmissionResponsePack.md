@@ -149,3 +149,17 @@ Use this in release notes or review communication:
 - Build selected under iOS version in App Store Connect
 - Reviewer notes added (and credentials if required)
 - Submit for Review
+
+---
+
+## 8) Upload Command (CLI)
+
+If using App Store Connect API keys:
+
+```bash
+ASC_API_KEY_ID=<KEY_ID> ASC_API_ISSUER_ID=<ISSUER_ID> bash scripts/upload-appstore.sh
+```
+
+Default IPA path expected:
+
+`build/AppStoreExport/WCS-Platform.ipa`
