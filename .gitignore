@@ -1,0 +1,7 @@
+# Xcode user-local workspace data
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Local build artifacts
+build/
+DerivedData/
