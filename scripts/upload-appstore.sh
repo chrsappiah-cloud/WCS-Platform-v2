@@ -50,7 +50,7 @@ fi
 
 echo "Check processing status in App Store Connect or run:"
 if [[ -n "$APPLE_ID" ]]; then
-  echo "  xcrun altool --build-status --apple-id $APPLE_ID --bundle-version 4 --bundle-short-version-string 1.0.1 --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
+  echo "  xcrun altool --build-status --apple-id $APPLE_ID --bundle-version <CURRENT_PROJECT_VERSION> --bundle-short-version-string <MARKETING_VERSION> --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
 else
-  echo "  xcrun altool --build-status --apple-id <APP_ID> --bundle-version 4 --bundle-short-version-string 1.0.1 --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
+  echo "  xcrun altool --build-status --apple-id <APP_ID> --bundle-version <CURRENT_PROJECT_VERSION> --bundle-short-version-string <MARKETING_VERSION> --platform ios --api-key \"$ASC_API_KEY_ID\" --api-issuer \"$ASC_API_ISSUER_ID\""
 fi

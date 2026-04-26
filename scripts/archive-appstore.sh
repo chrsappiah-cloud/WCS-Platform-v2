@@ -3,7 +3,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PROJECT_PATH="$REPO_ROOT/WCS-Platform.xcodeproj"
+APP_DIR="$REPO_ROOT/WCS-Platform"
+PROJECT_PATH="$APP_DIR/WCS-Platform.xcodeproj"
 SCHEME="WCS-Platform"
 CONFIGURATION="Release"
 ARCHIVE_PATH="${ARCHIVE_PATH:-$REPO_ROOT/build/WCS-Platform-AppStore.xcarchive}"
@@ -11,11 +12,21 @@ EXPORT_PATH="${EXPORT_PATH:-$REPO_ROOT/build/AppStoreExport}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-$REPO_ROOT/scripts/ExportOptions-AppStore.plist}"
 FALLBACK_EXPORT_OPTIONS_PLIST="${FALLBACK_EXPORT_OPTIONS_PLIST:-$REPO_ROOT/scripts/ExportOptions-AppStore-no-symbols.plist}"
 
+if ! command -v xcodegen >/dev/null 2>&1; then
+  echo "error: xcodegen is required (brew install xcodegen)" >&2
+  exit 1
+fi
+
+echo "==> xcodegen generate"
+(cd "$APP_DIR" && xcodegen generate)
+
 echo "==> Archiving App Store build"
 echo "Project: $PROJECT_PATH"
 echo "Scheme: $SCHEME"
 echo "Configuration: $CONFIGURATION"
 echo "Archive path: $ARCHIVE_PATH"
+
+mkdir -p "$(dirname "$ARCHIVE_PATH")"
 
 xcodebuild \
   -project "$PROJECT_PATH" \
@@ -30,6 +41,7 @@ if [[ -f "$EXPORT_OPTIONS_PLIST" ]]; then
   set +e
   xcodebuild \
     -exportArchive \
+    -allowProvisioningUpdates \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
     -exportOptionsPlist "$EXPORT_OPTIONS_PLIST"
@@ -41,6 +53,7 @@ if [[ -f "$EXPORT_OPTIONS_PLIST" ]]; then
       echo "Primary export failed (status $primary_export_status). Retrying with no-symbols export options."
       xcodebuild \
         -exportArchive \
+        -allowProvisioningUpdates \
         -archivePath "$ARCHIVE_PATH" \
         -exportPath "$EXPORT_PATH" \
         -exportOptionsPlist "$FALLBACK_EXPORT_OPTIONS_PLIST"

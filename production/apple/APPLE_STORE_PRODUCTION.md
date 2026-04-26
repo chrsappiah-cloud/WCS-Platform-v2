@@ -22,34 +22,43 @@ This folder supports **App Store Connect** submission for the native iOS app bui
 | App `Info.plist` | `WCS-Platform/Info.plist` |
 | **Promotional / store art (this pack)** | `production/apple/promotional/` |
 
-## 2) Regenerate Xcode project (required before archive)
+## 2) App Store review process (documentation)
+
+| Step | Document / action |
+|------|---------------------|
+| Reviewer narrative, commerce, media, links | `docs/AppStore_Review_Compliance_Packet.md` |
+| Copy-ready responses / common rejection fixes | `docs/AppStoreSubmissionResponsePack.md` |
+| Metadata templates | `docs/AppStoreMetadataTemplate.md` |
+| Pre-flight checklist (store + compliance) | `docs/AppStoreProductionChecklist.md` (this repo’s master checklist) |
+| Launch / privacy / payments hardening | `docs/Launch_Compliance_Hardening_Checklist.md` |
+| Final sign-off artifact (if maintained) | `docs/AppStore_Final_Checklist_Completed.md` |
+
+## 3) Deployment pipeline
+
+| Stage | How |
+|-------|-----|
+| Regenerate Xcode project | `cd WCS-Platform && xcodegen generate` |
+| CI build + test + unsigned archive (on `push`) | `.github/workflows/ios-ci-cd.yml` |
+| Local full test (optional erase sim) | `bash scripts/run-stable-tests.sh` |
+| **Signed** archive + IPA export | `bash scripts/archive-appstore.sh` |
+| Upload IPA to App Store Connect | `ASC_API_KEY_ID=… ASC_API_ISSUER_ID=… bash scripts/upload-appstore.sh` |
+| Resolve numeric Apple ID (optional) | `bash scripts/fetch-appstore-apple-id.sh` |
+| Export options plists | `scripts/ExportOptions-AppStore.plist`, `scripts/ExportOptions-AppStore-no-symbols.plist` |
+
+**Xcode path:** **Product → Archive** (scheme **WCS-Platform**, **Release**), then **Distribute App** in Organizer if you prefer GUI over CLI export/upload.
+
+## 4) Simulator sanity build
+
+From the **repository root** (parent of `WCS-Platform/` and `scripts/`):
 
 ```bash
-cd WCS-Platform && xcodegen generate
-```
-
-## 3) Simulator build (sanity)
-
-```bash
-xcodebuild \
-  -project "WCS-Platform/WCS-Platform.xcodeproj" \
+cd WCS-Platform && xcodegen generate && xcodebuild \
+  -project "WCS-Platform.xcodeproj" \
   -scheme "WCS-Platform" \
   -configuration Debug \
   -destination "platform=iOS Simulator,name=iPhone 17" \
   build
 ```
-
-## 4) Archive for App Store Connect (device, signed)
-
-In **Xcode**: **Product → Archive** with scheme **WCS-Platform**, **Release**.
-
-CLI (unsigned artifact for CI; for store uploads use Xcode Organizer + signing):
-
-```bash
-bash scripts/ios-archive.sh
-```
-
-CI reference: `.github/workflows/ios-ci-cd.yml` (XcodeGen + build + test + unsigned archive artifact on `push`).
 
 ## 5) App Store Connect — listing copy (starter)
 
@@ -65,9 +74,10 @@ CI reference: `.github/workflows/ios-ci-cd.yml` (XcodeGen + build + test + unsig
 
 ## 6) Pre-submission checklist
 
-- [ ] Run `bash scripts/validate-external-links-config.sh`
-- [ ] Review `docs/Launch_Compliance_Hardening_Checklist.md`
-- [ ] Confirm **1024** app icons are **opaque** (no alpha) if App Store flags transparency
+- [ ] `cd WCS-Platform && xcodegen generate`
+- [ ] `bash scripts/validate-external-links-config.sh`
+- [ ] Review `docs/Launch_Compliance_Hardening_Checklist.md` and `docs/AppStore_Review_Compliance_Packet.md`
+- [ ] Confirm **1024** app icons are **opaque** if App Store flags transparency
 - [ ] Age rating, export compliance, and subscription / external purchase disclosures completed in App Store Connect
 - [ ] Physical device smoke test (tabs, video lesson, admin studio if applicable)
 
@@ -75,10 +85,10 @@ CI reference: `.github/workflows/ios-ci-cd.yml` (XcodeGen + build + test + unsig
 
 PNG templates live under `production/apple/promotional/`:
 
-- `AppStore-Hero-2732x2048.png` — iPad / hero canvas
-- `Social-1200x630.png` — link preview / Open Graph
-- `Story-1080x1920.png` — vertical story
-- `Poster-2048x2732.png` — tall poster
-- `screenshot-placeholders/iPhone-1290x2796-1.png` … `-4.png` — iPhone 6.5" screenshot shells (replace with real UI captures before submission)
+- `AppStore-Hero-2732x2048.png` — iPad / hero canvas  
+- `Social-1200x630.png` — link preview / Open Graph  
+- `Story-1080x1920.png` — vertical story  
+- `Poster-2048x2732.png` — tall poster  
+- `screenshot-placeholders/iPhone-1290x2796-1.png` … `-4.png` — iPhone 6.5" screenshot shells (**replace** with real UI captures before submission)
 
 Use them in App Store Connect **App Preview and Screenshots** and for social launch posts.
