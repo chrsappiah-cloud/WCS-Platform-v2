@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct AdminCourseCreatorView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
@@ -22,6 +23,7 @@ struct AdminCourseCreatorView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .task { await viewModel.loadDrafts() }
+        .task { await viewModel.startRealtimeVideoPolling() }
         .onReceive(NotificationCenter.default.publisher(for: .wcsAdminDraftsDidChange)) { _ in
             guard !AppEnvironment.debugSafeMode else { return }
             Task { await viewModel.loadDrafts() }
@@ -72,6 +74,25 @@ struct AdminCourseCreatorView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 Text("WCS AI Course Generation Studio")
                     .wcsSectionTitle()
+
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Button("Save these settings as defaults") {
+                        viewModel.saveCurrentAsDefaultConfiguration()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(DesignTokens.brand)
+
+                    Button("Load defaults") {
+                        viewModel.applySavedConfigurationIfAvailable()
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button("Reset defaults", role: .destructive) {
+                        viewModel.resetSavedConfiguration()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .font(.caption)
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                     Text("Blueprint templates")
@@ -157,6 +178,89 @@ struct AdminCourseCreatorView: View {
                     Text("WCS AI Course Generation uses retrieval planning, reranking, and citation-grounded synthesis with Open Library + OpenAlex evidence.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                }
+                .wcsInsetPanel()
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                    Text("Manual backup authoring (upload fallback)")
+                        .font(.headline.weight(.semibold))
+                    Text("Use this when automated generation is unavailable. Add manual video links, course materials, quizzes, and assignments as a publishable backup draft.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+
+                    TextField("Manual course title", text: $viewModel.manualCourseTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualCourseTitleField")
+                    TextField("Manual summary", text: $viewModel.manualSummary)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualSummaryField")
+                    TextField("Module title", text: $viewModel.manualModuleTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualModuleTitleField")
+                    TextField("Video lesson title", text: $viewModel.manualVideoTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualVideoTitleField")
+                    TextField("Video URL (HTTPS)", text: $viewModel.manualVideoURL)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualVideoURLField")
+                    TextField("Reading lesson title", text: $viewModel.manualReadingTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualReadingTitleField")
+                    TextField("Quiz lesson title", text: $viewModel.manualQuizTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualQuizTitleField")
+                    TextField("Assignment lesson title", text: $viewModel.manualAssignmentTitle)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled(true)
+                        .accessibilityIdentifier("manualAssignmentTitleField")
+
+                    Text("Reading material")
+                        .font(.caption.weight(.semibold))
+                    TextEditor(text: $viewModel.manualReadingMaterial)
+                        .frame(minHeight: 80)
+                        .autocorrectionDisabled(true)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .accessibilityIdentifier("manualReadingMaterialEditor")
+
+                    Text("Quiz prompts/questions")
+                        .font(.caption.weight(.semibold))
+                    TextEditor(text: $viewModel.manualQuizPrompt)
+                        .frame(minHeight: 70)
+                        .autocorrectionDisabled(true)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .accessibilityIdentifier("manualQuizPromptEditor")
+
+                    Text("Assignment brief")
+                        .font(.caption.weight(.semibold))
+                    TextEditor(text: $viewModel.manualAssignmentBrief)
+                        .frame(minHeight: 80)
+                        .autocorrectionDisabled(true)
+                        .scrollContentBackground(.hidden)
+                        .padding(8)
+                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .accessibilityIdentifier("manualAssignmentBriefEditor")
+
+                    Button {
+                        Task { await viewModel.createManualBackupDraft(createdBy: appViewModel.user?.email ?? "admin@wcs") }
+                    } label: {
+                        Label("Create manual backup draft", systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .disabled(!viewModel.canCreateManualBackup || viewModel.isGenerating)
+                    .accessibilityIdentifier("createManualBackupDraftButton")
                 }
                 .wcsInsetPanel()
 
@@ -281,6 +385,88 @@ private struct DraftCard: View {
                     .foregroundStyle(.secondary)
             }
 
+            if !generatedAssets.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Generated module videos (real-time)")
+                        .font(.caption.weight(.semibold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(generatedAssets.sorted(by: { $0.generatedAt > $1.generatedAt }), id: \.lessonId) { asset in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    if let videoID = youtubeVideoID(from: asset.playbackURL) {
+                                        YouTubeEmbedWebView(videoID: videoID)
+                                            .frame(width: 220, height: 124)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    } else if let videoID = youtubeVideoID(from: asset.youtubeCompanionURL) {
+                                        YouTubeEmbedWebView(videoID: videoID)
+                                            .frame(width: 220, height: 124)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    } else {
+                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .fill(Color(.tertiarySystemFill))
+                                            .frame(width: 220, height: 124)
+                                            .overlay {
+                                                Image(systemName: "video.fill")
+                                                    .font(.title2)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                    }
+
+                                    Text(asset.title)
+                                        .font(.caption.weight(.semibold))
+                                        .lineLimit(2)
+                                        .frame(width: 220, alignment: .leading)
+                                    if let kit = asset.motionTextToVideoKit {
+                                        Text("Kit: \(kit.enginePreset) · \(kit.aspectRatio)")
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                            .frame(width: 220, alignment: .leading)
+                                    }
+                                    if let playbackURL = URL(string: asset.playbackURL) {
+                                        Link("Open playback URL", destination: playbackURL)
+                                            .font(.caption2)
+                                    }
+                                    if let kit = asset.motionTextToVideoKit {
+                                        Button("Copy kit JSON") {
+                                            UIPasteboard.general.string = exportJSON(for: kit)
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .font(.caption2)
+                                    }
+                                }
+                                .frame(width: 220, alignment: .leading)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if let newestAsset = generatedAssets.sorted(by: { $0.generatedAt > $1.generatedAt }).first,
+               let kit = newestAsset.motionTextToVideoKit {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Text-to-video kit (Motion AI style)")
+                        .font(.caption.weight(.semibold))
+                    Text("Preset: \(kit.enginePreset) · Export: \(kit.exportPreset)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(kit.shotPrompt)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(4)
+                    Text("Scene beats")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(Array(kit.sceneBeats.prefix(4).enumerated()), id: \.offset) { _, beat in
+                        Text("• \(beat)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.top, 4)
+            }
+
             AdminDraftCompanionMediaStrip(draft: draft)
 
             if draft.status != .published {
@@ -300,6 +486,40 @@ private struct DraftCard: View {
         } message: {
             Text("This clears archived video assets for this draft and generates fresh recordings in real time.")
         }
+    }
+
+    private func youtubeVideoID(from rawURL: String?) -> String? {
+        guard let rawURL, let url = URL(string: rawURL) else { return nil }
+        let host = (url.host ?? "").lowercased()
+        if host.contains("youtu.be") {
+            let id = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return id.count == 11 ? id : nil
+        }
+        guard host.contains("youtube.com"),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        else { return nil }
+        if let id = components.queryItems?.first(where: { $0.name == "v" })?.value, id.count == 11 {
+            return id
+        }
+        if components.path.contains("/embed/"), let last = components.path.split(separator: "/").last {
+            let id = String(last)
+            return id.count == 11 ? id : nil
+        }
+        return nil
+    }
+
+    private func exportJSON(for kit: MotionTextToVideoKit) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        if let data = try? encoder.encode(kit), let text = String(data: data, encoding: .utf8) {
+            return text
+        }
+        return """
+        {
+          "enginePreset": "\(kit.enginePreset)",
+          "targetDurationSeconds": \(kit.targetDurationSeconds)
+        }
+        """
     }
 }
 

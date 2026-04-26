@@ -47,6 +47,7 @@
 	<string>wcs-admin-2026</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>audio</string>
 		<string>remote-notification</string>
 	</array>
 </dict>

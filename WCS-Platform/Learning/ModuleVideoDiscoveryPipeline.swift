@@ -55,6 +55,8 @@ struct AdminLessonVideoDiscoveryResult: Identifiable, Hashable, Sendable {
 }
 
 enum ModuleVideoDiscoveryPipeline {
+    private static let blockedTerms = ["adult", "nsfw", "porn", "gambling", "weapon"]
+
     /// Builds one script line per **video** lesson in display order.
     static func scriptLines(from course: Course) -> [LessonVideoScriptLine] {
         let sortedModules = course.modules.sorted { $0.order < $1.order }
@@ -96,12 +98,13 @@ enum ModuleVideoDiscoveryPipeline {
     static func resolveCompanionVideos(
         scriptLines: [LessonVideoScriptLine],
         maxResultsPerLesson: Int = 2,
-        configuration: YouTubeSearchConfiguration = .wcsLearning,
-        session: URLSession = .shared
+        configuration: YouTubeSearchConfiguration? = nil,
+        session: URLSession? = nil
     ) async throws -> [LessonVideoDiscoveryResult] {
         guard YouTubeSearchAPIClient.resolveAPIKey() != nil else {
             throw YouTubeAPIError.missingAPIKey
         }
+        let configuration = configuration ?? .wcsLearning
         var results: [LessonVideoDiscoveryResult] = []
         results.reserveCapacity(scriptLines.count)
         for line in scriptLines {
@@ -111,7 +114,10 @@ enum ModuleVideoDiscoveryPipeline {
                 maxResults: maxResultsPerLesson,
                 session: session
             )
-            results.append(LessonVideoDiscoveryResult(scriptLine: line, snippets: page.items))
+            let filtered = page.items.filter {
+                isAllowed(snippet: $0, for: line.youTubeSearchQuery)
+            }
+            results.append(LessonVideoDiscoveryResult(scriptLine: line, snippets: filtered))
         }
         return results
     }
@@ -119,12 +125,13 @@ enum ModuleVideoDiscoveryPipeline {
     static func resolveAdminDraftVideos(
         scriptLines: [AdminLessonVideoScriptLine],
         maxResultsPerLesson: Int = 2,
-        configuration: YouTubeSearchConfiguration = .wcsLearning,
-        session: URLSession = .shared
+        configuration: YouTubeSearchConfiguration? = nil,
+        session: URLSession? = nil
     ) async throws -> [AdminLessonVideoDiscoveryResult] {
         guard YouTubeSearchAPIClient.resolveAPIKey() != nil else {
             throw YouTubeAPIError.missingAPIKey
         }
+        let configuration = configuration ?? .wcsLearning
         var results: [AdminLessonVideoDiscoveryResult] = []
         results.reserveCapacity(scriptLines.count)
         for line in scriptLines {
@@ -134,8 +141,24 @@ enum ModuleVideoDiscoveryPipeline {
                 maxResults: maxResultsPerLesson,
                 session: session
             )
-            results.append(AdminLessonVideoDiscoveryResult(scriptLine: line, snippets: page.items))
+            let filtered = page.items.filter {
+                isAllowed(snippet: $0, for: line.youTubeSearchQuery)
+            }
+            results.append(AdminLessonVideoDiscoveryResult(scriptLine: line, snippets: filtered))
         }
         return results
+    }
+
+    private static func isAllowed(snippet: YouTubeVideoSnippet, for query: String) -> Bool {
+        let title = snippet.title.lowercased()
+        if blockedTerms.contains(where: { title.contains($0) }) {
+            return false
+        }
+        let tokens = query.lowercased().split(whereSeparator: \.isWhitespace).map(String.init)
+            .filter { $0.count >= 4 }
+        if tokens.isEmpty {
+            return true
+        }
+        return tokens.contains(where: { title.contains($0) })
     }
 }

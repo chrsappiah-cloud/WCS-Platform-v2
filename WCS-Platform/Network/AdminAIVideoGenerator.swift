@@ -23,6 +23,7 @@ struct GeneratedVideoAsset: Codable, Hashable {
     let moduleSyllabus: [String]?
     let lecturePresentationOutline: [String]?
     let uploadSafetyReport: VideoUploadSafetyReport?
+    let motionTextToVideoKit: MotionTextToVideoKit?
 }
 
 struct VideoUploadSafetyReport: Codable, Hashable {
@@ -32,6 +33,19 @@ struct VideoUploadSafetyReport: Codable, Hashable {
     let checksum: String
     let uploadStatus: String
     let rationale: String
+}
+
+/// Motion AI-style reusable text-to-video production kit for one lesson/module.
+struct MotionTextToVideoKit: Codable, Hashable {
+    let enginePreset: String
+    let targetDurationSeconds: Int
+    let visualStyle: String
+    let sceneBeats: [String]
+    let shotPrompt: String
+    let voiceoverScript: String
+    let subtitleStyle: String
+    let aspectRatio: String
+    let exportPreset: String
 }
 
 protocol AIVideoGenerating {
@@ -48,10 +62,10 @@ struct MockAIVideoGenerator: AIVideoGenerating {
     nonisolated init() {}
 
     private let sampleVideoURLs = [
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+        "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
     ]
 
     func cachedVideoAssets(for draft: AdminCourseDraft) async -> [UUID: GeneratedVideoAsset] {
@@ -76,12 +90,16 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                 try? await Task.sleep(nanoseconds: 600_000_000)
 
                 let sourceHint = draft.sourceReferences.first ?? "internal curriculum guidance"
-                let url = sampleVideoURLs[stableIndex(for: lesson.id, offset: seed) % sampleVideoURLs.count]
+                let fallbackURL = sampleVideoURLs[stableIndex(for: lesson.id, offset: seed) % sampleVideoURLs.count]
                 seed += 1
                 let scriptSegments = makeScriptSegments(for: lesson, module: module, draft: draft)
                 let youtubeKeywords = makeYouTubeKeywords(for: lesson, module: module, draft: draft)
                 let audioReadiness = AudioPresentationReadiness.snapshot()
                 let youtubeURL = makeYouTubeSearchURL(keywords: youtubeKeywords)
+                let liveSnippet = try? await resolveLiveLectureSnippet(keywords: youtubeKeywords)
+                let playbackURL = liveSnippet
+                    .map { "https://www.youtube.com/watch?v=\($0.videoID)" }
+                    ?? fallbackURL
                 let narration = makeNarrationText(
                     lesson: lesson,
                     module: module,
@@ -94,13 +112,20 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     module: module,
                     draft: draft
                 )
-                let uploadSafety = makeUploadSafetyReport(playbackURL: url, lesson: lesson)
+                let uploadSafety = makeUploadSafetyReport(playbackURL: playbackURL, lesson: lesson)
                 let apiPipeline = makeAPIPipeline()
+                let motionKit = makeMotionTextToVideoKit(
+                    lesson: lesson,
+                    module: module,
+                    draft: draft,
+                    scriptSegments: scriptSegments,
+                    narration: narration
+                )
 
                 let asset = GeneratedVideoAsset(
                     lessonId: lesson.id,
                     title: lesson.title,
-                    playbackURL: url,
+                    playbackURL: playbackURL,
                     scriptOutline: """
                     1) Hook and context for \(draft.title)
                     2) Core concept walkthrough for \(module.title)
@@ -118,7 +143,7 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     """,
                     confidence: draft.sourceReferences.isEmpty ? 0.65 : 0.86,
                     generatedAt: Date(),
-                    youtubeCompanionURL: youtubeURL,
+                    youtubeCompanionURL: liveSnippet.map { "https://www.youtube.com/watch?v=\($0.videoID)" } ?? youtubeURL,
                     youtubeSearchKeywords: youtubeKeywords,
                     moduleScriptSegments: scriptSegments,
                     tutorialNarrationText: narration,
@@ -127,7 +152,8 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                     openAIRecommendedPipeline: apiPipeline,
                     moduleSyllabus: syllabus,
                     lecturePresentationOutline: lectureOutline,
-                    uploadSafetyReport: uploadSafety
+                    uploadSafetyReport: uploadSafety,
+                    motionTextToVideoKit: motionKit
                 )
                 assets[lesson.id] = asset
                 await cache.upsert(asset: asset, for: draft.id)
@@ -196,6 +222,17 @@ struct MockAIVideoGenerator: AIVideoGenerating {
         return comps.url?.absoluteString
     }
 
+    private func resolveLiveLectureSnippet(keywords: [String]) async throws -> YouTubeVideoSnippet? {
+        guard YouTubeSearchAPIClient.resolveAPIKey() != nil else { return nil }
+        let query = keywords.joined(separator: " ")
+        let page = try await YouTubeSearchAPIClient.searchVideos(
+            query: query,
+            configuration: .wcsLearning,
+            maxResults: 3
+        )
+        return page.items.first
+    }
+
     private func makeNarrationText(
         lesson: AdminLessonDraft,
         module: AdminModuleDraft,
@@ -241,14 +278,56 @@ struct MockAIVideoGenerator: AIVideoGenerating {
             "GET /v1/videos/{id} polling then GET /v1/videos/{id}/content for MP4 retrieval",
             "POST /v1/audio/speech for narration (gpt-4o-mini-tts)",
             "POST /v1/audio/transcriptions for microphone transcript QA (gpt-4o-transcribe)",
+            "GET https://cloudaicompanion.googleapis.com/v1/projects/{project}/locations for Google model location discovery",
+            "Use OAuth Bearer token for Google Cloud AI Companion authenticated calls",
             "Use signed HTTPS object-storage upload endpoint for MP4 persistence (production backend)",
             "Validate MIME type, checksum, and moderation policy before module publication"
         ]
     }
 
+    private func makeMotionTextToVideoKit(
+        lesson: AdminLessonDraft,
+        module: AdminModuleDraft,
+        draft: AdminCourseDraft,
+        scriptSegments: [String],
+        narration: String
+    ) -> MotionTextToVideoKit {
+        let beats = [
+            "Cold open: state learner outcome for \(lesson.title).",
+            "Concept reveal: explain one core principle from \(module.title).",
+            "Worked example: map concept to a practical scenario.",
+            "Recap + CTA: learner writes one applied takeaway."
+        ]
+        let style = "clean educational motion graphics, high contrast labels, subtle camera drift"
+        let prompt = """
+        Create a concise lesson video for "\(lesson.title)" in course "\(draft.title)".
+        Audience: \(draft.targetAudience). Level: \(draft.level).
+        Visual style: \(style).
+        Include these beats: \(beats.joined(separator: " | ")).
+        """
+        return MotionTextToVideoKit(
+            enginePreset: "motion-ai-edu-v1",
+            targetDurationSeconds: max(60, lesson.durationMinutes * 60),
+            visualStyle: style,
+            sceneBeats: beats + scriptSegments,
+            shotPrompt: prompt,
+            voiceoverScript: narration,
+            subtitleStyle: "high-legibility lower-third, 2 lines max, sentence case",
+            aspectRatio: "16:9",
+            exportPreset: "h264-main-1080p-30fps-aac"
+        )
+    }
+
     private func makeUploadSafetyReport(playbackURL: String, lesson: AdminLessonDraft) -> VideoUploadSafetyReport {
         let isHTTPS = playbackURL.lowercased().hasPrefix("https://")
-        let mimeType = "video/mp4"
+        let mimeType: String
+        if playbackURL.contains("youtube.com") || playbackURL.contains("youtu.be") {
+            mimeType = "text/html"
+        } else if playbackURL.contains(".m3u8") {
+            mimeType = "application/vnd.apple.mpegurl"
+        } else {
+            mimeType = "video/mp4"
+        }
         let checksumSeed = "\(lesson.id.uuidString)|\(playbackURL)"
         let checksum = checksumSeed.unicodeScalars
             .reduce(into: 0) { partial, scalar in partial = (partial &* 31) &+ Int(scalar.value) }

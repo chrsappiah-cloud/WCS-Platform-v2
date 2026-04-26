@@ -4,6 +4,7 @@
 //
 
 import AVFoundation
+import AVFAudio
 import Foundation
 
 struct AudioPresentationReadiness: Hashable {
@@ -13,7 +14,7 @@ struct AudioPresentationReadiness: Hashable {
     static func snapshot() -> AudioPresentationReadiness {
         let session = AVAudioSession.sharedInstance()
         let inputAvailable = session.isInputAvailable
-        let permission = session.recordPermission
+        let permission = AVAudioApplication.shared.recordPermission
 
         let permissionLabel: String
         switch permission {

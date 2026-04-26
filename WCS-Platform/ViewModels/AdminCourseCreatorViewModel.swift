@@ -8,6 +8,31 @@ import Foundation
 
 @MainActor
 final class AdminCourseCreatorViewModel: ObservableObject {
+    private struct CreatorDefaults: Codable {
+        var selectedAccessTier: AdminCourseAccessTier
+        var productName: String
+        var idealLearner: String
+        var transformation: String
+        var offerStack: String
+        var launchAngle: String
+        var selectedCohortType: AICohortType
+        var preferredCohortSize: String
+        var prompt: String
+        var manualCourseTitle: String
+        var manualSummary: String
+        var manualModuleTitle: String
+        var manualVideoTitle: String
+        var manualVideoURL: String
+        var manualReadingTitle: String
+        var manualReadingMaterial: String
+        var manualQuizTitle: String
+        var manualQuizPrompt: String
+        var manualAssignmentTitle: String
+        var manualAssignmentBrief: String
+    }
+
+    private static let creatorDefaultsKey = "wcs.admin.creator.defaults.v1"
+
     struct DraftVideoStatus: Hashable {
         let totalVideoLessons: Int
         let generatedVideoLessons: Int
@@ -26,11 +51,26 @@ final class AdminCourseCreatorViewModel: ObservableObject {
     @Published var launchAngle = ""
     @Published var selectedCohortType: AICohortType = .weeklyCohort
     @Published var preferredCohortSize = "30"
+    @Published var manualCourseTitle = ""
+    @Published var manualSummary = ""
+    @Published var manualModuleTitle = ""
+    @Published var manualVideoTitle = ""
+    @Published var manualVideoURL = ""
+    @Published var manualReadingTitle = ""
+    @Published var manualReadingMaterial = ""
+    @Published var manualQuizTitle = ""
+    @Published var manualQuizPrompt = ""
+    @Published var manualAssignmentTitle = ""
+    @Published var manualAssignmentBrief = ""
     @Published var isGenerating = false
     @Published var drafts: [AdminCourseDraft] = []
     @Published var videoStatusByDraftID: [UUID: DraftVideoStatus] = [:]
     @Published var generatedAssetsByDraftID: [UUID: [GeneratedVideoAsset]] = [:]
     @Published var errorMessage: String?
+
+    init() {
+        loadSavedConfiguration()
+    }
 
     func unlock() {
         guard !accessCodeInput.isEmpty else {
@@ -57,6 +97,7 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         defer { isGenerating = false }
 
         do {
+            saveCurrentAsDefaultConfiguration()
             let finalPrompt = buildKajabiStylePrompt()
             _ = try await AdminCourseDraftStore.shared.generate(
                 prompt: finalPrompt,
@@ -69,6 +110,33 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func createManualBackupDraft(createdBy: String) async {
+        errorMessage = nil
+        guard canCreateManualBackup else {
+            errorMessage = "Complete all manual backup fields before creating draft."
+            return
+        }
+        saveCurrentAsDefaultConfiguration()
+        _ = await AdminCourseDraftStore.shared.createManualBackupDraft(
+            createdBy: createdBy,
+            accessTier: selectedAccessTier,
+            courseTitle: manualCourseTitle,
+            summary: manualSummary,
+            moduleTitle: manualModuleTitle,
+            videoTitle: manualVideoTitle,
+            videoURL: manualVideoURL,
+            readingTitle: manualReadingTitle,
+            readingMaterial: manualReadingMaterial,
+            quizTitle: manualQuizTitle,
+            quizPrompt: manualQuizPrompt,
+            assignmentTitle: manualAssignmentTitle,
+            assignmentBrief: manualAssignmentBrief
+        )
+        clearManualBackupInputs()
+        drafts = await AdminCourseDraftStore.shared.allDrafts()
+        await refreshVideoStatuses()
     }
 
     func publish(_ id: UUID) async {
@@ -104,8 +172,65 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         prompt = template.defaultProductionNotes
     }
 
+    func saveCurrentAsDefaultConfiguration() {
+        let payload = CreatorDefaults(
+            selectedAccessTier: selectedAccessTier,
+            productName: productName,
+            idealLearner: idealLearner,
+            transformation: transformation,
+            offerStack: offerStack,
+            launchAngle: launchAngle,
+            selectedCohortType: selectedCohortType,
+            preferredCohortSize: preferredCohortSize,
+            prompt: prompt,
+            manualCourseTitle: manualCourseTitle,
+            manualSummary: manualSummary,
+            manualModuleTitle: manualModuleTitle,
+            manualVideoTitle: manualVideoTitle,
+            manualVideoURL: manualVideoURL,
+            manualReadingTitle: manualReadingTitle,
+            manualReadingMaterial: manualReadingMaterial,
+            manualQuizTitle: manualQuizTitle,
+            manualQuizPrompt: manualQuizPrompt,
+            manualAssignmentTitle: manualAssignmentTitle,
+            manualAssignmentBrief: manualAssignmentBrief
+        )
+        let encoder = JSONEncoder()
+        guard let data = try? encoder.encode(payload) else {
+            errorMessage = "Could not save default settings."
+            return
+        }
+        UserDefaults.standard.set(data, forKey: Self.creatorDefaultsKey)
+        errorMessage = nil
+    }
+
+    func resetSavedConfiguration() {
+        UserDefaults.standard.removeObject(forKey: Self.creatorDefaultsKey)
+        errorMessage = nil
+    }
+
+    func applySavedConfigurationIfAvailable() {
+        loadSavedConfiguration()
+    }
+
     var canGenerate: Bool {
         buildKajabiStylePrompt().trimmingCharacters(in: .whitespacesAndNewlines).count >= 20
+    }
+
+    var canCreateManualBackup: Bool {
+        [
+            manualCourseTitle,
+            manualSummary,
+            manualModuleTitle,
+            manualVideoTitle,
+            manualVideoURL,
+            manualReadingTitle,
+            manualReadingMaterial,
+            manualQuizTitle,
+            manualQuizPrompt,
+            manualAssignmentTitle,
+            manualAssignmentBrief,
+        ].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     func refreshVideoStatuses() async {
@@ -124,6 +249,16 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         }
         videoStatusByDraftID = updated
         generatedAssetsByDraftID = assetsUpdated
+    }
+
+    /// Keeps admin cards live while AI module video generation is in flight.
+    func startRealtimeVideoPolling() async {
+        while !Task.isCancelled {
+            await refreshVideoStatuses()
+            let hasActiveGeneration = videoStatusByDraftID.values.contains { $0.isGenerating }
+            let sleepNanos: UInt64 = hasActiveGeneration ? 2_000_000_000 : 5_000_000_000
+            try? await Task.sleep(nanoseconds: sleepNanos)
+        }
     }
 
     private func buildKajabiStylePrompt() -> String {
@@ -148,6 +283,46 @@ final class AdminCourseCreatorViewModel: ObservableObject {
 
         Decompose the request into sub-queries, retrieve and rerank open-source evidence, map claims to citations, and deliver a structured program with modules, video lessons, reading materials, quizzes, assignments, Oxford-style grading guidance, certification criteria, and launch-ready promo copy.
         """
+    }
+
+    private func clearManualBackupInputs() {
+        manualCourseTitle = ""
+        manualSummary = ""
+        manualModuleTitle = ""
+        manualVideoTitle = ""
+        manualVideoURL = ""
+        manualReadingTitle = ""
+        manualReadingMaterial = ""
+        manualQuizTitle = ""
+        manualQuizPrompt = ""
+        manualAssignmentTitle = ""
+        manualAssignmentBrief = ""
+    }
+
+    private func loadSavedConfiguration() {
+        guard let data = UserDefaults.standard.data(forKey: Self.creatorDefaultsKey) else { return }
+        let decoder = JSONDecoder()
+        guard let saved = try? decoder.decode(CreatorDefaults.self, from: data) else { return }
+        selectedAccessTier = saved.selectedAccessTier
+        productName = saved.productName
+        idealLearner = saved.idealLearner
+        transformation = saved.transformation
+        offerStack = saved.offerStack
+        launchAngle = saved.launchAngle
+        selectedCohortType = saved.selectedCohortType
+        preferredCohortSize = saved.preferredCohortSize
+        prompt = saved.prompt
+        manualCourseTitle = saved.manualCourseTitle
+        manualSummary = saved.manualSummary
+        manualModuleTitle = saved.manualModuleTitle
+        manualVideoTitle = saved.manualVideoTitle
+        manualVideoURL = saved.manualVideoURL
+        manualReadingTitle = saved.manualReadingTitle
+        manualReadingMaterial = saved.manualReadingMaterial
+        manualQuizTitle = saved.manualQuizTitle
+        manualQuizPrompt = saved.manualQuizPrompt
+        manualAssignmentTitle = saved.manualAssignmentTitle
+        manualAssignmentBrief = saved.manualAssignmentBrief
     }
 }
 

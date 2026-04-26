@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1640"
+   LastUpgradeVersion = "1430"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,9 +15,37 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5E4287402F9C54E100FC1A03"
+               BlueprintIdentifier = "1458BC88256A14768EC43BC3"
                BuildableName = "WCS-Platform.app"
                BlueprintName = "WCS-Platform"
+               ReferencedContainer = "container:WCS-Platform.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "036E2D628D05D50176CA1B20"
+               BuildableName = "WCS-PlatformTests.xctest"
+               BlueprintName = "WCS-PlatformTests"
+               ReferencedContainer = "container:WCS-Platform.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "39792F4D8BD8917BF3C3D787"
+               BuildableName = "WCS-PlatformUITests.xctest"
+               BlueprintName = "WCS-PlatformUITests"
                ReferencedContainer = "container:WCS-Platform.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,17 +57,10 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       onlyGenerateCoverageForSpecifiedTargets = "NO">
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "YOUTUBE_DATA_API_KEY"
-            value = "ijearch"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "5E4287402F9C54E100FC1A03"
+            BlueprintIdentifier = "1458BC88256A14768EC43BC3"
             BuildableName = "WCS-Platform.app"
             BlueprintName = "WCS-Platform"
             ReferencedContainer = "container:WCS-Platform.xcodeproj">
@@ -48,10 +69,10 @@
       <Testables>
          <TestableReference
             skipped = "NO"
-            parallelizable = "YES">
+            parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5E4287512F9C54E300FC1A03"
+               BlueprintIdentifier = "036E2D628D05D50176CA1B20"
                BuildableName = "WCS-PlatformTests.xctest"
                BlueprintName = "WCS-PlatformTests"
                ReferencedContainer = "container:WCS-Platform.xcodeproj">
@@ -59,16 +80,18 @@
          </TestableReference>
          <TestableReference
             skipped = "NO"
-            parallelizable = "YES">
+            parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5E42875B2F9C54E300FC1A03"
+               BlueprintIdentifier = "39792F4D8BD8917BF3C3D787"
                BuildableName = "WCS-PlatformUITests.xctest"
                BlueprintName = "WCS-PlatformUITests"
                ReferencedContainer = "container:WCS-Platform.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -84,19 +107,14 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "5E4287402F9C54E100FC1A03"
+            BlueprintIdentifier = "1458BC88256A14768EC43BC3"
             BuildableName = "WCS-Platform.app"
             BlueprintName = "WCS-Platform"
             ReferencedContainer = "container:WCS-Platform.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "YOUTUBE_DATA_API_KEY"
-            value = "ijearch"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -108,7 +126,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "5E4287402F9C54E100FC1A03"
+            BlueprintIdentifier = "1458BC88256A14768EC43BC3"
             BuildableName = "WCS-Platform.app"
             BlueprintName = "WCS-Platform"
             ReferencedContainer = "container:WCS-Platform.xcodeproj">

@@ -8,7 +8,20 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
     @State private var pipelineStatus: PipelineHealthStatus?
+    @State private var generationStatus: GenerationCapabilityStatus?
     @State private var isCheckingPipeline = false
+    @State private var isCheckingGenerationAPIs = false
+    @State private var cloudAIRepositoryGroups: [CloudAIRepositoryGroup] = []
+    @State private var cloudAILocations: [String] = []
+    @State private var cloudAIParentIndexResource = "projects/wcs-platform/locations/global/codeRepositoryIndexes/default-index"
+    @State private var cloudAIGroupName = "projects/wcs-platform/locations/global/codeRepositoryIndexes/default-index/repositoryGroups/default-group"
+    @State private var cloudAIRepositoryResource = "https://github.com/chrsappiah-cloud/WCSArtGalleryApp"
+    @State private var cloudAIBranchPattern = "main|release/.*"
+    @State private var cloudAIErrorMessage: String?
+    @State private var isLoadingCloudAI = false
+    @State private var isCreatingCloudAIGroup = false
+    @State private var isAutomatingCloudAI = false
+    @State private var cloudAIAutomationMessage: String?
 
     var body: some View {
         List {
@@ -168,6 +181,102 @@ struct ProfileView: View {
                     }
                     .font(.caption2)
                 }
+                Button {
+                    Task { await checkGenerationAPIs() }
+                } label: {
+                    if isCheckingGenerationAPIs {
+                        ProgressView()
+                    } else {
+                        Label("Check generation APIs", systemImage: "wand.and.stars")
+                    }
+                }
+                if let generationStatus {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Generation API check: \(generationStatus.checkedAt.formatted(date: .omitted, time: .shortened))")
+                            .foregroundStyle(.secondary)
+                        ForEach(generationStatus.checks) { check in
+                            Text("• \(check.system): \(check.state.rawValue) — \(check.detail)")
+                        }
+                    }
+                    .font(.caption2)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Cloud AI Companion repository groups")
+                        .font(.caption.weight(.semibold))
+                    TextField("Parent index resource", text: $cloudAIParentIndexResource)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                        .font(.caption2)
+                    TextField("Repository group full name", text: $cloudAIGroupName)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                        .font(.caption2)
+                    TextField("Repository URL / resource", text: $cloudAIRepositoryResource)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                        .font(.caption2)
+                    TextField("Branch pattern (RE2)", text: $cloudAIBranchPattern)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
+                        .font(.caption2)
+                    HStack {
+                        Button {
+                            Task { await loadCloudAIRepositoryGroups() }
+                        } label: {
+                            if isLoadingCloudAI {
+                                ProgressView()
+                            } else {
+                                Label("List groups", systemImage: "list.bullet")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        Button {
+                            Task { await createCloudAIRepositoryGroup() }
+                        } label: {
+                            if isCreatingCloudAIGroup {
+                                ProgressView()
+                            } else {
+                                Label("Create group", systemImage: "plus.circle")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        Button {
+                            Task { await automateCloudAISetup() }
+                        } label: {
+                            if isAutomatingCloudAI {
+                                ProgressView()
+                            } else {
+                                Label("Automate setup", systemImage: "bolt.fill")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    if !cloudAILocations.isEmpty {
+                        Text("Locations: \(cloudAILocations.joined(separator: ", "))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    if !cloudAIRepositoryGroups.isEmpty {
+                        ForEach(Array(cloudAIRepositoryGroups.enumerated()), id: \.offset) { _, group in
+                            Text("• \(group.name) · repos: \(group.repositories.count)")
+                                .font(.caption2)
+                        }
+                    }
+                    if let cloudAIErrorMessage {
+                        Text(cloudAIErrorMessage)
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                    }
+                    if let cloudAIAutomationMessage {
+                        Text(cloudAIAutomationMessage)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 LabeledContent("API base") {
                     Text(AppEnvironment.platformAPIBaseURL.absoluteString)
                         .font(.caption2)
@@ -201,6 +310,80 @@ struct ProfileView: View {
         isCheckingPipeline = true
         defer { isCheckingPipeline = false }
         pipelineStatus = try? await NetworkClient.shared.fetchPipelineHealthStatus()
+    }
+
+    private func checkGenerationAPIs() async {
+        isCheckingGenerationAPIs = true
+        defer { isCheckingGenerationAPIs = false }
+        generationStatus = await NetworkClient.shared.fetchGenerationCapabilityStatus()
+    }
+
+    private func loadCloudAIRepositoryGroups() async {
+        isLoadingCloudAI = true
+        defer { isLoadingCloudAI = false }
+        cloudAIErrorMessage = nil
+        cloudAIAutomationMessage = nil
+        do {
+            cloudAILocations = try await NetworkClient.shared.fetchCloudAICompanionLocations()
+            cloudAIRepositoryGroups = try await NetworkClient.shared.listCloudAIRepositoryGroups(
+                parentIndexResource: cloudAIParentIndexResource
+            )
+        } catch {
+            cloudAIErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func createCloudAIRepositoryGroup() async {
+        isCreatingCloudAIGroup = true
+        defer { isCreatingCloudAIGroup = false }
+        cloudAIErrorMessage = nil
+        cloudAIAutomationMessage = nil
+        let group = CloudAIRepositoryGroup(
+            name: cloudAIGroupName,
+            createTime: nil,
+            updateTime: nil,
+            labels: ["source": "ios-admin", "system": "wcs"],
+            repositories: [
+                .init(resource: cloudAIRepositoryResource, branchPattern: cloudAIBranchPattern)
+            ]
+        )
+        do {
+            _ = try await NetworkClient.shared.createCloudAIRepositoryGroup(
+                parentIndexResource: cloudAIParentIndexResource,
+                group: group
+            )
+            await loadCloudAIRepositoryGroups()
+        } catch {
+            cloudAIErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func automateCloudAISetup() async {
+        isAutomatingCloudAI = true
+        defer { isAutomatingCloudAI = false }
+        cloudAIErrorMessage = nil
+        cloudAIAutomationMessage = nil
+        let targetGroup = CloudAIRepositoryGroup(
+            name: cloudAIGroupName,
+            createTime: nil,
+            updateTime: nil,
+            labels: ["source": "ios-admin", "system": "wcs", "automation": "true"],
+            repositories: [.init(resource: cloudAIRepositoryResource, branchPattern: cloudAIBranchPattern)]
+        )
+        do {
+            let result = try await NetworkClient.shared.ensureCloudAIRepositoryGroup(
+                parentIndexResource: cloudAIParentIndexResource,
+                targetGroup: targetGroup
+            )
+            cloudAILocations = result.locations
+            cloudAIRepositoryGroups = result.groups
+            cloudAIAutomationMessage = result.action == "created"
+                ? "Automation complete: repository group created and synchronized."
+                : "Automation complete: repository group already existed and status synchronized."
+            generationStatus = await NetworkClient.shared.fetchGenerationCapabilityStatus()
+        } catch {
+            cloudAIErrorMessage = error.localizedDescription
+        }
     }
 }
 

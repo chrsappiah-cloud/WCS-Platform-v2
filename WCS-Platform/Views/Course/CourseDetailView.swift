@@ -384,9 +384,9 @@ struct CourseDetailView: View {
             .wcsInsetPanel()
         } else if course.isEnrolled, YouTubeSearchAPIClient.resolveAPIKey() == nil {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                Text("Companion YouTube discovery")
+                Text("Optional companion YouTube embeds")
                     .font(.headline.weight(.semibold))
-                Text("Add `YOUTUBE_DATA_API_KEY` to your Xcode scheme to unlock Phase 4 embeds for enrolled learners.")
+                Text("`YOUTUBE_DATA_API_KEY` is only needed for Phase 4 companion embeds. Core lecture playback uses the lesson `videoURL` and works without this key.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -137,6 +137,30 @@ struct HomeTabView: View {
                 }
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text("Social media systems")
+                        .wcsSectionTitle()
+                    Text("Live channels are active for community updates, module highlights, and learner support.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: DesignTokens.Spacing.sm) {
+                            ForEach(BrandOutboundLinks.current.socialPairs, id: \.label) { item in
+                                Link(destination: item.url) {
+                                    Label(item.label, systemImage: socialIcon(for: item.label))
+                                        .font(.caption.weight(.semibold))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color(.tertiarySystemFill), in: Capsule())
+                                }
+                            }
+                        }
+                    }
+                }
+                .wcsInsetPanel()
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                     Text("Platform capabilities")
                         .wcsSectionTitle()
 
@@ -168,6 +192,25 @@ struct HomeTabView: View {
 
     private func loadFeatured() async {
         featuredCourses = (try? await NetworkClient.shared.fetchAvailableCourses()) ?? []
+    }
+
+    private func socialIcon(for label: String) -> String {
+        switch label.lowercased() {
+        case "youtube":
+            return "play.rectangle.fill"
+        case "instagram":
+            return "camera.fill"
+        case "facebook":
+            return "person.2.circle.fill"
+        case "linkedin":
+            return "briefcase.fill"
+        case "tiktok":
+            return "music.note"
+        case "x":
+            return "bubble.left.and.bubble.right.fill"
+        default:
+            return "link"
+        }
     }
 }
 

@@ -35,10 +35,13 @@ final class CourseDetailViewModel: ObservableObject {
             course = loaded
             isEnrolled = loaded.isEnrolled
             await loadScholarshipAndCompanionVideos(for: loaded)
+            Telemetry.event("course.load.success", attributes: ["courseId": loaded.id.uuidString])
         } catch let api as WCSAPIError {
             lastError = api
+            Telemetry.event("course.load.failure", attributes: ["courseId": courseId.uuidString])
         } catch {
             lastError = WCSAPIError(underlying: error, statusCode: nil, body: nil)
+            Telemetry.event("course.load.failure", attributes: ["courseId": courseId.uuidString])
         }
     }
 
@@ -48,8 +51,10 @@ final class CourseDetailViewModel: ObservableObject {
                 query: "\(course.title) learning pedagogy curriculum",
                 rows: 4
             )
+            Telemetry.event("crossref.fetch.success", attributes: ["courseId": course.id.uuidString])
         } catch {
             crossrefScholarship = []
+            Telemetry.event("crossref.fetch.failure", attributes: ["courseId": course.id.uuidString])
         }
 
         companionVideoResults = []
@@ -65,8 +70,10 @@ final class CourseDetailViewModel: ObservableObject {
                 scriptLines: capped,
                 maxResultsPerLesson: 2
             )
+            Telemetry.event("youtube.companion.success", attributes: ["courseId": course.id.uuidString, "count": "\(companionVideoResults.count)"])
         } catch {
             companionVideoResults = []
+            Telemetry.event("youtube.companion.failure", attributes: ["courseId": course.id.uuidString])
         }
     }
 

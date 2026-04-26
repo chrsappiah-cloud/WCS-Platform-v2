@@ -22,7 +22,7 @@ struct YouTubeSearchConfiguration: Sendable {
     var safeSearch: String
     var videoEmbeddable: Bool
 
-    static let `default` = YouTubeSearchConfiguration(
+    nonisolated static let `default` = YouTubeSearchConfiguration(
         regionCode: nil,
         relevanceLanguage: "en",
         order: "relevance",
@@ -30,7 +30,7 @@ struct YouTubeSearchConfiguration: Sendable {
         videoEmbeddable: true
     )
 
-    static let wcsLearning = YouTubeSearchConfiguration(
+    nonisolated static let wcsLearning = YouTubeSearchConfiguration(
         regionCode: nil,
         relevanceLanguage: "en",
         order: "relevance",
@@ -108,6 +108,9 @@ private struct YouTubeAPIErrorEnvelope: Decodable {
 }
 
 enum YouTubeSearchAPIClient {
+    private static let service = "youtube"
+    private static let cacheMaxAge: TimeInterval = 60 * 30
+
     nonisolated static func resolveAPIKey() -> String? {
         if let env = ProcessInfo.processInfo.environment["YOUTUBE_DATA_API_KEY"],
            !env.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -116,14 +119,15 @@ enum YouTubeSearchAPIClient {
         return nil
     }
 
-    static func searchVideos(
+    nonisolated static func searchVideos(
         query: String,
         configuration: YouTubeSearchConfiguration? = nil,
         pageToken: String? = nil,
         maxResults: Int = 8,
-        session: URLSession = .shared
+        session: URLSession? = nil
     ) async throws -> YouTubeSearchPage {
         let configuration = configuration ?? .wcsLearning
+        let session = session ?? URLSession(configuration: .default)
         guard let apiKey = resolveAPIKey() else {
             throw YouTubeAPIError.missingAPIKey
         }
@@ -156,20 +160,37 @@ enum YouTubeSearchAPIClient {
             throw YouTubeAPIError.invalidRequestURL
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let request: URLRequest = {
+            var r = URLRequest(url: url)
+            r.httpMethod = "GET"
+            r.setValue("application/json", forHTTPHeaderField: "Accept")
+            return r
+        }()
 
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw YouTubeAPIError.httpStatus(code: -1, message: nil)
+        let cacheKey = "\(query)|\(maxResults)|\(configuration.order)|\(configuration.safeSearch)|\(configuration.relevanceLanguage ?? "")"
+        do {
+            let data = try await ExternalServiceResilience.withRetry(service: service) {
+                let (data, response) = try await session.data(for: request)
+                guard let http = response as? HTTPURLResponse else {
+                    throw YouTubeAPIError.httpStatus(code: -1, message: nil)
+                }
+                guard (200 ..< 300).contains(http.statusCode) else {
+                    let message = Self.decodeYouTubeErrorMessage(from: data) ?? String(data: data, encoding: .utf8)
+                    throw YouTubeAPIError.httpStatus(code: http.statusCode, message: message)
+                }
+                return data
+            }
+            await ExternalResponseCache.shared.set(service: service, key: cacheKey, payload: data)
+            return try decodePage(from: data)
+        } catch {
+            guard let stale = await ExternalResponseCache.shared.get(service: service, key: cacheKey, maxAge: cacheMaxAge) else {
+                throw error
+            }
+            return (try? decodePage(from: stale)) ?? YouTubeSearchPage(items: [], nextPageToken: nil)
         }
+    }
 
-        guard (200 ..< 300).contains(http.statusCode) else {
-            let message = Self.decodeYouTubeErrorMessage(from: data) ?? String(data: data, encoding: .utf8)
-            throw YouTubeAPIError.httpStatus(code: http.statusCode, message: message)
-        }
-
+    nonisolated static func decodePage(from data: Data) throws -> YouTubeSearchPage {
         let decoded: YouTubeSearchEnvelope
         do {
             decoded = try JSONDecoder().decode(YouTubeSearchEnvelope.self, from: data)
@@ -185,11 +206,10 @@ enum YouTubeSearchAPIClient {
             let thumb = urlString.flatMap(URL.init(string:))
             return YouTubeVideoSnippet(videoID: videoID, title: title, thumbnailURL: thumb)
         }
-
         return YouTubeSearchPage(items: snippets, nextPageToken: decoded.nextPageToken)
     }
 
-    private static func decodeYouTubeErrorMessage(from data: Data) -> String? {
+    nonisolated private static func decodeYouTubeErrorMessage(from data: Data) -> String? {
         guard let env = try? JSONDecoder().decode(YouTubeAPIErrorEnvelope.self, from: data) else {
             return nil
         }

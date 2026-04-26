@@ -8,7 +8,9 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: org.worldclassscholars.platform
     CURRENT_PROJECT_VERSION: 1
     MARKETING_VERSION: 1.0
-    DEVELOPMENT_TEAM: ""
+    # Team ID (org.worldclassscholars / App Store provider). Override in Xcode per-machine if needed.
+    DEVELOPMENT_TEAM: TM2WG7HH96
+    CODE_SIGN_STYLE: Automatic
 targets:
   WCS-Platform:
     type: application
@@ -19,6 +21,7 @@ targets:
       - path: ViewModels
       - path: Views
       - path: Core
+      - path: Learning
       - path: WCS_PlatformApp.swift
     resources:
       - path: Assets.xcassets
@@ -28,10 +31,49 @@ targets:
         CODE_SIGN_ENTITLEMENTS: WCS_Platform.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
+
+  WCS-PlatformTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ../WCS-PlatformTests
+    dependencies:
+      - target: WCS-Platform
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: org.worldclassscholars.platform.tests
+
+  WCS-PlatformUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: ../WCS-PlatformUITests
+    dependencies:
+      - target: WCS-Platform
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: ../WCS-PlatformUITests/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: org.worldclassscholars.platform.uitests
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 1
+
 schemes:
   WCS-Platform:
     build:
       targets:
         WCS-Platform: all
+        WCS-PlatformTests: [test]
+        WCS-PlatformUITests: [test]
     run:
       config: Debug
+    test:
+      gatherCoverageData: false
+      targets:
+        - name: WCS-PlatformTests
+        - name: WCS-PlatformUITests
+    archive:
+      config: Release
+      buildTargets:
+        WCS-Platform: all

@@ -30,6 +30,9 @@ private struct CrossrefWorksEnvelope: Decodable {
 }
 
 enum CrossrefWorksAPIClient {
+    private static let service = "crossref"
+    private static let cacheMaxAge: TimeInterval = 60 * 60 * 6
+
     static func searchWorks(
         query: String,
         rows: Int = 5,
@@ -44,32 +47,54 @@ enum CrossrefWorksAPIClient {
             throw URLError(.badURL)
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 14
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(
-            "WCS-Platform/1.0 (mailto:support@wcs.education; https://github.com/CrossRef/rest-api-doc)",
-            forHTTPHeaderField: "User-Agent"
-        )
+        let request: URLRequest = {
+            var r = URLRequest(url: url)
+            r.httpMethod = "GET"
+            r.timeoutInterval = 14
+            r.setValue("application/json", forHTTPHeaderField: "Accept")
+            r.setValue(
+                "WCS-Platform/1.0 (mailto:support@wcs.education; https://github.com/CrossRef/rest-api-doc)",
+                forHTTPHeaderField: "User-Agent"
+            )
+            return r
+        }()
 
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw URLError(.badServerResponse)
+        do {
+            let data = try await ExternalServiceResilience.withRetry(service: service) {
+                let (data, response) = try await session.data(for: request)
+                guard let http = response as? HTTPURLResponse else {
+                    throw URLError(.badServerResponse)
+                }
+                guard (200 ..< 300).contains(http.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                return data
+            }
+            await ExternalResponseCache.shared.set(service: service, key: "\(query)|\(rows)", payload: data)
+            return try decodeWorks(from: data)
+        } catch {
+            guard let stale = await ExternalResponseCache.shared.get(
+                service: service,
+                key: "\(query)|\(rows)",
+                maxAge: cacheMaxAge
+            ) else {
+                throw error
+            }
+            return (try? decodeWorks(from: stale)) ?? []
         }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
+    }
 
+    static func decodeWorks(from data: Data) throws -> [CrossrefWorkSummary] {
         let decoded = try JSONDecoder().decode(CrossrefWorksEnvelope.self, from: data)
         let items = decoded.message?.items ?? []
 
         return items.enumerated().compactMap { idx, item in
-            let title = (item.title?.first?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
-                ?? "Untitled work"
+            let title = (item.title?.first?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { text in
+                text.isEmpty ? nil : text
+            } ?? "Untitled work"
             let doi = item.DOI?.trimmingCharacters(in: .whitespacesAndNewlines)
-            let id = doi.flatMap { !$0.isEmpty ? $0 : nil } ?? "crossref-\(idx)-\(title.hashValue)"
-            let resource = item.URL.flatMap { URL(string: $0) }
+            let id = doi.flatMap { $0.isEmpty ? nil : $0 } ?? "crossref-\(idx)-\(title.hashValue)"
+            let resource = item.URL.flatMap(URL.init(string:))
                 ?? doi.flatMap { URL(string: "https://doi.org/\($0)") }
             return CrossrefWorkSummary(id: id, title: title, doi: doi, resourceURL: resource)
         }

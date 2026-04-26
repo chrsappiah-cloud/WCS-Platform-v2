@@ -270,12 +270,14 @@ actor MockLearningStore {
                     let generationSubtitle = subtitle.isEmpty && lesson.kind == .video && isVideoGenerationInFlight
                         ? "Generating AI lesson video in real time. This recording will be archived for reuse."
                         : subtitle
+                    let fallbackVideoURL = fallbackPlaybackURL(for: lesson.id)
+                    let manualBackupVideoURL = manualVideoURL(from: lesson.notes)
                     return Lesson(
                         id: lesson.id,
                         title: lesson.title,
                         subtitle: generationSubtitle.isEmpty ? nil : generationSubtitle,
                         type: mapLessonKind(lesson.kind),
-                        videoURL: lesson.kind == .video ? videoAsset?.playbackURL : nil,
+                        videoURL: lesson.kind == .video ? (videoAsset?.playbackURL ?? manualBackupVideoURL ?? fallbackVideoURL) : nil,
                         durationSeconds: max(1, lesson.durationMinutes) * 60,
                         isCompleted: false,
                         isAvailable: true,
@@ -444,6 +446,28 @@ actor MockLearningStore {
         case .assignment:
             return .assignment
         }
+    }
+
+    private func fallbackPlaybackURL(for lessonID: UUID) -> String {
+        let samples = [
+            "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+            "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+            "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+        ]
+        let hash = lessonID.uuidString.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        return samples[hash % samples.count]
+    }
+
+    private func manualVideoURL(from notes: String) -> String? {
+        guard let range = notes.range(of: "http") else { return nil }
+        let candidate = String(notes[range.lowerBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: candidate),
+              ["http", "https"].contains((url.scheme ?? "").lowercased())
+        else {
+            return nil
+        }
+        return candidate
     }
 
     private func isBlockedAICourseTitle(_ title: String) -> Bool {

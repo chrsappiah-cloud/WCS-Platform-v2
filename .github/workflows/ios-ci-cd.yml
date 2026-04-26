@@ -27,26 +27,39 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: cd WCS-Platform && xcodegen generate
+
+      - name: Validate external link allowlist config
+        run: bash scripts/validate-external-links-config.sh
+
       - name: Build for simulator
         run: >
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 16"
+          -destination "platform=iOS Simulator,name=iPhone 17"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           build
 
-      - name: Run unit tests
+      - name: Run tests
+        env:
+          CI: "true"
         run: >
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 16"
+          -destination "platform=iOS Simulator,name=iPhone 17"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
-          -only-testing:"WCS-PlatformTests"
           test
+
+      - name: Verify privacy manifest exists
+        run: test -f "WCS-Platform/PrivacyInfo.xcprivacy"
 
   cd-archive-artifact:
     name: CD Archive Artifact
@@ -59,6 +72,12 @@ jobs:
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: cd WCS-Platform && xcodegen generate
 
       - name: Create unsigned archive
         run: >
