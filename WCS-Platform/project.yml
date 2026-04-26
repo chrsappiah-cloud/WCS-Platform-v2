@@ -6,8 +6,8 @@ settings:
     SWIFT_VERSION: 5.10
     IPHONEOS_DEPLOYMENT_TARGET: 18.0
     PRODUCT_BUNDLE_IDENTIFIER: org.worldclassscholars.platform
-    CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 1.0
+    CURRENT_PROJECT_VERSION: 2
+    MARKETING_VERSION: 1.1.0
     # Team ID (org.worldclassscholars / App Store provider). Override in Xcode per-machine if needed.
     DEVELOPMENT_TEAM: TM2WG7HH96
     CODE_SIGN_STYLE: Automatic
