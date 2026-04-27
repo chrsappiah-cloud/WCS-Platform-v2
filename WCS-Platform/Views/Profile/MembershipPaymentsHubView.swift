@@ -9,6 +9,9 @@ import SwiftUI
 
 struct MembershipPaymentsHubView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
+    @StateObject private var storeKitManager = WCSStoreKitSubscriptionManager()
+    @State private var plans: [WCSSubscriptionPlan] = []
+    @State private var planError: String?
     private let links = BrandOutboundLinks.current
 
     var body: some View {
@@ -22,7 +25,83 @@ struct MembershipPaymentsHubView: View {
                 .foregroundStyle(.secondary)
             }
 
-            Section("Membership & subscriptions") {
+            Section("Individual learner plans") {
+                ForEach(plans.filter { $0.segment == .individual }) { plan in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(plan.displayName)
+                                .font(.headline)
+                            Spacer()
+                            Text(plan.isFreeTier ? "Free" : money(plan.monthlyPriceUSD) + "/mo")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        Text(plan.description)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 2)
+                }
+                if let planError {
+                    Text(planError)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Apple subscriptions (StoreKit)") {
+                if storeKitManager.isLoading {
+                    ProgressView("Loading Apple products…")
+                } else if storeKitManager.products.isEmpty {
+                    Text("Configure `WCSAppleSubscriptionProductIDs` in Info.plist and App Store Connect products to enable in-app purchases.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(storeKitManager.products, id: \.id) { product in
+                        Button {
+                            Task {
+                                Telemetry.event(.upgradeStarted, attributes: ["provider": "apple_iap", "product_id": product.id])
+                                await storeKitManager.purchase(product: product)
+                            }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(product.displayName)
+                                    Text(product.description)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text(product.displayPrice)
+                            }
+                        }
+                        .disabled(storeKitManager.isPurchasing)
+                    }
+                }
+                if let msg = storeKitManager.purchaseMessage {
+                    Text(msg)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Enterprise and investor billing") {
+                if let url = links.enterpriseSalesCheckoutURL {
+                    Link("Open enterprise billing workflow", destination: url)
+                } else {
+                    Text("Set ENTERPRISE_SALES_CHECKOUT_URL for enterprise procurement.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                if let url = links.investorRelationsPaymentURL {
+                    Link("Open investor payment workflow", destination: url)
+                } else {
+                    Text("Set INVESTOR_RELATIONS_PAYMENT_URL for investor commitments.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Hosted checkout and policy") {
                 if let url = links.membershipCardCheckoutURL {
                     Link("Open hosted membership checkout", destination: url)
                 } else {
@@ -38,6 +117,11 @@ struct MembershipPaymentsHubView: View {
 
             Section("Administrator payouts") {
                 if appViewModel.user != nil {
+                    NavigationLink {
+                        WCSAdminFinanceDashboardView()
+                    } label: {
+                        Label("Open admin finance monitor", systemImage: "banknote")
+                    }
                     if let url = links.merchantFinancialDashboardURL {
                         Link("Open merchant / Connect dashboard", destination: url)
                     } else {
@@ -58,6 +142,23 @@ struct MembershipPaymentsHubView: View {
         .navigationTitle("Membership & payouts")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .task {
+            await loadPlans()
+            await storeKitManager.loadProducts()
+        }
+    }
+
+    private func loadPlans() async {
+        do {
+            plans = try await NetworkClient.shared.fetchSubscriptionPlans()
+            planError = nil
+        } catch {
+            planError = "Could not load plans: \(error.localizedDescription)"
+        }
+    }
+
+    private func money(_ amount: Decimal) -> String {
+        amount.formatted(.currency(code: "USD"))
     }
 }
 

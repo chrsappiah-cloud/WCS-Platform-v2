@@ -43,6 +43,10 @@
 	</array>
 	<key>WCSPlatformAPIBaseURL</key>
 	<string>https://api.wcs.education/v1</string>
+	<key>WCSBackendProvider</key>
+	<string>supabase</string>
+	<key>WCSAppleSubscriptionProductIDs</key>
+	<string>wcs.individual.pro.monthly</string>
 	<key>WCSAdminAccessCode</key>
 	<string>wcs-admin-2026</string>
 	<key>UIBackgroundModes</key>

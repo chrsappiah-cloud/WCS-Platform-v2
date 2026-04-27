@@ -7,8 +7,23 @@ import Foundation
 
 enum AppEnvironment {
     private static let infoPlistKey = "WCSPlatformAPIBaseURL"
+    private static let backendProviderInfoPlistKey = "WCSBackendProvider"
     private static let adminCodeInfoPlistKey = "WCSAdminAccessCode"
+    private static let appleSubscriptionProductIDsInfoPlistKey = "WCSAppleSubscriptionProductIDs"
     private static let debugSafeModeUserDefaultsKey = "wcs.debugSafeMode"
+
+    enum BackendProvider: String {
+        case supabase
+    }
+
+    /// Locked backend foundation for MVP execution window.
+    static var backendProvider: BackendProvider {
+        if let raw = Bundle.main.object(forInfoDictionaryKey: backendProviderInfoPlistKey) as? String,
+           let provider = BackendProvider(rawValue: raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) {
+            return provider
+        }
+        return .supabase
+    }
 
     /// Base URL for the Nest (or other) platform API, e.g. `http://127.0.0.1:3000` for Simulator against a Mac-hosted API.
     static var platformAPIBaseURL: URL {
@@ -36,6 +51,18 @@ enum AppEnvironment {
 
     static func setDebugSafeMode(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: debugSafeModeUserDefaultsKey)
+    }
+
+    /// Comma-separated StoreKit product ids from Info.plist key `WCSAppleSubscriptionProductIDs`.
+    static var appleSubscriptionProductIDs: Set<String> {
+        if let raw = Bundle.main.object(forInfoDictionaryKey: appleSubscriptionProductIDsInfoPlistKey) as? String {
+            let ids = raw
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            if !ids.isEmpty { return Set(ids) }
+        }
+        return []
     }
 
     /// Extra simulator-only stabilization for noisy keyboard/haptics sessions.

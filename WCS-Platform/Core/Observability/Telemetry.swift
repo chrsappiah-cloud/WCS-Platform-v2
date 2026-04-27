@@ -31,6 +31,10 @@ nonisolated enum Telemetry {
         }
     }
 
+    static func event(_ telemetryEvent: TelemetryEvent, attributes: [String: String] = [:]) {
+        event(telemetryEvent.rawValue, attributes: baselineAttributes().merging(attributes, uniquingKeysWith: { _, new in new }))
+    }
+
     static func event(_ name: String, identity: WCSIdentitySnapshot?, attributes: [String: String] = [:]) {
         var merged = attributes
         if let identity {
@@ -39,6 +43,10 @@ nonisolated enum Telemetry {
             }
         }
         event(name, attributes: merged)
+    }
+
+    static func event(_ telemetryEvent: TelemetryEvent, identity: WCSIdentitySnapshot?, attributes: [String: String] = [:]) {
+        event(telemetryEvent.rawValue, identity: identity, attributes: baselineAttributes().merging(attributes, uniquingKeysWith: { _, new in new }))
     }
 
     static func recentEvents(prefix: String? = nil, limit: Int = 12) -> [String] {
@@ -51,6 +59,18 @@ nonisolated enum Telemetry {
             candidates = storedEvents
         }
         return Array(candidates.suffix(max(1, limit)))
+    }
+
+    private static func baselineAttributes() -> [String: String] {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String ?? "unknown"
+        let build = info["CFBundleVersion"] as? String ?? "unknown"
+        return [
+            "platform": "ios",
+            "app_version": version,
+            "build_number": build,
+            "backend_provider": AppEnvironment.backendProvider.rawValue,
+        ]
     }
 }
 

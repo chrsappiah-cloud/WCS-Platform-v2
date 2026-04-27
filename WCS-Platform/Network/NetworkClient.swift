@@ -498,6 +498,76 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         return user.isPremium
     }
 
+    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan] {
+        if useMocks {
+            return [
+                WCSSubscriptionPlan(
+                    id: "free-audit",
+                    displayName: "Free Audit",
+                    segment: .individual,
+                    isFreeTier: true,
+                    monthlyPriceUSD: 0,
+                    description: "Audit selected lessons and community discussions.",
+                    appleProductID: nil
+                ),
+                WCSSubscriptionPlan(
+                    id: "individual-pro",
+                    displayName: "Individual Pro",
+                    segment: .individual,
+                    isFreeTier: false,
+                    monthlyPriceUSD: 29.99,
+                    description: "Full course access, assessments, and certificates.",
+                    appleProductID: AppEnvironment.appleSubscriptionProductIDs.first
+                ),
+                WCSSubscriptionPlan(
+                    id: "enterprise-seat",
+                    displayName: "Enterprise Seats",
+                    segment: .enterprise,
+                    isFreeTier: false,
+                    monthlyPriceUSD: 99,
+                    description: "Managed cohorts, seat packs, and admin reporting.",
+                    appleProductID: nil
+                ),
+                WCSSubscriptionPlan(
+                    id: "investor-insight",
+                    displayName: "Investor Insight Access",
+                    segment: .investor,
+                    isFreeTier: false,
+                    monthlyPriceUSD: 499,
+                    description: "Governance updates, KPI access, and diligence portal.",
+                    appleProductID: nil
+                ),
+            ]
+        }
+        return try await rawRequest("/commerce/plans", method: "GET")
+    }
+
+    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot {
+        if useMocks {
+            return WCSAdminFinanceSnapshot(
+                asOf: Date(),
+                grossRevenueUSD: 12840.55,
+                feesUSD: 413.22,
+                netRevenueUSD: 12427.33,
+                activeLearnerSubscriptions: 312,
+                activeEnterpriseContracts: 6,
+                activeInvestorCommitments: 3,
+                breakdown: WCSRevenueBreakdown(
+                    individualUSD: 8420.10,
+                    enterpriseUSD: 3160.45,
+                    investorUSD: 1260.00
+                ),
+                payout: WCSPayoutStatus(
+                    pendingUSD: 1750.40,
+                    paidOutUSD: 10676.93,
+                    bankAccountAlias: "WCS Operations Account •••• 2044",
+                    lastSettlementAt: Date().addingTimeInterval(-60 * 60 * 24)
+                )
+            )
+        }
+        return try await rawRequest("/commerce/admin/finance/snapshot", method: "GET")
+    }
+
     func publishDraft(_ id: UUID) async throws {
         try await AdminCourseDraftStore.shared.markPublished(id)
     }

@@ -26,6 +26,7 @@
 		46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */; };
 		49F73151C1A7B55FD03A5DDA /* MembershipPaymentsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */; };
 		4F3C29C0F5C01E6FDAB7721B /* CourseHydration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97BE3FC5B786BC2FF881795 /* CourseHydration.swift */; };
+		513D887D95B3DC89560FD437 /* WCSCommerceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85463E9EED8C095A2FFE41C5 /* WCSCommerceModels.swift */; };
 		5448D38865FE8D7B6A17255A /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BF0E1953E75ACEA03727D48 /* HomeTabView.swift */; };
 		56C0C66659C43E126C36760A /* Enrollment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDB72807D275CC1CAED4C98 /* Enrollment.swift */; };
 		5A6E681E4B131A4DF7698394 /* ModuleVideoDiscoveryPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */; };
@@ -36,7 +37,9 @@
 		68519CFF546FB55C3958E56D /* AdminAICourseGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */; };
 		6C38459DCCD4BC84904E48E9 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */; };
 		768D4B13BE6BB0F298BF2369 /* MockDiscussionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */; };
+		87040CCBD1A0CF862EBCD556 /* WCSAdminFinanceDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887901DB1B77F90C6D322C4A /* WCSAdminFinanceDashboardView.swift */; };
 		887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */; };
+		8EB345FCA606C168A927D94F /* TelemetryEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */; };
 		8EEC9A3D60C58605AD4AFE8B /* StorageArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */; };
 		9044C88257850A13B4E2FA1E /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5B68565C5431264720813 /* Course.swift */; };
 		993269EFC5B02DE459F0C50F /* QuizQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */; };
@@ -59,6 +62,7 @@
 		C3D615464982B36D34F0B07A /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */; };
 		C4E172D8CA95F2B8209B9447 /* CrossrefWorksAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */; };
 		CD1CA64245D616360EFD0E69 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60ABF3B78D740911D3BD5D7 /* APIError.swift */; };
+		D99D490D14871370DEBF6AB1 /* WCSStoreKitSubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */; };
 		D9F58EA01DA0EF7D3E8D8C55 /* CourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC65D149D994F3DA726A6EA /* CourseListView.swift */; };
 		DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */; };
 		E2C5F4DB8C8C9E5910CA537D /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42CB6BF06F1D5953B1DB57 /* DesignTokens.swift */; };
@@ -123,6 +127,7 @@
 		5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossrefWorksAPIClient.swift; sourceTree = "<group>"; };
 		60820261114D2D2A475D4822 /* View+SimulatorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SimulatorStability.swift"; sourceTree = "<group>"; };
 		61069ED3967742504EF8D5DA /* QuizStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizStartView.swift; sourceTree = "<group>"; };
+		69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSStoreKitSubscriptionManager.swift; sourceTree = "<group>"; };
 		6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAICourseGenerator.swift; sourceTree = "<group>"; };
 		6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseDraft.swift; sourceTree = "<group>"; };
 		712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipPaymentsHubView.swift; sourceTree = "<group>"; };
@@ -130,7 +135,10 @@
 		7874C6477BAB664C48551926 /* WCSDomainProjections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainProjections.swift; sourceTree = "<group>"; };
 		801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		819B08829E36EC821515F9B9 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		85463E9EED8C095A2FFE41C5 /* WCSCommerceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSCommerceModels.swift; sourceTree = "<group>"; };
+		887901DB1B77F90C6D322C4A /* WCSAdminFinanceDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSAdminFinanceDashboardView.swift; sourceTree = "<group>"; };
 		8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionBadgeView.swift; sourceTree = "<group>"; };
+		8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryEvent.swift; sourceTree = "<group>"; };
 		92ACD9F9C1F337500EBC88BE /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizQuestionView.swift; sourceTree = "<group>"; };
 		A2A5B68565C5431264720813 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
@@ -160,6 +168,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		02299858F9A12B689C4BB6CF /* Commerce */ = {
+			isa = PBXGroup;
+			children = (
+				69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */,
+			);
+			path = Commerce;
+			sourceTree = "<group>";
+		};
 		110AE839CD1BA909DAD0621A = {
 			isa = PBXGroup;
 			children = (
@@ -213,6 +229,7 @@
 				39C4CF88BA458D1DA1805B1F /* Quiz.swift */,
 				59E844D4C89354A7C29261E2 /* Subscription.swift */,
 				12A9AFF8ABBCF19959C62BD6 /* User.swift */,
+				85463E9EED8C095A2FFE41C5 /* WCSCommerceModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -241,6 +258,7 @@
 			isa = PBXGroup;
 			children = (
 				3DF031A29C4F07AEABE60252 /* Telemetry.swift */,
+				8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */,
 			);
 			path = Observability;
 			sourceTree = "<group>";
@@ -368,6 +386,7 @@
 				43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */,
 				D57C5E12098904CEBFA37813 /* Architecture */,
 				82A14FD73430D17E1657C7E1 /* Audio */,
+				02299858F9A12B689C4BB6CF /* Commerce */,
 				EB8213260250E28E370C3160 /* Config */,
 				C61B7B859B9D245D7CD5FCB9 /* Extensions */,
 				6EBA9CDB3B3901CEBF77B53F /* Observability */,
@@ -390,6 +409,7 @@
 				712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */,
 				71F7FD7BAE011A0EA8C66044 /* ProfileView.swift */,
 				8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */,
+				887901DB1B77F90C6D322C4A /* WCSAdminFinanceDashboardView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -573,16 +593,20 @@
 				E9754C3A2484464A37C27A64 /* Subscription.swift in Sources */,
 				F78B8DD02D1234D2AFCEF0D9 /* SubscriptionBadgeView.swift in Sources */,
 				34714BE866CA9ECDFCFA2F35 /* Telemetry.swift in Sources */,
+				8EB345FCA606C168A927D94F /* TelemetryEvent.swift in Sources */,
 				F8D4AF429EB50A1DEF470E67 /* User.swift in Sources */,
 				9B0DC185E9A042C35BCA186C /* VideoPlayerView.swift in Sources */,
 				9EBAF97A15249A1865E62D68 /* VideoPlayerViewModel.swift in Sources */,
 				9F528517279F0563ACA9055F /* View+SimulatorStability.swift in Sources */,
 				F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */,
+				87040CCBD1A0CF862EBCD556 /* WCSAdminFinanceDashboardView.swift in Sources */,
 				887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */,
+				513D887D95B3DC89560FD437 /* WCSCommerceModels.swift in Sources */,
 				DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */,
 				C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */,
 				46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */,
 				1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */,
+				D99D490D14871370DEBF6AB1 /* WCSStoreKitSubscriptionManager.swift in Sources */,
 				00ACCAA5418F28C3AB47B7A5 /* WCS_PlatformApp.swift in Sources */,
 				F1B879D2E8FBB061E91D34D6 /* YouTubeEmbedWebView.swift in Sources */,
 				11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */,

@@ -17,6 +17,9 @@ struct WCS_PlatformApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                .task {
+                    Telemetry.event(.appLaunched)
+                }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
                     logger.warning("Memory warning received in app process")
                 }

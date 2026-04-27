@@ -96,7 +96,7 @@ struct ProfileView: View {
                 NavigationLink {
                     MembershipPaymentsHubView()
                 } label: {
-                    Label("Membership & card payouts", systemImage: "creditcard")
+                    Label("Membership, subscriptions, and payouts", systemImage: "creditcard")
                 }
             } header: {
                 Text("Subscriptions")

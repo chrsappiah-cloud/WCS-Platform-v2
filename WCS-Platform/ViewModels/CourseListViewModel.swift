@@ -38,6 +38,7 @@ final class CourseListViewModel: ObservableObject {
         do {
             let payload = try await catalogRepository.fetchDiscoverPayload()
             courses = payload.allPrograms.map(\.course)
+            Telemetry.event(.discoverViewed, attributes: ["course_count": "\(courses.count)"])
         } catch let api as WCSAPIError {
             lastError = api
         } catch {
