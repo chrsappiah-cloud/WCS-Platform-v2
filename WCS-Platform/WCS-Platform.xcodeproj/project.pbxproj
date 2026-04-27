@@ -14,6 +14,7 @@
 		0B5B5FC68A1E763ADDAA4FBB /* AdminCourseDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35635417F6B5BAC2761C3DB /* AdminCourseDraftStore.swift */; };
 		0E7E49DF9976D4B4D73A61E2 /* AdminCourseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */; };
 		11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */; };
+		1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */; };
 		1551C615585FABD774D662A8 /* CourseDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6304ABCAC4DCEB84650218 /* CourseDetailViewModel.swift */; };
 		19520449363228C7829BA111 /* WCS_PlatformUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD2E7C0E43801AEECE31098 /* WCS_PlatformUITests.swift */; };
 		26DED2EBA5DB9CCC1B06FCBA /* WCS_PlatformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17474560116B58C8CB7080E /* WCS_PlatformTests.swift */; };
@@ -22,6 +23,7 @@
 		34714BE866CA9ECDFCFA2F35 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF031A29C4F07AEABE60252 /* Telemetry.swift */; };
 		375E92F20FC538CC05DF6DED /* QuizStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61069ED3967742504EF8D5DA /* QuizStartView.swift */; };
 		3864C2308A1D3D1B3231AD3A /* LessonRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBE87F50C43953ECCBE4C20 /* LessonRowView.swift */; };
+		46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */; };
 		49F73151C1A7B55FD03A5DDA /* MembershipPaymentsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */; };
 		4F3C29C0F5C01E6FDAB7721B /* CourseHydration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97BE3FC5B786BC2FF881795 /* CourseHydration.swift */; };
 		5448D38865FE8D7B6A17255A /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BF0E1953E75ACEA03727D48 /* HomeTabView.swift */; };
@@ -34,6 +36,7 @@
 		68519CFF546FB55C3958E56D /* AdminAICourseGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */; };
 		6C38459DCCD4BC84904E48E9 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */; };
 		768D4B13BE6BB0F298BF2369 /* MockDiscussionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */; };
+		887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */; };
 		8EEC9A3D60C58605AD4AFE8B /* StorageArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */; };
 		9044C88257850A13B4E2FA1E /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5B68565C5431264720813 /* Course.swift */; };
 		993269EFC5B02DE459F0C50F /* QuizQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */; };
@@ -52,13 +55,16 @@
 		B73019AF4379C87924B2359B /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C4CF88BA458D1DA1805B1F /* Quiz.swift */; };
 		BB18445FC4FC191938A6AE39 /* AudioPresentationReadiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35BEE9FAA5CE54E3D400B6F6 /* AudioPresentationReadiness.swift */; };
 		BCD6D482AA72B064A1991177 /* BrandOutboundLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A950A07D76E4E91EECA949 /* BrandOutboundLinks.swift */; };
+		C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7874C6477BAB664C48551926 /* WCSDomainProjections.swift */; };
 		C3D615464982B36D34F0B07A /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */; };
 		C4E172D8CA95F2B8209B9447 /* CrossrefWorksAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */; };
 		CD1CA64245D616360EFD0E69 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60ABF3B78D740911D3BD5D7 /* APIError.swift */; };
 		D9F58EA01DA0EF7D3E8D8C55 /* CourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC65D149D994F3DA726A6EA /* CourseListView.swift */; };
+		DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */; };
 		E2C5F4DB8C8C9E5910CA537D /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42CB6BF06F1D5953B1DB57 /* DesignTokens.swift */; };
 		E9754C3A2484464A37C27A64 /* Subscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E844D4C89354A7C29261E2 /* Subscription.swift */; };
 		F1B879D2E8FBB061E91D34D6 /* YouTubeEmbedWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC3EAAAC22679C61D3BADE7 /* YouTubeEmbedWebView.swift */; };
+		F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */; };
 		F78B8DD02D1234D2AFCEF0D9 /* SubscriptionBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */; };
 		F8D4AF429EB50A1DEF470E67 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12A9AFF8ABBCF19959C62BD6 /* User.swift */; };
 		F90D52DA457C2AA6DE3E3E26 /* AdminAIVideoGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA3D7C3B35A247FE1BCD0C /* AdminAIVideoGenerator.swift */; };
@@ -93,6 +99,8 @@
 		1A6304ABCAC4DCEB84650218 /* CourseDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailViewModel.swift; sourceTree = "<group>"; };
 		1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageArchitecture.swift; sourceTree = "<group>"; };
 		1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchAPIClient.swift; sourceTree = "<group>"; };
+		1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainRepositories.swift; sourceTree = "<group>"; };
+		2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSBFFPayloads.swift; sourceTree = "<group>"; };
 		247A3929E99D95ABC59927EB /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleVideoDiscoveryPipeline.swift; sourceTree = "<group>"; };
 		2AA475298D2DB4032CEFEDED /* VideoPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerViewModel.swift; sourceTree = "<group>"; };
@@ -106,6 +114,7 @@
 		3A9851D632CA9C8185D24B69 /* QuizViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizViewModel.swift; sourceTree = "<group>"; };
 		3BD2E7C0E43801AEECE31098 /* WCS_PlatformUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformUITests.swift; sourceTree = "<group>"; };
 		3DF031A29C4F07AEABE60252 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
+		3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSAboutPlatformView.swift; sourceTree = "<group>"; };
 		43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
 		46FD5C640490977CE9A34763 /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		4C833CE4D85864C62F7D6691 /* AdminCourseCreatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseCreatorViewModel.swift; sourceTree = "<group>"; };
@@ -118,6 +127,7 @@
 		6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseDraft.swift; sourceTree = "<group>"; };
 		712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipPaymentsHubView.swift; sourceTree = "<group>"; };
 		71F7FD7BAE011A0EA8C66044 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		7874C6477BAB664C48551926 /* WCSDomainProjections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainProjections.swift; sourceTree = "<group>"; };
 		801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		819B08829E36EC821515F9B9 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionBadgeView.swift; sourceTree = "<group>"; };
@@ -137,7 +147,9 @@
 		E452FA949B46382D3D3C87DA /* WCS_PlatformApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformApp.swift; sourceTree = "<group>"; };
 		E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalServiceResilience.swift; sourceTree = "<group>"; };
 		EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDiscussionStore.swift; sourceTree = "<group>"; };
+		EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainContracts.swift; sourceTree = "<group>"; };
 		F1D5B9DDEE5941EA181E2F2E /* MockCourseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCourseCatalog.swift; sourceTree = "<group>"; };
+		F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSPlatformAccessControl.swift; sourceTree = "<group>"; };
 		F3433B36FD14811F99D62942 /* NetworkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkClient.swift; sourceTree = "<group>"; };
 		F66FD55D44EE2D598667B6EB /* MockLearningStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockLearningStore.swift; sourceTree = "<group>"; };
 		F7A950A07D76E4E91EECA949 /* BrandOutboundLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandOutboundLinks.swift; sourceTree = "<group>"; };
@@ -209,6 +221,7 @@
 			isa = PBXGroup;
 			children = (
 				FB21D1CCA779D9286CC4E5CB /* CourseCardView.swift */,
+				3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */,
 				BBC3EAAAC22679C61D3BADE7 /* YouTubeEmbedWebView.swift */,
 			);
 			path = Shared;
@@ -247,6 +260,7 @@
 				F66FD55D44EE2D598667B6EB /* MockLearningStore.swift */,
 				F3433B36FD14811F99D62942 /* NetworkClient.swift */,
 				1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */,
+				F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */,
 				1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */,
 			);
 			path = Network;
@@ -328,6 +342,17 @@
 			path = "../WCS-PlatformUITests";
 			sourceTree = "<group>";
 		};
+		D57C5E12098904CEBFA37813 /* Architecture */ = {
+			isa = PBXGroup;
+			children = (
+				2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */,
+				EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */,
+				7874C6477BAB664C48551926 /* WCSDomainProjections.swift */,
+				1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */,
+			);
+			path = Architecture;
+			sourceTree = "<group>";
+		};
 		EB8213260250E28E370C3160 /* Config */ = {
 			isa = PBXGroup;
 			children = (
@@ -341,6 +366,7 @@
 			isa = PBXGroup;
 			children = (
 				43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */,
+				D57C5E12098904CEBFA37813 /* Architecture */,
 				82A14FD73430D17E1657C7E1 /* Audio */,
 				EB8213260250E28E370C3160 /* Config */,
 				C61B7B859B9D245D7CD5FCB9 /* Extensions */,
@@ -551,6 +577,12 @@
 				9B0DC185E9A042C35BCA186C /* VideoPlayerView.swift in Sources */,
 				9EBAF97A15249A1865E62D68 /* VideoPlayerViewModel.swift in Sources */,
 				9F528517279F0563ACA9055F /* View+SimulatorStability.swift in Sources */,
+				F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */,
+				887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */,
+				DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */,
+				C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */,
+				46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */,
+				1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */,
 				00ACCAA5418F28C3AB47B7A5 /* WCS_PlatformApp.swift in Sources */,
 				F1B879D2E8FBB061E91D34D6 /* YouTubeEmbedWebView.swift in Sources */,
 				11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */,

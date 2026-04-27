@@ -424,7 +424,12 @@ struct CourseDetailView: View {
             }
         case .assignment:
             if let assignment = lesson.assignment {
-                AssignmentLessonView(assignment: assignment)
+                AssignmentLessonView(
+                    assignment: assignment,
+                    courseId: course.id,
+                    moduleId: module.id,
+                    lessonId: lesson.id
+                )
             } else {
                 ContentUnavailableView("Assignment unavailable", systemImage: "doc.text", description: Text("No assignment attached to this lesson."))
             }
@@ -571,10 +576,28 @@ private struct ReadingLessonView: View {
 
 private struct AssignmentLessonView: View {
     let assignment: Assignment
+    let courseId: UUID
+    let moduleId: UUID
+    let lessonId: UUID
+    private let learningRepository: LearningRepository
     @State private var draft: String = ""
     @State private var isSubmitting = false
     @State private var localSubmission: Submission?
     @State private var errorText: String?
+
+    init(
+        assignment: Assignment,
+        courseId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        learningRepository: LearningRepository = WCSAppContainer.shared.learning
+    ) {
+        self.assignment = assignment
+        self.courseId = courseId
+        self.moduleId = moduleId
+        self.lessonId = lessonId
+        self.learningRepository = learningRepository
+    }
 
     private var effectiveSubmission: Submission? {
         localSubmission ?? assignment.submission
@@ -653,10 +676,13 @@ private struct AssignmentLessonView: View {
         errorText = nil
         defer { isSubmitting = false }
         do {
-            let submission = try await NetworkClient.shared.submitAssignment(
-                assignment.id,
+            let submission = try await learningRepository.submitAssignment(
+                assignmentId: assignment.id,
                 content: draft,
-                attachments: []
+                attachments: [],
+                courseId: courseId,
+                moduleId: moduleId,
+                lessonId: lessonId
             )
             localSubmission = submission
         } catch let e as WCSAPIError {

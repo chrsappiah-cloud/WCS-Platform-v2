@@ -81,6 +81,14 @@ actor MockLearningStore {
         notifyChange()
     }
 
+    func resetLearningStateForTests() {
+        enrollmentDates.removeAll()
+        enrollmentIds.removeAll()
+        completedLessonIds.removeAll()
+        submittedAssignments.removeAll()
+        notifyChange()
+    }
+
     func videoGenerationStatus(for draft: AdminCourseDraft) async -> CourseVideoGenerationStatus {
         let videoLessonIDs = Set(
             draft.modules
@@ -178,6 +186,20 @@ actor MockLearningStore {
     func currentUser() -> User {
         let enrollments = enrolledCourseIds.sorted(by: { $0.uuidString < $1.uuidString }).map { makeEnrollment(courseId: $0) }
         let mockPremium = UserDefaults.standard.bool(forKey: "wcs.mockPremiumMode")
+        let mockRoleRaw = UserDefaults.standard.string(forKey: "wcs.mockRole") ?? ""
+        let fallbackAdmin = UserDefaults.standard.bool(forKey: "wcs.mockAdminMode")
+        let role = UserRole(rawValue: mockRoleRaw) ?? (fallbackAdmin ? .orgAdmin : .learner)
+        let orgId = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+        let memberships = [
+            OrganizationMembership(
+                id: UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!,
+                organizationId: orgId,
+                organizationName: "World Class Scholars",
+                role: role,
+                joinedAt: Date().addingTimeInterval(-60 * 60 * 24 * 120),
+                isActive: true
+            )
+        ]
         let subscriptions: [Subscription] = mockPremium ? [
             Subscription(
                 id: UUID(),
@@ -192,8 +214,11 @@ actor MockLearningStore {
         return User(
             id: userId,
             email: "learner@worldclassscholars.org",
-            name: "WCS Learner",
+            name: role == .learner ? "WCS Learner" : "WCS Team Member",
             photoURL: nil,
+            role: role,
+            activeOrganizationId: orgId,
+            memberships: memberships,
             subscriptions: subscriptions,
             enrollments: enrollments
         )

@@ -18,7 +18,7 @@ struct QuizStartView: View {
         self.courseId = courseId
         self.moduleId = moduleId
         self.lessonId = lessonId
-        _viewModel = StateObject(wrappedValue: QuizViewModel(quiz: quiz))
+        _viewModel = StateObject(wrappedValue: QuizViewModel(quiz: quiz, courseId: courseId, moduleId: moduleId, lessonId: lessonId))
     }
 
     var body: some View {

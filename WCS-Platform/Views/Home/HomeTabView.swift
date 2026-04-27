@@ -7,7 +7,13 @@ import SwiftUI
 
 struct HomeTabView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
+    private let catalogRepository: CatalogRepository
+    @State private var discoverPayload: DiscoverPayload?
     @State private var featuredCourses: [Course] = []
+
+    init(catalogRepository: CatalogRepository = WCSAppContainer.shared.catalog) {
+        self.catalogRepository = catalogRepository
+    }
 
     var body: some View {
         ScrollView {
@@ -191,7 +197,12 @@ struct HomeTabView: View {
     }
 
     private func loadFeatured() async {
-        featuredCourses = (try? await NetworkClient.shared.fetchAvailableCourses()) ?? []
+        if let payload = try? await catalogRepository.fetchDiscoverPayload() {
+            discoverPayload = payload
+            featuredCourses = payload.featuredPrograms.map(\.course)
+        } else {
+            featuredCourses = (try? await catalogRepository.fetchAvailableCourses()) ?? []
+        }
     }
 
     private func socialIcon(for label: String) -> String {

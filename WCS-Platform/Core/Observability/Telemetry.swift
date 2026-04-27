@@ -6,7 +6,7 @@
 import Foundation
 import os
 
-enum Telemetry {
+nonisolated enum Telemetry {
     private static let logger = Logger(subsystem: "wcs.platform.ios", category: "telemetry")
     private static let maxStoredEvents = 200
     private static var storedEvents: [String] = []
@@ -29,6 +29,16 @@ enum Telemetry {
         Task { @MainActor in
             NotificationCenter.default.post(name: .wcsTelemetryDidUpdate, object: nil)
         }
+    }
+
+    static func event(_ name: String, identity: WCSIdentitySnapshot?, attributes: [String: String] = [:]) {
+        var merged = attributes
+        if let identity {
+            for (k, v) in identity.telemetryAttributes() where merged[k] == nil {
+                merged[k] = v
+            }
+        }
+        event(name, attributes: merged)
     }
 
     static func recentEvents(prefix: String? = nil, limit: Int = 12) -> [String] {

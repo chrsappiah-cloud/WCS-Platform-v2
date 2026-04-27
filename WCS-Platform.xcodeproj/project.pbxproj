@@ -24,11 +24,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E4287412F9C54E100FC1A03 /* WCS-Platform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E4287522F9C54E300FC1A03 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42875C2F9C54E300FC1A03 /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -41,6 +43,13 @@
 				LogStoreManifest.plist,
 			);
 			target = 5E4287402F9C54E100FC1A03 /* WCS-Platform */;
+		};
+		5EEA2E6A2FA0B4BD00FC1A03 /* Exceptions for "WCS-PlatformUITests" folder in "WCS-PlatformUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5E42875B2F9C54E300FC1A03 /* WCS-PlatformUITests */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -60,6 +69,9 @@
 		};
 		5E42875F2F9C54E300FC1A03 /* WCS-PlatformUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5EEA2E6A2FA0B4BD00FC1A03 /* Exceptions for "WCS-PlatformUITests" folder in "WCS-PlatformUITests" target */,
+			);
 			path = "WCS-PlatformUITests";
 			sourceTree = "<group>";
 		};
@@ -90,6 +102,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5E20D58C2F9E3D7E00813B49 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		5E4287382F9C54E100FC1A03 = {
 			isa = PBXGroup;
 			children = (
@@ -118,6 +137,13 @@
 			sourceTree = "<group>";
 		};
 		5E42C4E82F9D320400FC1A03 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5E6D49DC2F9E1A7300365907 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -244,12 +270,20 @@
 					ProjectRef = 5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */;
 				},
 				{
+					ProductGroup = 5E6D49DC2F9E1A7300365907 /* Products */;
+					ProjectRef = 5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */;
+				},
+				{
 					ProductGroup = 5E42C4E82F9D320400FC1A03 /* Products */;
 					ProjectRef = 5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */;
 				},
 				{
 					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
 					ProjectRef = 5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */;
+				},
+				{
+					ProductGroup = 5E20D58C2F9E3D7E00813B49 /* Products */;
+					ProjectRef = 5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -331,7 +365,7 @@
 				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
@@ -349,7 +383,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -372,7 +406,7 @@
 				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
@@ -390,7 +424,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -466,6 +500,7 @@
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SYMROOT = "$(BUILD_DIR)/Products";
@@ -526,6 +561,7 @@
 				MTL_FAST_MATH = YES;
 				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SYMROOT = "$(BUILD_DIR)/Products";
 				VALIDATE_PRODUCT = YES;
@@ -537,11 +573,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -559,11 +595,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -580,10 +616,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -600,10 +636,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;

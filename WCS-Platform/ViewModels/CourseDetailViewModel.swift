@@ -21,9 +21,17 @@ final class CourseDetailViewModel: ObservableObject {
     @Published private(set) var companionVideoResults: [LessonVideoDiscoveryResult] = []
 
     private let courseId: UUID
+    private let catalogRepository: CatalogRepository
+    private let learningRepository: LearningRepository
 
-    init(courseId: UUID) {
+    init(
+        courseId: UUID,
+        catalogRepository: CatalogRepository = WCSAppContainer.shared.catalog,
+        learningRepository: LearningRepository = WCSAppContainer.shared.learning
+    ) {
         self.courseId = courseId
+        self.catalogRepository = catalogRepository
+        self.learningRepository = learningRepository
     }
 
     func loadCourse() async {
@@ -31,7 +39,7 @@ final class CourseDetailViewModel: ObservableObject {
         lastError = nil
         defer { isLoading = false }
         do {
-            let loaded = try await NetworkClient.shared.fetchCourse(courseId)
+            let loaded = try await catalogRepository.fetchCourse(courseId)
             course = loaded
             isEnrolled = loaded.isEnrolled
             await loadScholarshipAndCompanionVideos(for: loaded)
@@ -82,7 +90,7 @@ final class CourseDetailViewModel: ObservableObject {
         lastError = nil
         defer { isLoading = false }
         do {
-            _ = try await NetworkClient.shared.enrollInCourse(courseId)
+            _ = try await learningRepository.enroll(programId: courseId)
             await loadCourse()
         } catch let api as WCSAPIError {
             lastError = api

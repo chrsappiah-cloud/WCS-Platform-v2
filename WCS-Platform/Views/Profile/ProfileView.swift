@@ -148,6 +148,21 @@ struct ProfileView: View {
                             }
                         }
                     ))
+                    Picker("Mock role", selection: Binding(
+                        get: { UserDefaults.standard.string(forKey: "wcs.mockRole") ?? UserRole.learner.rawValue },
+                        set: { newValue in
+                            UserDefaults.standard.set(newValue, forKey: "wcs.mockRole")
+                            UserDefaults.standard.set(newValue == UserRole.orgAdmin.rawValue || newValue == UserRole.admin.rawValue, forKey: "wcs.mockAdminMode")
+                            Task { @MainActor in
+                                NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
+                                await appViewModel.bootstrapUser()
+                            }
+                        }
+                    )) {
+                        Text("Learner").tag(UserRole.learner.rawValue)
+                        Text("Instructor").tag(UserRole.instructor.rawValue)
+                        Text("Org admin").tag(UserRole.orgAdmin.rawValue)
+                    }
                 }
                 Toggle("Debug safe mode (simulator)", isOn: Binding(
                     get: { AppEnvironment.debugSafeMode },

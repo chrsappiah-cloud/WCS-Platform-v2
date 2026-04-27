@@ -28,16 +28,24 @@ final class VideoPlayerViewModel: ObservableObject {
     private let moduleId: UUID
     private let lessonId: UUID
     private let originalURL: URL
+    private let learningRepository: LearningRepository
     private static let logger = Logger(subsystem: "wcs.platform.ios", category: "lesson-video")
     private var didLogPlaybackStart = false
     private var lastHeartbeatSecond: Int = -1
     private var lastBufferingState: Bool?
 
-    init(url: URL, courseId: UUID, moduleId: UUID, lessonId: UUID) {
+    init(
+        url: URL,
+        courseId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        learningRepository: LearningRepository = WCSAppContainer.shared.learning
+    ) {
         self.courseId = courseId
         self.moduleId = moduleId
         self.lessonId = lessonId
         self.originalURL = url
+        self.learningRepository = learningRepository
         let youtubeID = Self.extractYouTubeVideoID(from: url)
         self.embeddedYouTubeID = youtubeID
         self.usesEmbeddedWebPlayer = youtubeID != nil
@@ -163,8 +171,8 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func markLessonComplete() async {
         do {
-            _ = try await NetworkClient.shared.updateLessonProgress(
-                courseId: courseId,
+            _ = try await learningRepository.markProgress(
+                programId: courseId,
                 moduleId: moduleId,
                 lessonId: lessonId,
                 complete: true

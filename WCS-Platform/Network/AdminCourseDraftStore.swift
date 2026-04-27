@@ -212,9 +212,30 @@ actor AdminCourseDraftStore {
                 NSLocalizedDescriptionKey: "Publish blocked: only structured AI-generated course outputs can be published. Remove search/question-style inputs and regenerate."
             ])
         }
+
+        let actor = await MockLearningStore.shared.currentUser()
+        let canPublish = actor.role == .orgAdmin || actor.role == .admin
+        guard canPublish else {
+            throw NSError(domain: "WCSAdminAI", code: 1004, userInfo: [
+                NSLocalizedDescriptionKey: "Publishing is restricted to administrators."
+            ])
+        }
         drafts[idx].status = .published
         drafts[idx].updatedAt = Date()
         await MockLearningStore.shared.publishDraftToCatalog(drafts[idx])
+        let publishedDraftId = drafts[idx].id.uuidString
+        let publishedModuleCount = "\(drafts[idx].modules.count)"
+        let publishedLessonCount = "\(drafts[idx].modules.flatMap(\.lessons).count)"
+        await MainActor.run {
+            Telemetry.event(
+                "contentops.publish.synced_learning_graph",
+                attributes: [
+                    "draftId": publishedDraftId,
+                    "moduleCount": publishedModuleCount,
+                    "lessonCount": publishedLessonCount,
+                ]
+            )
+        }
         notifyChange()
     }
 

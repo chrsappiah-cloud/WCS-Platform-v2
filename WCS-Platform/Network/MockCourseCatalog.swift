@@ -507,4 +507,23 @@ enum MockCourseCatalog {
         }
         return nil
     }
+
+    struct QuizLocation: Sendable, Hashable {
+        let courseId: UUID
+        let moduleId: UUID
+        let lessonId: UUID
+    }
+
+    static func findQuizLocation(id: UUID) -> QuizLocation? {
+        for course in courses {
+            for module in course.modules {
+                for lesson in module.lessons {
+                    if let quiz = lesson.quiz, quiz.id == id {
+                        return QuizLocation(courseId: course.id, moduleId: module.id, lessonId: lesson.id)
+                    }
+                }
+            }
+        }
+        return nil
+    }
 }

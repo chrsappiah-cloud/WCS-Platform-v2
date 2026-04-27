@@ -11,6 +11,7 @@ enum AppTab: String, Hashable {
     case programs
     case discussion
     case profile
+    case about
 }
 
 @MainActor
@@ -20,9 +21,11 @@ final class AppViewModel: ObservableObject {
     @Published var isAuthenticated = false
     @Published var user: User?
 
+    private let identityRepository: IdentityRepository
     private var cancellables = Set<AnyCancellable>()
 
-    init() {
+    init(identityRepository: IdentityRepository = WCSAppContainer.shared.identity) {
+        self.identityRepository = identityRepository
         NotificationCenter.default.publisher(for: .wcsLearningStateDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -42,7 +45,7 @@ final class AppViewModel: ObservableObject {
 
     func bootstrapUser() async {
         do {
-            user = try await NetworkClient.shared.currentUser()
+            user = try await identityRepository.currentUser()
             isAuthenticated = true
         } catch {
             isAuthenticated = false

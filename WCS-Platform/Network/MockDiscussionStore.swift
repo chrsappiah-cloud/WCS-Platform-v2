@@ -11,7 +11,12 @@ actor MockDiscussionStore {
     private let topics: [DiscussionTopic] = [
         DiscussionTopic(id: "announcements", title: "Announcements", subtitle: "Official WCS updates"),
         DiscussionTopic(id: "study-groups", title: "Study Groups", subtitle: "Peer collaboration and accountability"),
-        DiscussionTopic(id: "career", title: "Career Outcomes", subtitle: "Portfolio, jobs, and interview prep")
+        DiscussionTopic(id: "career", title: "Career Outcomes", subtitle: "Portfolio, jobs, and interview prep"),
+        DiscussionTopic(
+            id: "wcs:anchor:course:10000000-0000-0000-0000-000000000001:module:20000000-0000-0000-0000-000000000001:lesson:30000000-0000-0000-0000-000000000001",
+            title: "Anchored module discussion",
+            subtitle: "Tied to a specific lesson for access inheritance tests"
+        ),
     ]
 
     private var posts: [DiscussionPost] = [

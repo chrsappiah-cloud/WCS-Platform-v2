@@ -80,6 +80,9 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         if accessCodeInput == AppEnvironment.adminAccessCode {
             isUnlocked = true
             errorMessage = nil
+            UserDefaults.standard.set(true, forKey: "wcs.mockAdminMode")
+            UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
+            NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
         } else {
             errorMessage = "Invalid admin access code."
         }

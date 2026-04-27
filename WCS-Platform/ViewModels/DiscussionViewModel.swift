@@ -17,6 +17,11 @@ final class DiscussionViewModel: ObservableObject {
     @Published var isPosting = false
     @Published var pipelineStatus: PipelineHealthStatus?
     @Published var errorMessage: String?
+    private let communityRepository: CommunityRepository
+
+    init(communityRepository: CommunityRepository = WCSAppContainer.shared.community) {
+        self.communityRepository = communityRepository
+    }
 
     var canPost: Bool {
         !draftPost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isPosting
@@ -26,8 +31,8 @@ final class DiscussionViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            async let feed = NetworkClient.shared.fetchDiscussionFeed(topicID: selectedTopicID)
-            async let pipeline = NetworkClient.shared.fetchPipelineHealthStatus()
+            async let feed = communityRepository.fetchDiscussionFeed(topicID: selectedTopicID)
+            async let pipeline = communityRepository.fetchPipelineHealthStatus()
             let (resolvedFeed, resolvedPipeline) = try await (feed, pipeline)
             topics = resolvedFeed.topics
             posts = resolvedFeed.posts
@@ -47,7 +52,7 @@ final class DiscussionViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let feed = try await NetworkClient.shared.fetchDiscussionFeed(topicID: selectedTopicID)
+            let feed = try await communityRepository.fetchDiscussionFeed(topicID: selectedTopicID)
             topics = feed.topics
             posts = feed.posts
         } catch {
@@ -65,7 +70,7 @@ final class DiscussionViewModel: ObservableObject {
         defer { isPosting = false }
 
         do {
-            _ = try await NetworkClient.shared.createDiscussionPost(topicID: topic, body: message, authorName: authorName)
+            _ = try await communityRepository.createDiscussionPost(topicID: topic, body: message, authorName: authorName)
             draftPost = ""
             await loadFeed()
         } catch {

@@ -33,6 +33,12 @@ struct AppRootView: View {
                     ProfileView()
                 }
             }
+
+            Tab("About", systemImage: "info.circle", value: .about) {
+                NavigationStack {
+                    WCSAboutPlatformView()
+                }
+            }
         }
         .tint(DesignTokens.brandAccent)
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)

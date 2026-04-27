@@ -6,7 +6,7 @@
 import Foundation
 
 /// REST shell with a mock path for local UI development. Point `AppEnvironment.platformAPIBaseURL` at your WCS API when ready.
-final class NetworkClient {
+nonisolated final class NetworkClient: IdentityService, CatalogService, LearningService, CommunityService, CommerceService, ContentOpsService {
     static let shared = NetworkClient()
 
     /// When `true`, catalog and mutations resolve locally without network I/O.
@@ -28,10 +28,66 @@ final class NetworkClient {
         UserDefaults.standard.string(forKey: "wcs.authToken") ?? ""
     }
 
+    private func persistToken(_ token: String) {
+        UserDefaults.standard.set(token, forKey: "wcs.authToken")
+    }
+
     private func broadcastLearningChange() {
         Task { @MainActor in
             NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
         }
+    }
+
+    private func rawRequest<T: Decodable>(
+        _ path: String,
+        method: String = "GET",
+        body: Data? = nil
+    ) async throws -> T {
+        let trimmed = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let baseString = AppEnvironment.platformAPIBaseURL.absoluteString
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let urlString = trimmed.isEmpty ? baseString : "\(baseString)/\(trimmed)"
+        guard let url = URL(string: urlString) else {
+            throw WCSAPIError(underlying: URLError(.badURL), statusCode: nil, body: nil)
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let token = loadToken()
+        if !token.isEmpty {
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        req.httpBody = body
+
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse else {
+            throw WCSAPIError(underlying: URLError(.badServerResponse), statusCode: nil, body: data)
+        }
+        if !(200 ..< 300).contains(http.statusCode) {
+            throw WCSAPIError(underlying: HTTPStatusError(status: http.statusCode), statusCode: http.statusCode, body: data)
+        }
+        do {
+            return try jsonDecoder.decode(T.self, from: data)
+        } catch {
+            throw WCSAPIError(underlying: error, statusCode: http.statusCode, body: data)
+        }
+    }
+
+    private func resolveIdentitySnapshot() async throws -> WCSIdentitySnapshot {
+        try await WCSPlatformAccessPolicy.identitySnapshot(useMocks: useMocks) {
+            try await self.rawRequest("users/me", method: "GET")
+        }
+    }
+
+    private func rawFetchCourse(_ courseId: UUID) async throws -> Course {
+        if useMocks {
+            try await Task.sleep(nanoseconds: 120_000_000)
+            guard let course = await MockLearningStore.shared.snapshotCourse(courseId) else {
+                throw WCSAPIError(underlying: URLError(.fileDoesNotExist), statusCode: 404, body: nil)
+            }
+            return course
+        }
+        return try await rawRequest("courses/\(courseId.uuidString)", method: "GET")
     }
 
     private func request<T: Decodable>(
@@ -73,31 +129,154 @@ final class NetworkClient {
         if useMocks {
             return await MockLearningStore.shared.currentUser()
         }
-        return try await request("users/me", method: "GET")
+        return try await rawRequest("users/me", method: "GET")
+    }
+
+    func signUp(email: String, password: String, displayName: String) async throws -> User {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedEmail.isEmpty, !password.isEmpty else {
+            throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 400, body: nil)
+        }
+        if useMocks {
+            // Mock auth session; backend will own this in live mode.
+            persistToken("mock-token-\(UUID().uuidString)")
+            var user = await MockLearningStore.shared.currentUser()
+            user = User(
+                id: user.id,
+                email: normalizedEmail,
+                name: displayName.isEmpty ? user.name : displayName,
+                photoURL: user.photoURL,
+                role: user.role,
+                activeOrganizationId: user.activeOrganizationId,
+                memberships: user.memberships,
+                subscriptions: user.subscriptions,
+                enrollments: user.enrollments
+            )
+            return user
+        }
+        struct SignupRequest: Codable {
+            let email: String
+            let password: String
+            let displayName: String
+        }
+        let encoded = try jsonEncoder.encode(SignupRequest(email: normalizedEmail, password: password, displayName: displayName))
+        return try await rawRequest("auth/signup", method: "POST", body: encoded)
+    }
+
+    func logIn(email: String, password: String) async throws -> User {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalizedEmail.isEmpty, !password.isEmpty else {
+            throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 400, body: nil)
+        }
+        if useMocks {
+            persistToken("mock-token-\(UUID().uuidString)")
+            return await MockLearningStore.shared.currentUser()
+        }
+        struct LoginRequest: Codable {
+            let email: String
+            let password: String
+        }
+        struct LoginResponse: Decodable {
+            let token: String
+            let user: User
+        }
+        let encoded = try jsonEncoder.encode(LoginRequest(email: normalizedEmail, password: password))
+        let response: LoginResponse = try await rawRequest("auth/login", method: "POST", body: encoded)
+        persistToken(response.token)
+        return response.user
+    }
+
+    func switchOrganization(_ organizationId: UUID) async throws -> User {
+        if useMocks {
+            var user = await MockLearningStore.shared.currentUser()
+            user.activeOrganizationId = organizationId
+            return user
+        }
+        struct SwitchOrganizationRequest: Codable {
+            let organizationId: UUID
+        }
+        let encoded = try jsonEncoder.encode(SwitchOrganizationRequest(organizationId: organizationId))
+        return try await rawRequest("identity/switch-organization", method: "POST", body: encoded)
     }
 
     func fetchAvailableCourses() async throws -> [Course] {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .catalogBrowse,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 180_000_000)
             let user = await MockLearningStore.shared.currentUser()
-            return await MockLearningStore.shared.snapshotCourses(forPremiumUser: user.isPremium)
+            let courses = await MockLearningStore.shared.snapshotCourses(forPremiumUser: user.isPremium)
+            return courses.map { WCSPlatformAccessPolicy.redactCourseForCatalogIfNeeded(snapshot: snapshot, course: $0) }
         }
         let response: CourseListResponse = try await request("courses/available", method: "GET")
-        return response.courses
+        return response.courses.map { WCSPlatformAccessPolicy.redactCourseForCatalogIfNeeded(snapshot: snapshot, course: $0) }
+    }
+
+    func discoverPrograms() async throws -> [Course] {
+        try await fetchAvailableCourses()
+    }
+
+    func loadProgram(_ id: UUID) async throws -> Course {
+        try await fetchCourse(id)
+    }
+
+    func fetchDiscoverPayload() async throws -> DiscoverPayload {
+        let user = try await currentUser()
+        let identity = WCSDomainProjector.identity(from: user)
+        let courses = try await fetchAvailableCourses()
+
+        let cards: [DiscoverProgramCard] = courses.enumerated().map { index, course in
+            let tags = [course.level ?? "general", course.organizationName ?? "wcs"]
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            let featuredPlacement = index < 6 ? index + 1 : nil
+            let catalog = WCSDomainProjector.catalog(from: course, tags: tags, featuredPlacement: featuredPlacement)
+            let enrollment = user.enrollments.first(where: { $0.courseId == course.id })
+            let learning = WCSDomainProjector.learning(from: course, enrollment: enrollment)
+            let commerce = WCSDomainProjector.commerce(from: course, user: user)
+            return DiscoverProgramCard(id: course.id, course: course, catalog: catalog, learning: learning, commerce: commerce)
+        }
+
+        let featured = cards.filter { $0.catalog.featuredPlacement != nil }
+            .sorted { ($0.catalog.featuredPlacement ?? .max) < ($1.catalog.featuredPlacement ?? .max) }
+        let profile = WCSDomainProjector.profile(from: user)
+        let analytics = WCSDomainProjector.analytics(from: Telemetry.recentEvents(limit: 120))
+
+        return DiscoverPayload(
+            identity: identity,
+            featuredPrograms: featured,
+            allPrograms: cards,
+            profile: profile,
+            analytics: analytics,
+            generatedAt: Date()
+        )
     }
 
     func fetchCourse(_ courseId: UUID) async throws -> Course {
-        if useMocks {
-            try await Task.sleep(nanoseconds: 120_000_000)
-            guard let course = await MockLearningStore.shared.snapshotCourse(courseId) else {
-                throw WCSAPIError(underlying: URLError(.fileDoesNotExist), statusCode: 404, body: nil)
-            }
-            return course
-        }
-        return try await request("courses/\(courseId.uuidString)", method: "GET")
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .catalogCourseDetail(courseId: courseId),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
+        let loaded = try await rawFetchCourse(courseId)
+        return WCSPlatformAccessPolicy.redactCourseForCatalogIfNeeded(snapshot: snapshot, course: loaded)
     }
 
     func enrollInCourse(_ courseId: UUID) async throws -> Enrollment {
+        let snapshot = try await resolveIdentitySnapshot()
+        let course = try await rawFetchCourse(courseId)
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .commerceEnroll(courseId: courseId),
+            courseProvider: { _ in course }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 160_000_000)
             return await MockLearningStore.shared.enroll(courseId)
@@ -108,12 +287,27 @@ final class NetworkClient {
         return result
     }
 
+    func enroll(programId: UUID) async throws -> Enrollment {
+        try await enrollInCourse(programId)
+    }
+
+    func markProgress(programId: UUID, moduleId: UUID, lessonId: UUID, complete: Bool) async throws -> Enrollment {
+        try await updateLessonProgress(courseId: programId, moduleId: moduleId, lessonId: lessonId, complete: complete)
+    }
+
     func updateLessonProgress(
         courseId: UUID,
         moduleId: UUID,
         lessonId: UUID,
         complete: Bool
     ) async throws -> Enrollment {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .learningProgress(courseId: courseId, moduleId: moduleId, lessonId: lessonId),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 120_000_000)
             return try await MockLearningStore.shared.markProgress(courseId: courseId, lessonId: lessonId, complete: complete)
@@ -130,8 +324,36 @@ final class NetworkClient {
         return result
     }
 
-    func submitQuiz(_ quizId: UUID, answers: [UUID: Int]) async throws -> QuizSubmissionResult {
+    func submitQuiz(
+        _ quizId: UUID,
+        answers: [UUID: Int],
+        courseId: UUID?,
+        moduleId: UUID?,
+        lessonId: UUID?
+    ) async throws -> QuizSubmissionResult {
         if useMocks {
+            let snapshot = try await resolveIdentitySnapshot()
+            if let courseId, let moduleId, let lessonId {
+                try await WCSPlatformAccessPolicy.assertAllowed(
+                    snapshot: snapshot,
+                    operation: .learningQuizSubmit(courseId: courseId, moduleId: moduleId, lessonId: lessonId, quizId: quizId),
+                    courseProvider: { id in try await self.rawFetchCourse(id) }
+                )
+            } else if let resolved = MockCourseCatalog.findQuizLocation(id: quizId) {
+                try await WCSPlatformAccessPolicy.assertAllowed(
+                    snapshot: snapshot,
+                    operation: .learningQuizSubmit(
+                        courseId: resolved.courseId,
+                        moduleId: resolved.moduleId,
+                        lessonId: resolved.lessonId,
+                        quizId: quizId
+                    ),
+                    courseProvider: { id in try await self.rawFetchCourse(id) }
+                )
+            } else {
+                throw WCSAPIError(underlying: URLError(.dataNotAllowed), statusCode: 403, body: nil)
+            }
+
             try await Task.sleep(nanoseconds: 160_000_000)
             guard let quiz = MockCourseCatalog.findQuiz(id: quizId) else {
                 throw WCSAPIError(underlying: URLError(.fileDoesNotExist), statusCode: 404, body: nil)
@@ -154,7 +376,7 @@ final class NetworkClient {
                 awardedAt: Date(),
                 verificationCode: String(UUID().uuidString.prefix(8)).uppercased()
             ) : nil
-            return QuizSubmissionResult(
+            let result = QuizSubmissionResult(
                 score: score,
                 total: total,
                 percentage: percentage,
@@ -164,12 +386,55 @@ final class NetworkClient {
                 feedback: passed ? "Great work. You are eligible for certification." : "Review the explanations and try again.",
                 certification: certificate
             )
+
+            if let certificate {
+                Telemetry.event(
+                    "profile.milestone.certificate_earned",
+                    identity: snapshot,
+                    attributes: [
+                        "quizId": quizId.uuidString,
+                        "verification": certificate.verificationCode,
+                    ]
+                )
+            }
+
+            return result
         }
+
+        let snapshot = try await resolveIdentitySnapshot()
+        guard let courseId, let moduleId, let lessonId else {
+            throw WCSAPIError(underlying: URLError(.dataNotAllowed), statusCode: 403, body: nil)
+        }
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .learningQuizSubmit(courseId: courseId, moduleId: moduleId, lessonId: lessonId, quizId: quizId),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         let encoded = try jsonEncoder.encode(QuizSubmissionRequest(quizId: quizId, answers: answers))
         return try await request("quizzes/\(quizId.uuidString)/submit", method: "POST", body: encoded)
     }
 
-    func submitAssignment(_ assignmentId: UUID, content: String?, attachments: [URL]) async throws -> Submission {
+    func submitAssignment(
+        _ assignmentId: UUID,
+        content: String?,
+        attachments: [URL],
+        courseId: UUID,
+        moduleId: UUID,
+        lessonId: UUID
+    ) async throws -> Submission {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .learningAssignmentSubmit(
+                courseId: courseId,
+                moduleId: moduleId,
+                lessonId: lessonId,
+                assignmentId: assignmentId
+            ),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 160_000_000)
             return await MockLearningStore.shared.submitAssignment(assignmentId, content: content, attachments: attachments)
@@ -186,6 +451,13 @@ final class NetworkClient {
     }
 
     func fetchDiscussionFeed(topicID: String?) async throws -> DiscussionFeedResponse {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .communityFeed(topicID: topicID),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 120_000_000)
             return await MockDiscussionStore.shared.feed(topicID: topicID)
@@ -195,6 +467,13 @@ final class NetworkClient {
     }
 
     func createDiscussionPost(topicID: String, body: String, authorName: String) async throws -> DiscussionPost {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .communityPost(topicID: topicID),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             try await Task.sleep(nanoseconds: 100_000_000)
             return await MockDiscussionStore.shared.createPost(topicID: topicID, body: body, authorName: authorName)
@@ -203,7 +482,34 @@ final class NetworkClient {
         return try await request("discussion/posts", method: "POST", body: encoded)
     }
 
+    func loadDiscussion(topicID: String?) async throws -> DiscussionFeedResponse {
+        try await fetchDiscussionFeed(topicID: topicID)
+    }
+
+    func postDiscussion(topicID: String, body: String, authorName: String) async throws -> DiscussionPost {
+        try await createDiscussionPost(topicID: topicID, body: body, authorName: authorName)
+    }
+
+    func canAccessProgram(_ course: Course, user: User) -> Bool {
+        if user.isAdmin { return true }
+        if course.isOwned || course.isEnrolled { return true }
+        if course.isUnlockedBySubscription { return user.isPremium }
+        if course.price == nil { return true }
+        return user.isPremium
+    }
+
+    func publishDraft(_ id: UUID) async throws {
+        try await AdminCourseDraftStore.shared.markPublished(id)
+    }
+
     func fetchPipelineHealthStatus() async throws -> PipelineHealthStatus {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .adminInfrastructureRead,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             return await MockDiscussionStore.shared.pipelineStatus()
         }
@@ -212,6 +518,13 @@ final class NetworkClient {
 
     /// Cloudflare + iCloud storage readiness for admin/user data flows.
     func fetchStorageBackendsStatus() async throws -> StorageBackendsStatus {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .adminInfrastructureRead,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             return StorageArchitectureMockFactory.makeStatus()
         }
@@ -220,6 +533,13 @@ final class NetworkClient {
 
     /// Canonical database layout the backend publishes for app compatibility.
     func fetchDatabaseBlueprint() async throws -> DatabaseBlueprint {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .adminInfrastructureRead,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             return StorageArchitectureMockFactory.makeBlueprint()
         }
@@ -229,6 +549,41 @@ final class NetworkClient {
     /// End-to-end capability checks for course/audio/video generation systems.
     func fetchGenerationCapabilityStatus() async -> GenerationCapabilityStatus {
         var checks: [GenerationCapabilityCheck] = []
+
+        let snapshot: WCSIdentitySnapshot
+        do {
+            snapshot = try await resolveIdentitySnapshot()
+        } catch {
+            return GenerationCapabilityStatus(
+                checkedAt: Date(),
+                checks: [
+                    GenerationCapabilityCheck(
+                        system: "WCS Platform (identity)",
+                        state: .offline,
+                        detail: "Could not resolve an authenticated user for diagnostics."
+                    )
+                ]
+            )
+        }
+
+        do {
+            try await WCSPlatformAccessPolicy.assertAllowed(
+                snapshot: snapshot,
+                operation: .adminInfrastructureRead,
+                courseProvider: { id in try await self.rawFetchCourse(id) }
+            )
+        } catch {
+            return GenerationCapabilityStatus(
+                checkedAt: Date(),
+                checks: [
+                    GenerationCapabilityCheck(
+                        system: "WCS Platform (administrator access)",
+                        state: .offline,
+                        detail: "Administrator privileges are required to run generation diagnostics."
+                    )
+                ]
+            )
+        }
 
         let openLibrary = await probeReachability("https://openlibrary.org/search.json?q=education&limit=1")
         checks.append(
@@ -301,29 +656,14 @@ final class NetworkClient {
             .isEmpty == false
             ? ProcessInfo.processInfo.environment["GOOGLE_CLOUD_PROJECT_ID"]!.trimmingCharacters(in: .whitespacesAndNewlines)
             : "wcs-platform"
-        guard let url = URL(string: "https://cloudaicompanion.googleapis.com/v1/projects/\(projectID)/locations") else {
-            throw WCSAPIError(underlying: URLError(.badURL), statusCode: nil, body: nil)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let token = ProcessInfo.processInfo.environment["GOOGLE_OAUTH_ACCESS_TOKEN"]?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-           !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw WCSAPIError(underlying: URLError(.badServerResponse), statusCode: nil, body: data)
-        }
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw WCSAPIError(underlying: HTTPStatusError(status: http.statusCode), statusCode: http.statusCode, body: data)
-        }
         struct LocationsEnvelope: Decodable {
             struct Location: Decodable { let name: String }
             let locations: [Location]?
         }
-        let decoded = try jsonDecoder.decode(LocationsEnvelope.self, from: data)
+        let decoded: LocationsEnvelope = try await cloudAICompanionRequest(
+            path: "/v1/projects/\(projectID)/locations",
+            method: "GET"
+        )
         return (decoded.locations ?? []).map(\.name)
     }
 
@@ -419,6 +759,21 @@ final class NetworkClient {
         method: String,
         body: Data? = nil
     ) async throws -> T {
+        let snapshot = try await resolveIdentitySnapshot()
+        let op: WCSPlatformAccessPolicy.Operation = {
+            switch method.uppercased() {
+            case "GET":
+                return .adminInfrastructureRead
+            default:
+                return .adminInfrastructureWrite
+            }
+        }()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: op,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         let fullURL = "https://cloudaicompanion.googleapis.com\(path)"
         guard let url = URL(string: fullURL) else {
             throw WCSAPIError(underlying: URLError(.badURL), statusCode: nil, body: nil)

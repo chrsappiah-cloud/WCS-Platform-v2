@@ -13,6 +13,11 @@ final class CourseListViewModel: ObservableObject {
     /// Starts `true` so the first frame is never an empty `List` before `.task` runs.
     @Published var isLoading = true
     @Published var lastError: WCSAPIError?
+    private let catalogRepository: CatalogRepository
+
+    init(catalogRepository: CatalogRepository = WCSAppContainer.shared.catalog) {
+        self.catalogRepository = catalogRepository
+    }
 
     var filteredCourses: [Course] {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -31,7 +36,8 @@ final class CourseListViewModel: ObservableObject {
         lastError = nil
         defer { isLoading = false }
         do {
-            courses = try await NetworkClient.shared.fetchAvailableCourses()
+            let payload = try await catalogRepository.fetchDiscoverPayload()
+            courses = payload.allPrograms.map(\.course)
         } catch let api as WCSAPIError {
             lastError = api
         } catch {

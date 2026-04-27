@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 struct YouTubeVideoSnippet: Identifiable, Hashable, Sendable {
     var id: String { videoID }
@@ -46,6 +47,7 @@ struct YouTubeSearchPage: Sendable {
 
 enum YouTubeAPIError: Error, LocalizedError {
     case missingAPIKey
+    case invalidQuery
     case invalidRequestURL
     case httpStatus(code: Int, message: String?)
     case decodingFailed(underlying: Error)
@@ -54,6 +56,8 @@ enum YouTubeAPIError: Error, LocalizedError {
         switch self {
         case .missingAPIKey:
             "Set YOUTUBE_DATA_API_KEY in the scheme environment."
+        case .invalidQuery:
+            "Search query is empty or invalid."
         case .invalidRequestURL:
             "Could not build the YouTube Data API request URL."
         case .httpStatus(let code, let message):
@@ -64,40 +68,125 @@ enum YouTubeAPIError: Error, LocalizedError {
     }
 }
 
-private struct YouTubeSearchEnvelope: Decodable {
-    struct Item: Decodable {
-        struct IDBox: Decodable {
+// MARK: - Response DTOs (explicit Decodable: Swift 6 avoids MainActor-isolated synthesized `init(from:)` in `nonisolated` callers)
+
+private struct YouTubeSearchEnvelope: Sendable {
+    struct Item: Sendable {
+        struct IDBox: Sendable {
             let kind: String?
             let videoId: String?
+        }
+
+        struct Snippet: Sendable {
+            struct Thumbnails: Sendable {
+                struct Size: Sendable {
+                    let url: String?
+                }
+
+                let medium: Size?
+                let high: Size?
+            }
+
+            let title: String?
+            let thumbnails: Thumbnails?
         }
 
         let id: IDBox
         let snippet: Snippet?
     }
 
-    struct Snippet: Decodable {
-        let title: String?
-        let thumbnails: Thumbnails?
-    }
-
-    struct Thumbnails: Decodable {
-        struct Size: Decodable {
-            let url: String?
-        }
-
-        let medium: Size?
-        let high: Size?
-    }
-
     let items: [Item]?
     let nextPageToken: String?
 }
 
-private struct YouTubeAPIErrorEnvelope: Decodable {
-    struct Box: Decodable {
+extension YouTubeSearchEnvelope: Decodable {
+    nonisolated init(from decoder: Decoder) throws {
+        let root = try decoder.container(keyedBy: RootKey.self)
+        nextPageToken = try root.decodeIfPresent(String.self, forKey: .nextPageToken)
+
+        guard root.contains(.items) else {
+            items = nil
+            return
+        }
+        var list = try root.nestedUnkeyedContainer(forKey: .items)
+        var parsed: [Item] = []
+        while !list.isAtEnd {
+            let itemRoot = try list.nestedContainer(keyedBy: ItemKey.self)
+            let idBox = try Item.IDBox(from: itemRoot.nestedContainer(keyedBy: IDKey.self, forKey: .id))
+            let snippet = try Item.Snippet(from: itemRoot, forKey: .snippet)
+            parsed.append(Item(id: idBox, snippet: snippet))
+        }
+        items = parsed
+    }
+
+    fileprivate enum RootKey: String, CodingKey {
+        case items
+        case nextPageToken
+    }
+
+    fileprivate enum ItemKey: String, CodingKey {
+        case id
+        case snippet
+    }
+
+    fileprivate enum IDKey: String, CodingKey {
+        case kind
+        case videoId
+    }
+
+    fileprivate enum SnippetKey: String, CodingKey {
+        case title
+        case thumbnails
+    }
+
+    fileprivate enum ThumbKey: String, CodingKey {
+        case medium
+        case high
+    }
+
+    fileprivate enum SizeKey: String, CodingKey {
+        case url
+    }
+}
+
+private extension YouTubeSearchEnvelope.Item.IDBox {
+    nonisolated init(from c: KeyedDecodingContainer<YouTubeSearchEnvelope.IDKey>) throws {
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        videoId = try c.decodeIfPresent(String.self, forKey: .videoId)
+    }
+}
+
+private extension YouTubeSearchEnvelope.Item.Snippet {
+    nonisolated init?(from item: KeyedDecodingContainer<YouTubeSearchEnvelope.ItemKey>, forKey key: YouTubeSearchEnvelope.ItemKey) throws {
+        guard item.contains(key) else {
+            return nil
+        }
+        let sc = try item.nestedContainer(keyedBy: YouTubeSearchEnvelope.SnippetKey.self, forKey: key)
+        title = try sc.decodeIfPresent(String.self, forKey: .title)
+        if sc.contains(.thumbnails) {
+            let tc = try sc.nestedContainer(keyedBy: YouTubeSearchEnvelope.ThumbKey.self, forKey: .thumbnails)
+            let medium = try Self.Thumbnails.Size(from: tc, forKey: .medium)
+            let high = try Self.Thumbnails.Size(from: tc, forKey: .high)
+            thumbnails = Self.Thumbnails(medium: medium, high: high)
+        } else {
+            thumbnails = nil
+        }
+    }
+}
+
+private extension YouTubeSearchEnvelope.Item.Snippet.Thumbnails.Size {
+    nonisolated init?(from thumbs: KeyedDecodingContainer<YouTubeSearchEnvelope.ThumbKey>, forKey key: YouTubeSearchEnvelope.ThumbKey) throws {
+        guard thumbs.contains(key) else { return nil }
+        let zc = try thumbs.nestedContainer(keyedBy: YouTubeSearchEnvelope.SizeKey.self, forKey: key)
+        url = try zc.decodeIfPresent(String.self, forKey: .url)
+    }
+}
+
+private struct YouTubeAPIErrorEnvelope: Sendable {
+    struct Box: Sendable {
         let code: Int?
         let message: String?
-        struct Err: Decodable {
+        struct Err: Sendable {
             let message: String?
         }
 
@@ -107,9 +196,48 @@ private struct YouTubeAPIErrorEnvelope: Decodable {
     let error: Box?
 }
 
+extension YouTubeAPIErrorEnvelope: Decodable {
+    nonisolated init(from decoder: Decoder) throws {
+        let root = try decoder.container(keyedBy: RootKey.self)
+        if root.contains(.error) {
+            let ec = try root.nestedContainer(keyedBy: ErrorBoxKey.self, forKey: .error)
+            let code = try ec.decodeIfPresent(Int.self, forKey: .code)
+            let message = try ec.decodeIfPresent(String.self, forKey: .message)
+            var errs: [Box.Err] = []
+            if var arr = try? ec.nestedUnkeyedContainer(forKey: .errors) {
+                while !arr.isAtEnd {
+                    let errC = try arr.nestedContainer(keyedBy: ErrKey.self)
+                    let m = try errC.decodeIfPresent(String.self, forKey: .message)
+                    errs.append(Box.Err(message: m))
+                }
+            }
+            error = Box(code: code, message: message, errors: errs.isEmpty ? nil : errs)
+        } else {
+            error = nil
+        }
+    }
+
+    private enum RootKey: String, CodingKey {
+        case error
+    }
+
+    private enum ErrorBoxKey: String, CodingKey {
+        case code
+        case message
+        case errors
+    }
+
+    private enum ErrKey: String, CodingKey {
+        case message
+    }
+}
+
 enum YouTubeSearchAPIClient {
     private static let service = "youtube"
     private static let cacheMaxAge: TimeInterval = 60 * 30
+    nonisolated private static let requestTimeout: TimeInterval = 20
+    nonisolated private static let maxQueryLength = 180
+    nonisolated private static let maxPageTokenLength = 256
 
     nonisolated static func resolveAPIKey() -> String? {
         if let env = ProcessInfo.processInfo.environment["YOUTUBE_DATA_API_KEY"],
@@ -126,8 +254,10 @@ enum YouTubeSearchAPIClient {
         maxResults: Int = 8,
         session: URLSession? = nil
     ) async throws -> YouTubeSearchPage {
+        let normalizedQuery = try validatedQuery(query)
+        let safePageToken = sanitizedPageToken(pageToken)
         let configuration = configuration ?? .wcsLearning
-        let session = session ?? URLSession(configuration: .default)
+        let session = session ?? makeDefaultSession()
         guard let apiKey = resolveAPIKey() else {
             throw YouTubeAPIError.missingAPIKey
         }
@@ -137,7 +267,7 @@ enum YouTubeSearchAPIClient {
             URLQueryItem(name: "part", value: "snippet"),
             URLQueryItem(name: "type", value: "video"),
             URLQueryItem(name: "maxResults", value: "\(max(1, min(maxResults, 50)))"),
-            URLQueryItem(name: "q", value: query),
+            URLQueryItem(name: "q", value: normalizedQuery),
             URLQueryItem(name: "key", value: apiKey),
             URLQueryItem(name: "order", value: configuration.order),
             URLQueryItem(name: "safeSearch", value: configuration.safeSearch),
@@ -151,8 +281,8 @@ enum YouTubeSearchAPIClient {
         if let lang = configuration.relevanceLanguage, !lang.isEmpty {
             items.append(URLQueryItem(name: "relevanceLanguage", value: lang))
         }
-        if let pageToken, !pageToken.isEmpty {
-            items.append(URLQueryItem(name: "pageToken", value: pageToken))
+        if let safePageToken, !safePageToken.isEmpty {
+            items.append(URLQueryItem(name: "pageToken", value: safePageToken))
         }
         components.queryItems = items
 
@@ -167,7 +297,12 @@ enum YouTubeSearchAPIClient {
             return r
         }()
 
-        let cacheKey = "\(query)|\(maxResults)|\(configuration.order)|\(configuration.safeSearch)|\(configuration.relevanceLanguage ?? "")"
+        let cacheKey = hashedCacheKey(
+            query: normalizedQuery,
+            maxResults: maxResults,
+            configuration: configuration,
+            pageToken: safePageToken
+        )
         do {
             let data = try await ExternalServiceResilience.withRetry(service: service) {
                 let (data, response) = try await session.data(for: request)
@@ -217,5 +352,60 @@ enum YouTubeSearchAPIClient {
             return first
         }
         return env.error?.message
+    }
+
+    nonisolated private static func makeDefaultSession() -> URLSession {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = requestTimeout
+        config.timeoutIntervalForResource = requestTimeout
+        config.waitsForConnectivity = false
+        return URLSession(configuration: config)
+    }
+
+    nonisolated private static func validatedQuery(_ query: String) throws -> String {
+        let collapsed = query
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !collapsed.isEmpty else {
+            throw YouTubeAPIError.invalidQuery
+        }
+
+        let cleaned = String(collapsed.prefix(maxQueryLength))
+        guard cleaned.rangeOfCharacter(from: .letters) != nil else {
+            throw YouTubeAPIError.invalidQuery
+        }
+        return cleaned
+    }
+
+    nonisolated private static func sanitizedPageToken(_ token: String?) -> String? {
+        guard let token else { return nil }
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
+        guard trimmed.unicodeScalars.allSatisfy(allowed.contains) else { return nil }
+        return String(trimmed.prefix(maxPageTokenLength))
+    }
+
+    nonisolated private static func hashedCacheKey(
+        query: String,
+        maxResults: Int,
+        configuration: YouTubeSearchConfiguration,
+        pageToken: String?
+    ) -> String {
+        let seed = [
+            query,
+            String(maxResults),
+            configuration.order,
+            configuration.safeSearch,
+            configuration.relevanceLanguage ?? "",
+            configuration.regionCode ?? "",
+            configuration.videoEmbeddable ? "1" : "0",
+            pageToken ?? ""
+        ].joined(separator: "|")
+        let digest = SHA256.hash(data: Data(seed.utf8))
+        return digest.compactMap { String(format: "%02x", $0) }.joined()
     }
 }
