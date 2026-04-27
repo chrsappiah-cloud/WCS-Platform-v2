@@ -6,17 +6,20 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct MembershipPaymentsHubView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
-    @StateObject private var storeKitManager = WCSStoreKitSubscriptionManager()
+    @StateObject private var storeKitManager: WCSStoreKitSubscriptionManager
     @State private var plans: [WCSSubscriptionPlan] = []
     @State private var planError: String?
     private let links = BrandOutboundLinks.current
     private let commerceRepository: CommerceRepository
 
+    @MainActor
     init(commerceRepository: CommerceRepository = WCSAppContainer.shared.commerce) {
         self.commerceRepository = commerceRepository
+        _storeKitManager = StateObject(wrappedValue: WCSStoreKitSubscriptionManager())
     }
 
     var body: some View {

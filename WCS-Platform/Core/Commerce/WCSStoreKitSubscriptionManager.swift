@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Combine
 import StoreKit
 
 @MainActor
@@ -15,8 +16,8 @@ final class WCSStoreKitSubscriptionManager: ObservableObject {
 
     private let productIDs: Set<String>
 
-    init(productIDs: Set<String> = AppEnvironment.appleSubscriptionProductIDs) {
-        self.productIDs = productIDs
+    init(productIDs: Set<String>? = nil) {
+        self.productIDs = productIDs ?? AppEnvironment.appleSubscriptionProductIDs
     }
 
     func loadProducts() async {

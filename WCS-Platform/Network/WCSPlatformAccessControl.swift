@@ -146,6 +146,8 @@ enum WCSPlatformAccessPolicy: Sendable {
         case communityFeed(topicID: String?)
         case communityPost(topicID: String)
         case commerceEnroll(courseId: UUID)
+        case commercePlansRead
+        case commerceAdminFinanceRead
         case adminInfrastructureRead
         case adminInfrastructureWrite
     }
@@ -190,6 +192,17 @@ enum WCSPlatformAccessPolicy: Sendable {
             try assertIdentityPresent(snapshot)
             let course = try await courseProvider(courseId)
             try assertCanPurchaseOrEnroll(snapshot: snapshot, course: course)
+
+        case .commercePlansRead:
+            try assertIdentityPresent(snapshot)
+            return
+
+        case .commerceAdminFinanceRead:
+            try assertIdentityPresent(snapshot)
+            guard snapshot.isAdmin else {
+                throw WCSAPIError(underlying: URLError(.dataNotAllowed), statusCode: 403, body: nil)
+            }
+            return
 
         case let .learningProgress(courseId, moduleId, lessonId):
             try assertIdentityPresent(snapshot)

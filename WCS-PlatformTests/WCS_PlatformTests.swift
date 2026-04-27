@@ -407,6 +407,54 @@ struct WCS_PlatformTests {
         }
     }
 
+    @Test func commerceAdminFinance_requiresAdminRole() async throws {
+        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
+        defer {
+            if let previousRole {
+                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
+            }
+        }
+
+        UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
+        await #expect(throws: Error.self) {
+            _ = try await NetworkClient.shared.fetchAdminFinanceSnapshot()
+        }
+    }
+
+    @Test func commerceAdminFinance_allowsOrgAdminRole() async throws {
+        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
+        defer {
+            if let previousRole {
+                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
+            }
+        }
+
+        UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
+        let snapshot = try await NetworkClient.shared.fetchAdminFinanceSnapshot()
+        #expect(snapshot.netRevenueUSD >= 0)
+        #expect(!snapshot.payout.bankAccountAlias.isEmpty)
+    }
+
+    @Test func commercePlans_areAvailableToAuthenticatedLearner() async throws {
+        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
+        defer {
+            if let previousRole {
+                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
+            }
+        }
+
+        UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
+        let plans = try await NetworkClient.shared.fetchSubscriptionPlans()
+        #expect(!plans.isEmpty)
+        #expect(plans.contains(where: { $0.segment == .individual }))
+    }
+
     @Test func domainProjections_coverAllBoundedContextParameters() async throws {
         UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
         let user = await MockLearningStore.shared.currentUser()

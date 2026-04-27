@@ -499,6 +499,13 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
     }
 
     func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan] {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .commercePlansRead,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             return [
                 WCSSubscriptionPlan(
@@ -543,6 +550,13 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
     }
 
     func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot {
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .commerceAdminFinanceRead,
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
         if useMocks {
             return WCSAdminFinanceSnapshot(
                 asOf: Date(),

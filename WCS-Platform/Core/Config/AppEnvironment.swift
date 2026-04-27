@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum AppEnvironment {
+nonisolated enum AppEnvironment {
     private static let infoPlistKey = "WCSPlatformAPIBaseURL"
     private static let backendProviderInfoPlistKey = "WCSBackendProvider"
     private static let adminCodeInfoPlistKey = "WCSAdminAccessCode"
@@ -69,7 +69,7 @@ enum AppEnvironment {
     static var simulatorStabilityMode: Bool {
         #if targetEnvironment(simulator)
         #if DEBUG
-        if !UserDefaults.standard.object(forKey: debugSafeModeUserDefaultsKey).isNil {
+        if UserDefaults.standard.object(forKey: debugSafeModeUserDefaultsKey) != nil {
             return debugSafeMode
         }
         return true
@@ -80,8 +80,4 @@ enum AppEnvironment {
         return false
         #endif
     }
-}
-
-private extension Optional {
-    var isNil: Bool { self == nil }
 }
