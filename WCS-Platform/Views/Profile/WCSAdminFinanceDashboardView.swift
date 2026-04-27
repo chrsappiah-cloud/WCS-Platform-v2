@@ -6,10 +6,16 @@
 import SwiftUI
 
 struct WCSAdminFinanceDashboardView: View {
+    @EnvironmentObject private var appViewModel: AppViewModel
     @State private var snapshot: WCSAdminFinanceSnapshot?
     @State private var isLoading = false
     @State private var errorMessage: String?
     private let links = BrandOutboundLinks.current
+    private let commerceRepository: CommerceRepository
+
+    init(commerceRepository: CommerceRepository = WCSAppContainer.shared.commerce) {
+        self.commerceRepository = commerceRepository
+    }
 
     var body: some View {
         List {
@@ -68,10 +74,15 @@ struct WCSAdminFinanceDashboardView: View {
     }
 
     private func loadSnapshot() async {
+        guard appViewModel.user?.isAdmin == true else {
+            errorMessage = "Administrator access is required to view financial data."
+            snapshot = nil
+            return
+        }
         isLoading = true
         defer { isLoading = false }
         do {
-            snapshot = try await NetworkClient.shared.fetchAdminFinanceSnapshot()
+            snapshot = try await commerceRepository.fetchAdminFinanceSnapshot()
             errorMessage = nil
         } catch {
             errorMessage = "Unable to load finance data: \(error.localizedDescription)"
@@ -82,5 +93,6 @@ struct WCSAdminFinanceDashboardView: View {
 #Preview {
     NavigationStack {
         WCSAdminFinanceDashboardView()
+            .environmentObject(AppViewModel())
     }
 }

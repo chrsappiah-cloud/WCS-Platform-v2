@@ -46,6 +46,8 @@ protocol CommunityRepository {
 
 protocol CommerceRepository {
     func canAccessProgram(_ course: Course, user: User) -> Bool
+    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan]
+    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot
 }
 
 protocol ContentOpsRepository {
@@ -120,6 +122,12 @@ nonisolated struct WCSLiveRepositories: IdentityRepository, CatalogRepository, L
     // Commerce
     func canAccessProgram(_ course: Course, user: User) -> Bool {
         client.canAccessProgram(course, user: user)
+    }
+    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan] {
+        try await client.fetchSubscriptionPlans()
+    }
+    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot {
+        try await client.fetchAdminFinanceSnapshot()
     }
 
     // Content ops

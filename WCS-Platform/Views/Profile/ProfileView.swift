@@ -317,6 +317,7 @@ struct ProfileView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .task {
+            Telemetry.event(.profileViewed)
             await appViewModel.bootstrapUser()
         }
     }

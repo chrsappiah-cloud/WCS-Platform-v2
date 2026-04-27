@@ -13,6 +13,11 @@ struct MembershipPaymentsHubView: View {
     @State private var plans: [WCSSubscriptionPlan] = []
     @State private var planError: String?
     private let links = BrandOutboundLinks.current
+    private let commerceRepository: CommerceRepository
+
+    init(commerceRepository: CommerceRepository = WCSAppContainer.shared.commerce) {
+        self.commerceRepository = commerceRepository
+    }
 
     var body: some View {
         List {
@@ -116,7 +121,7 @@ struct MembershipPaymentsHubView: View {
             }
 
             Section("Administrator payouts") {
-                if appViewModel.user != nil {
+                if appViewModel.user?.isAdmin == true {
                     NavigationLink {
                         WCSAdminFinanceDashboardView()
                     } label: {
@@ -130,7 +135,7 @@ struct MembershipPaymentsHubView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    Text("Sign in to show administrator payout shortcuts.")
+                    Text("Administrator role required to show payout and finance monitoring shortcuts.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -150,7 +155,7 @@ struct MembershipPaymentsHubView: View {
 
     private func loadPlans() async {
         do {
-            plans = try await NetworkClient.shared.fetchSubscriptionPlans()
+            plans = try await commerceRepository.fetchSubscriptionPlans()
             planError = nil
         } catch {
             planError = "Could not load plans: \(error.localizedDescription)"
