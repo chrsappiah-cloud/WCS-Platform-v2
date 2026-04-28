@@ -39,7 +39,10 @@ This folder supports **App Store Connect** submission for the native iOS app bui
 |-------|-----|
 | Regenerate Xcode project | `cd WCS-Platform && xcodegen generate` |
 | CI build + test + unsigned archive (on `push`) | `.github/workflows/ios-ci-cd.yml` |
+| Optional UI tests (Actions or weekly) | `.github/workflows/ios-ui-tests.yml` |
+| Production test + release runbook | `docs/PRODUCTION_TEST_AND_RELEASE_RUNBOOK.md` |
 | Local full test (optional erase sim) | `bash scripts/run-stable-tests.sh` |
+| Local UI tests only | `bash scripts/run-ui-tests-only.sh` |
 | **Signed** archive + IPA export | `bash scripts/archive-appstore.sh` |
 | Upload IPA to App Store Connect | `ASC_API_KEY_ID=… ASC_API_ISSUER_ID=… bash scripts/upload-appstore.sh` |
 | Resolve numeric Apple ID (optional) | `bash scripts/fetch-appstore-apple-id.sh` |

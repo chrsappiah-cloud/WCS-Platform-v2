@@ -54,6 +54,66 @@ struct WCS_PlatformTests {
         }
     }
 
+    @Test func publishGuard_allowsHowToStyleAITitlesWhenStructured() async throws {
+        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
+        defer {
+            if let previousRole {
+                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
+            }
+        }
+        UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
+
+        let store = AdminCourseDraftStore(generator: StubTitledPublishableGenerator(title: "How to Lead Remote Teams"))
+        let generated = try await store.generate(
+            prompt: "Build a WCS AI Course Generation blueprint using a retrieval-plan-generate workflow.\nProduct name: How to Lead Remote Teams\nIdeal learner: managers\nTransformation promise: execution\nOffer stack: modules\nLaunch angle: growth\nAdditional curriculum and brand notes: none\n",
+            createdBy: "admin@wcs",
+            accessTier: .freePublic
+        )
+        #expect(generated.title.lowercased().contains("how to"))
+        try await store.markPublished(generated.id)
+        let draftsAfter = await store.allDrafts()
+        #expect(draftsAfter.first(where: { $0.id == generated.id })?.status == .published)
+    }
+
+    @Test func publishGuard_manualBackupAllowsHowToInCourseTitle() async throws {
+        await AdminCourseDraftStore.shared.clearAll()
+        await MockLearningStore.shared.deleteBlockedAICourses()
+        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
+        let previousAdminMode = UserDefaults.standard.bool(forKey: "wcs.mockAdminMode")
+        defer {
+            if let previousRole {
+                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
+            }
+            UserDefaults.standard.set(previousAdminMode, forKey: "wcs.mockAdminMode")
+        }
+        UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
+        UserDefaults.standard.set(true, forKey: "wcs.mockAdminMode")
+
+        let videoURL = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8"
+        let draft = try await AdminCourseDraftStore.shared.createManualBackupDraft(
+            createdBy: "admin@wcs",
+            accessTier: .freePublic,
+            courseTitle: "How to Study Effectively (Manual)",
+            summary: "A practical manual backup with common “how to” phrasing in the title.",
+            moduleTitle: "Week 1",
+            videoTitle: "Lecture",
+            videoURL: videoURL,
+            readingTitle: "Reading",
+            readingMaterial: "Notes.",
+            quizTitle: "Quiz",
+            quizPrompt: "Q1",
+            assignmentTitle: "Assignment",
+            assignmentBrief: "Brief."
+        )
+        try await AdminCourseDraftStore.shared.markPublished(draft.id)
+        let published = await MockLearningStore.shared.snapshotCourse(draft.id)
+        #expect(published?.title.contains("How to") == true)
+    }
+
     @Test func publishedDraftVideoLessonsResolvePlaybackURLs() async throws {
         await MockLearningStore.shared.deleteBlockedAICourses()
         let draft = makeDraftForTests(
@@ -570,8 +630,17 @@ struct WCS_PlatformTests {
         let decoded = try JSONDecoder().decode(LessonVideoRenderJobListResponse.self, from: Data(json.utf8))
         #expect(decoded.jobs.count == 1)
         #expect(decoded.jobs[0].status == "completed")
+        #expect(decoded.jobs[0].normalizedStatus == .completed)
         #expect(decoded.jobs[0].provider == "mock")
         #expect(decoded.jobs[0].playbackUrl?.contains("example.com") == true)
+    }
+
+    @Test func lessonVideoRenderJobStatus_normalizesWorkflowAliases() {
+        #expect(LessonVideoRenderJobStatus.normalized(from: "inprogress") == .inProgress)
+        #expect(LessonVideoRenderJobStatus.normalized(from: "running") == .inProgress)
+        #expect(LessonVideoRenderJobStatus.normalized(from: "ready_for_composition") == .readyForComposition)
+        #expect(LessonVideoRenderJobStatus.normalized(from: "succeeded") == .completed)
+        #expect(LessonVideoRenderJobStatus.normalized(from: "unknown_state") == nil)
     }
 
     @Test func lessonVideoStoryboard_encodesForBFFPayload() throws {
@@ -626,7 +695,9 @@ struct WCS_PlatformTests {
 
     @Test func lessonVideoPlaybackPolicy_nearestUdemyStyleRate() {
         #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 0.9) == 1.0)
-        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.11) == 1.25)
+        // Midpoint between 1.0 and 1.25 is 1.125 — values below that snap to 1.0.
+        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.11) == 1.0)
+        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.2) == 1.25)
         #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.8) == 2.0)
     }
 
@@ -675,6 +746,54 @@ struct WCS_PlatformTests {
         #expect(payload.allPrograms.allSatisfy { !$0.commerce.sku.isEmpty })
     }
 
+    @Test func contentOps_pipelineEndpoints_mockRoundTrip() async throws {
+        let planReq = LessonVideoPlanRequest(
+            lessonId: "lesson-001",
+            moduleId: "module-001",
+            moduleTitle: "Module",
+            lessonTitle: "Lesson",
+            sourceScript: "Explain the water cycle in concise terms.",
+            learningObjectives: ["Define evaporation"],
+            glossary: ["evaporation"],
+            assessmentPrompts: ["Which step forms clouds?"],
+            targetAgeBand: "middle-school",
+            styleProfileId: nil,
+            referenceAssetIds: []
+        )
+        let planned = try await NetworkClient.shared.planLessonVideo(planReq)
+        #expect(planned.lessonId == "lesson-001")
+        #expect(!planned.storyboard.scenes.isEmpty)
+        #expect(planned.status == "planned")
+
+        let scene = try #require(planned.storyboard.scenes.first)
+        let renderReq = LessonVideoSceneRenderRequest(
+            lessonId: "lesson-001",
+            moduleId: "module-001",
+            moduleTitle: "Module",
+            scene: scene,
+            providerBackendHint: "mock"
+        )
+        let queued = try await NetworkClient.shared.renderLessonScene(scene.sceneId, request: renderReq)
+        #expect(queued.normalizedStatus == .queued)
+        let fetched = try await NetworkClient.shared.fetchLessonRenderJob(queued.renderJobId)
+        #expect(fetched.normalizedStatus == .completed)
+
+        let composed = try await NetworkClient.shared.composeLessonVideo(
+            "lesson-001",
+            request: LessonVideoComposeRequest(
+                lessonId: "lesson-001",
+                moduleId: "module-001",
+                includeCaptions: true,
+                includeChapterMarkers: true
+            )
+        )
+        #expect(composed.status == "ready_for_composition")
+
+        let output = try await NetworkClient.shared.fetchLessonVideoOutput("lesson-001")
+        #expect((output.playbackURL ?? "").hasPrefix("https://"))
+        #expect(output.status == "published")
+    }
+
     @Test func lessonManualVideoBackup_mergeExtractAndStrip() {
         let merged = LessonManualVideoBackup.mergeURLLine(
             into: "Instructor notes here.",
@@ -684,6 +803,19 @@ struct WCS_PlatformTests {
         #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == "https://cdn.example.com/lesson.mp4")
         let stripped = LessonManualVideoBackup.stripMachineLines(from: merged)
         #expect(stripped == "Instructor notes here.")
+    }
+
+    @Test func lessonManualVideoBackup_externalSourceRoundTrip() {
+        let merged = LessonManualVideoBackup.mergeManualVideoMachineLines(
+            into: "Notes body.",
+            httpsURL: "https://cdn.example.com/mootion-export.mp4",
+            externalSource: .mootion
+        )
+        #expect(merged.contains("wcs.manualVideoURL:"))
+        #expect(merged.contains("wcs.externalVideoSource:"))
+        #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == "https://cdn.example.com/mootion-export.mp4")
+        #expect(LessonManualVideoBackup.extractExternalSource(from: merged) == .mootion)
+        #expect(LessonManualVideoBackup.stripMachineLines(from: merged) == "Notes body.")
     }
 
     @Test @MainActor
@@ -719,6 +851,18 @@ private struct StubQuestionGenerator: AICourseGenerating {
             summary: "Question-style generated text.",
             outcomePrefix: "Understand AI basics",
             includeFindings: false
+        )
+    }
+}
+
+private struct StubTitledPublishableGenerator: AICourseGenerating {
+    let title: String
+    func generateDraft(prompt: String, createdBy: String, accessTier: AdminCourseAccessTier) async throws -> AdminCourseDraft {
+        makeDraftForTests(
+            title: title,
+            summary: "Structured generated curriculum for publish guard tests.",
+            outcomePrefix: "Deliver measurable outcomes",
+            includeFindings: true
         )
     }
 }

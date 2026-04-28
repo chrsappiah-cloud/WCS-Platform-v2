@@ -85,9 +85,8 @@ final class WCS_PlatformUITests: XCTestCase {
 
     @MainActor
     func testManualBackupDraftCreatePublishAndPlaybackFlow() throws {
-        throw XCTSkip("Temporarily skipped: end-to-end manual backup draft UI flow is flaky on simulator due dynamic generated content and focus timing.")
-
         let app = XCUIApplication()
+        app.launchEnvironment["WCS_UI_TEST_ADMIN_ACCESS_CODE"] = "wcs-admin-2026"
         app.launch()
 
         let runID = String(UUID().uuidString.prefix(6))
@@ -95,6 +94,7 @@ final class WCS_PlatformUITests: XCTestCase {
         let moduleTitle = "Manual Continuity Module \(runID)"
         let videoTitle = "Manual continuity lecture \(runID)"
         let readingTitle = "Manual continuity reading \(runID)"
+        let videoURL = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8"
 
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 8))
         app.tabBars.buttons["Profile"].tap()
@@ -105,7 +105,7 @@ final class WCS_PlatformUITests: XCTestCase {
         studioLink.tap()
 
         let accessField = app.secureTextFields["Admin access code"]
-        if accessField.waitForExistence(timeout: 5) {
+        if accessField.waitForExistence(timeout: 8) {
             accessField.tap()
             accessField.typeText("wcs-admin-2026")
             app.buttons["Unlock Studio"].tap()
@@ -115,6 +115,16 @@ final class WCS_PlatformUITests: XCTestCase {
         XCTAssertTrue(manualSectionButton.waitForExistence(timeout: 12))
 
         fillTextField(app, identifier: "manualCourseTitleField", value: courseTitle)
+        fillTextField(app, identifier: "manualSummaryField", value: "Manual backup summary \(runID).")
+        fillTextField(app, identifier: "manualModuleTitleField", value: moduleTitle)
+        fillTextField(app, identifier: "manualVideoTitleField", value: videoTitle)
+        fillTextField(app, identifier: "manualVideoURLField", value: videoURL)
+        fillTextField(app, identifier: "manualReadingTitleField", value: readingTitle)
+        fillTextView(app, identifier: "manualReadingMaterialEditor", value: "Reading body \(runID).")
+        fillTextField(app, identifier: "manualQuizTitleField", value: "Manual quiz \(runID)")
+        fillTextView(app, identifier: "manualQuizPromptEditor", value: "Q1 sample? Q2 sample?")
+        fillTextField(app, identifier: "manualAssignmentTitleField", value: "Manual assignment \(runID)")
+        fillTextView(app, identifier: "manualAssignmentBriefEditor", value: "Submit a short reflection.")
 
         scrollToElementIfNeeded(manualSectionButton, in: app)
         XCTAssertTrue(manualSectionButton.isEnabled)

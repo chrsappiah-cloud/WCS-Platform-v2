@@ -70,6 +70,16 @@ final class AdminCourseCreatorViewModel: ObservableObject {
     /// Supabase Edge `wcs-lesson-video-jobs` (requires `WCSLessonVideoJobListSecret` + deployed function).
     @Published var lessonVideoRenderJobs: [LessonVideoRenderJobRow] = []
     @Published var lessonVideoJobsLoadError: String?
+    @Published var pipelineStatusByDraftID: [UUID: String] = [:]
+    @Published var pipelineBusyDraftIDs: Set<UUID> = []
+    @Published var plannedStoryboardByDraftID: [UUID: LessonVideoStoryboard] = [:]
+    @Published var localComposedVideoByDraftID: [UUID: URL] = [:]
+    @Published var localImageSequenceClipByDraftID: [UUID: URL] = [:]
+    @Published var localImageSequencePreviewByDraftID: [UUID: URL] = [:]
+    @Published var imageSequenceSettingsByDraftID: [UUID: ImageSequenceRenderSettings] = [:]
+
+    private let lessonComposer = AVFoundationLessonComposer()
+    private let imageSequenceRenderer = AVFoundationImageSequenceRenderer()
 
     init() {
         loadSavedConfiguration()
@@ -80,7 +90,14 @@ final class AdminCourseCreatorViewModel: ObservableObject {
             errorMessage = "Enter admin access code."
             return
         }
-        if accessCodeInput == AppEnvironment.adminAccessCode {
+        let expectedCode = {
+            if let injected = ProcessInfo.processInfo.environment["WCS_UI_TEST_ADMIN_ACCESS_CODE"],
+               !injected.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return injected.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            return AppEnvironment.adminAccessCode
+        }()
+        if accessCodeInput == expectedCode {
             isUnlocked = true
             errorMessage = nil
             UserDefaults.standard.set(true, forKey: "wcs.mockAdminMode")
@@ -110,7 +127,6 @@ final class AdminCourseCreatorViewModel: ObservableObject {
                 createdBy: createdBy,
                 accessTier: selectedAccessTier
             )
-            prompt = ""
             drafts = await AdminCourseDraftStore.shared.allDrafts()
             await refreshVideoStatuses()
         } catch {
@@ -175,20 +191,177 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         await loadLessonVideoRenderJobs()
     }
 
-    func saveManualLessonVideoBackup(draftID: UUID, moduleID: UUID, lessonID: UUID, url: String) async {
+    func saveManualLessonVideoBackup(
+        draftID: UUID,
+        moduleID: UUID,
+        lessonID: UUID,
+        url: String,
+        externalVideoSource: ExternalLessonVideoSource
+    ) async {
         errorMessage = nil
         do {
+            let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
             try await AdminCourseDraftStore.shared.setManualLessonVideoPlaybackURL(
                 draftId: draftID,
                 moduleId: moduleID,
                 lessonId: lessonID,
-                urlString: url
+                urlString: url,
+                externalVideoSource: trimmedURL.isEmpty ? nil : externalVideoSource
             )
             drafts = await AdminCourseDraftStore.shared.allDrafts()
             await refreshVideoStatuses()
             NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    func planStoryboard(for draftID: UUID) async {
+        guard let draft = drafts.first(where: { $0.id == draftID }),
+              let (module, lesson) = firstVideoLesson(in: draft)
+        else {
+            errorMessage = "No video lesson found to plan."
+            return
+        }
+        pipelineBusyDraftIDs.insert(draftID)
+        defer { pipelineBusyDraftIDs.remove(draftID) }
+        do {
+            let req = LessonVideoPlanRequest(
+                lessonId: lesson.id.uuidString,
+                moduleId: module.id.uuidString,
+                moduleTitle: module.title,
+                lessonTitle: lesson.title,
+                sourceScript: LessonManualVideoBackup.stripMachineLines(from: lesson.notes),
+                learningObjectives: draft.outcomes,
+                glossary: [],
+                assessmentPrompts: [lesson.title],
+                targetAgeBand: draft.level,
+                styleProfileId: nil,
+                referenceAssetIds: []
+            )
+            let planned = try await NetworkClient.shared.planLessonVideo(req)
+            plannedStoryboardByDraftID[draftID] = planned.storyboard
+            pipelineStatusByDraftID[draftID] = "Planned \(planned.storyboard.scenes.count) scene(s)"
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+            pipelineStatusByDraftID[draftID] = "Planning failed"
+        }
+    }
+
+    func renderFirstPlannedScene(for draftID: UUID) async {
+        guard let draft = drafts.first(where: { $0.id == draftID }),
+              let storyboard = plannedStoryboardByDraftID[draftID],
+              let scene = storyboard.scenes.first,
+              let (module, lesson) = firstVideoLesson(in: draft)
+        else {
+            errorMessage = "Plan a storyboard before rendering scenes."
+            return
+        }
+        pipelineBusyDraftIDs.insert(draftID)
+        defer { pipelineBusyDraftIDs.remove(draftID) }
+        do {
+            let strategy = LessonVideoGenerationSettings.generationApproach
+            if strategy == .onDeviceExperimental {
+                pipelineStatusByDraftID[draftID] = "On-device video generation is experimental and not enabled in this build."
+                errorMessage = "Switch strategy to hybrid or image-sequence for production rendering."
+                return
+            }
+            if strategy == .imageSequenceAnimation {
+                let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
+                let localClip = try await imageSequenceRenderer.renderSceneClip(scene: scene, settings: settings)
+                localImageSequenceClipByDraftID[draftID] = localClip
+                pipelineStatusByDraftID[draftID] = "Image-sequence clip rendered locally (\(settings.resolution.label), \(settings.fps) fps): \(localClip.lastPathComponent)"
+                errorMessage = nil
+                return
+            }
+            let req = LessonVideoSceneRenderRequest(
+                lessonId: lesson.id.uuidString,
+                moduleId: module.id.uuidString,
+                moduleTitle: module.title,
+                scene: scene,
+                providerBackendHint: LessonVideoGenerationSettings.providerBackendHint
+            )
+            let job = try await NetworkClient.shared.renderLessonScene(scene.sceneId, request: req)
+            pipelineStatusByDraftID[draftID] = "Render job \(job.renderJobId): \(job.normalizedStatus?.displayLabel ?? job.status)"
+            errorMessage = nil
+            await loadLessonVideoRenderJobs()
+        } catch {
+            errorMessage = error.localizedDescription
+            pipelineStatusByDraftID[draftID] = "Render failed"
+        }
+    }
+
+    func previewFirstPlannedScene(for draftID: UUID) async {
+        guard let storyboard = plannedStoryboardByDraftID[draftID],
+              let scene = storyboard.scenes.first
+        else {
+            errorMessage = "Plan a storyboard before previewing."
+            return
+        }
+        pipelineBusyDraftIDs.insert(draftID)
+        defer { pipelineBusyDraftIDs.remove(draftID) }
+        do {
+            let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
+            let preview = try await imageSequenceRenderer.renderPreviewFrame(scene: scene, settings: settings)
+            localImageSequencePreviewByDraftID[draftID] = preview
+            pipelineStatusByDraftID[draftID] = "Preview frame rendered: \(preview.lastPathComponent)"
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+            pipelineStatusByDraftID[draftID] = "Preview failed"
+        }
+    }
+
+    func composePlannedLesson(for draftID: UUID) async {
+        guard let draft = drafts.first(where: { $0.id == draftID }),
+              let (_, lesson) = firstVideoLesson(in: draft)
+        else {
+            errorMessage = "No video lesson found to compose."
+            return
+        }
+        pipelineBusyDraftIDs.insert(draftID)
+        defer { pipelineBusyDraftIDs.remove(draftID) }
+        do {
+            let strategy = LessonVideoGenerationSettings.generationApproach
+            if strategy == .onDeviceExperimental {
+                pipelineStatusByDraftID[draftID] = "On-device composition path not configured for full text-to-video yet."
+                errorMessage = "On-device experimental mode is currently limited."
+                return
+            }
+
+            // Hybrid/image-sequence strategy: prefer native AVFoundation composition from available clips.
+            var clipURLs: [URL] = (generatedAssetsByDraftID[draftID] ?? [])
+                .compactMap { URL(string: $0.playbackURL) }
+                .filter {
+                    LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL($0) &&
+                    LessonVideoSafetyPolicy.validatePlaybackURLString($0.absoluteString) == nil
+                }
+            if let localImageClip = localImageSequenceClipByDraftID[draftID] {
+                clipURLs.append(localImageClip)
+            }
+            if !clipURLs.isEmpty {
+                let output = try await lessonComposer.composeLesson(clips: clipURLs)
+                localComposedVideoByDraftID[draftID] = output
+                pipelineStatusByDraftID[draftID] = "Locally composed via AVFoundation: \(output.lastPathComponent)"
+                errorMessage = nil
+                return
+            }
+
+            let response = try await NetworkClient.shared.composeLessonVideo(
+                lesson.id.uuidString,
+                request: LessonVideoComposeRequest(
+                    lessonId: lesson.id.uuidString,
+                    moduleId: draft.modules.first?.id.uuidString,
+                    includeCaptions: true,
+                    includeChapterMarkers: true
+                )
+            )
+            pipelineStatusByDraftID[draftID] = "Compose status: \(response.status)"
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+            pipelineStatusByDraftID[draftID] = "Compose failed"
         }
     }
 
@@ -372,6 +545,19 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         manualQuizPrompt = ""
         manualAssignmentTitle = ""
         manualAssignmentBrief = ""
+    }
+
+    private func firstVideoLesson(in draft: AdminCourseDraft) -> (AdminModuleDraft, AdminLessonDraft)? {
+        for module in draft.modules {
+            if let lesson = module.lessons.first(where: { $0.kind == .video || $0.kind == .live }) {
+                return (module, lesson)
+            }
+        }
+        return nil
+    }
+
+    func updateImageSequenceSettings(for draftID: UUID, settings: ImageSequenceRenderSettings) {
+        imageSequenceSettingsByDraftID[draftID] = settings
     }
 
     private func loadSavedConfiguration() {

@@ -11,13 +11,32 @@ import Foundation
 enum LessonManualVideoBackup {
     /// First line wins for machine parsing; additional lesson notes follow after blank lines.
     static let urlLinePrefix = "wcs.manualVideoURL:"
+    /// Optional provenance for externally-rendered masters (Mootion, Invideo AI, etc.).
+    static let externalSourceLinePrefix = "wcs.externalVideoSource:"
 
-    static func mergeURLLine(into notes: String, url: String) -> String {
-        let trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
-        let header = "\(urlLinePrefix) \(trimmedURL)"
+    /// Persists HTTPS playback URL and optional external tool provenance; strips prior machine lines first.
+    static func mergeManualVideoMachineLines(
+        into notes: String,
+        httpsURL: String?,
+        externalSource: ExternalLessonVideoSource?
+    ) -> String {
         let body = stripMachineLines(from: notes)
+        var headers: [String] = []
+        if let raw = httpsURL?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty,
+           let validated = validatedHTTPSURL(raw) {
+            headers.append("\(urlLinePrefix) \(validated)")
+        }
+        if let src = externalSource, !headers.isEmpty {
+            headers.append("\(externalSourceLinePrefix) \(src.storageToken)")
+        }
+        if headers.isEmpty { return body }
+        let header = headers.joined(separator: "\n")
         if body.isEmpty { return header }
         return "\(header)\n\n\(body)"
+    }
+
+    static func mergeURLLine(into notes: String, url: String) -> String {
+        mergeManualVideoMachineLines(into: notes, httpsURL: url, externalSource: nil)
     }
 
     static func stripMachineLines(from notes: String) -> String {
@@ -27,11 +46,22 @@ enum LessonManualVideoBackup {
             .filter { line in
                 let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 if t.lowercased().hasPrefix(urlLinePrefix.lowercased()) { return false }
+                if t.lowercased().hasPrefix(externalSourceLinePrefix.lowercased()) { return false }
                 if t.lowercased().hasPrefix("manual video backup url:") { return false }
                 return true
             }
             .joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func extractExternalSource(from notes: String) -> ExternalLessonVideoSource? {
+        for raw in notes.components(separatedBy: .newlines) {
+            let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard t.lowercased().hasPrefix(externalSourceLinePrefix.lowercased()) else { continue }
+            let rest = String(t.dropFirst(externalSourceLinePrefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            return ExternalLessonVideoSource(storageToken: rest)
+        }
+        return nil
     }
 
     /// Returns a normalized `https` URL string when one is declared in notes.

@@ -34,6 +34,20 @@ WCSLessonTextToVideoRequestTimeoutSeconds (Number or String, optional)
 WCSLessonTextToVideoProviderBackendHint (String, optional)
   Forwarded in JSON as providerBackendHint for your BFF to route (e.g. sora, luma, ltx).
 
+WCSLessonVideoGenerationApproach (String, optional)
+  Controls expected implementation strategy in diagnostics and capability checks.
+  Supported values:
+    - hybrid_cloud_native_composition (default, recommended production path)
+    - image_sequence_animation
+    - on_device_experimental
+
+WCSLessonVideoAllowedPlaybackHostsCSV (String, optional)
+  Additional comma-separated allowlisted hosts for lesson playback URLs.
+  Built-in safe hosts include YouTube, Apple sample streaming CDN, and Google storage samples.
+
+WCSLessonVideoRequireSignedPlaybackURLs (Bool/String, optional; default true)
+  When true, non-YouTube playback URLs must include token/signature query fields.
+
 WCSLessonTextToVideoExtraHTTPHeadersJSON (String, optional)
   JSON object of extra string headers, e.g. {"X-Custom-Auth":"dev-token"}.
 

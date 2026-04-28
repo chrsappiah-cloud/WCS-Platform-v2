@@ -43,6 +43,14 @@ struct LessonVideoRenderJobListResponse: Decodable, Sendable {
 }
 
 extension LessonVideoRenderJobRow {
+    var normalizedStatus: LessonVideoRenderJobStatus? {
+        LessonVideoRenderJobStatus.normalized(from: status)
+    }
+
+    var normalizedStatusLabel: String {
+        normalizedStatus?.displayLabel ?? status
+    }
+
     /// Sample rows for SwiftUI previews (no Supabase credentials).
     static var previewSamples: [LessonVideoRenderJobRow] {
         let json = #"""

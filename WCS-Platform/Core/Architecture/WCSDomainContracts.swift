@@ -145,5 +145,10 @@ protocol CommerceService {
 
 protocol ContentOpsService {
     func publishDraft(_ id: UUID) async throws
+    func planLessonVideo(_ request: LessonVideoPlanRequest) async throws -> LessonVideoPlanResponse
+    func renderLessonScene(_ sceneId: String, request: LessonVideoSceneRenderRequest) async throws -> LessonVideoRenderJobResponse
+    func fetchLessonRenderJob(_ renderJobId: String) async throws -> LessonVideoRenderJobResponse
+    func composeLessonVideo(_ lessonId: String, request: LessonVideoComposeRequest) async throws -> LessonVideoComposeResponse
+    func fetchLessonVideoOutput(_ lessonId: String) async throws -> LessonVideoOutputResponse
 }
 

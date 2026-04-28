@@ -17,6 +17,8 @@ On the repository **Settings → Rules → Rulesets** (or classic branch protect
 
 The workflow lives at `.github/workflows/ios-ci-cd.yml` and runs on every PR and push to `main`.
 
+Optional UI test workflow: `.github/workflows/ios-ui-tests.yml` (manual / weekly). Full runbook: [Production testing and Apple release](./PRODUCTION_TEST_AND_RELEASE_RUNBOOK.md).
+
 ## Required CI Gates (per PR and push to main)
 1. Project generation integrity
    - `xcodegen generate` success

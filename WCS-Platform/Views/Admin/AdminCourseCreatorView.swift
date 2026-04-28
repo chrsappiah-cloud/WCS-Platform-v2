@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct AdminCourseCreatorView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
@@ -110,7 +111,7 @@ struct AdminCourseCreatorView: View {
 
                 ForEach(viewModel.lessonVideoRenderJobs) { job in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(job.status) · \(job.provider) · lesson \(job.lessonId.prefix(8))…")
+                        Text("\(job.normalizedStatusLabel) · \(job.provider) · lesson \(job.lessonId.prefix(8))…")
                             .font(.caption.weight(.semibold))
                         if let mode = job.pipelineMode {
                             Text("Pipeline: \(mode)")
@@ -369,19 +370,42 @@ struct AdminCourseCreatorView: View {
                             draft: draft,
                             videoStatus: viewModel.videoStatusByDraftID[draft.id],
                             generatedAssets: viewModel.generatedAssetsByDraftID[draft.id] ?? [],
+                            pipelineStatusText: viewModel.pipelineStatusByDraftID[draft.id],
+                            hasPlannedStoryboard: viewModel.plannedStoryboardByDraftID[draft.id] != nil,
+                            isPipelineBusy: viewModel.pipelineBusyDraftIDs.contains(draft.id),
+                            localComposedVideoURL: viewModel.localComposedVideoByDraftID[draft.id],
+                            localImageSequenceClipURL: viewModel.localImageSequenceClipByDraftID[draft.id],
+                            localImageSequencePreviewURL: viewModel.localImageSequencePreviewByDraftID[draft.id],
+                            imageSequenceSettings: viewModel.imageSequenceSettingsByDraftID[draft.id] ?? .default,
                             onPublish: {
                             Task { await viewModel.publish(draft.id) }
                             },
                             onRegenerateVideos: { clearCache in
                                 Task { await viewModel.regenerateVideos(for: draft.id, clearCache: clearCache) }
                             },
-                            onSaveManualLessonVideo: { moduleId, lessonId, url in
+                            onPlanStoryboard: {
+                                Task { await viewModel.planStoryboard(for: draft.id) }
+                            },
+                            onRenderScene: {
+                                Task { await viewModel.renderFirstPlannedScene(for: draft.id) }
+                            },
+                            onPreviewScene: {
+                                Task { await viewModel.previewFirstPlannedScene(for: draft.id) }
+                            },
+                            onComposeLesson: {
+                                Task { await viewModel.composePlannedLesson(for: draft.id) }
+                            },
+                            onUpdateImageSequenceSettings: { settings in
+                                viewModel.updateImageSequenceSettings(for: draft.id, settings: settings)
+                            },
+                            onSaveManualLessonVideo: { moduleId, lessonId, url, source in
                                 Task {
                                     await viewModel.saveManualLessonVideoBackup(
                                         draftID: draft.id,
                                         moduleID: moduleId,
                                         lessonID: lessonId,
-                                        url: url
+                                        url: url,
+                                        externalVideoSource: source
                                     )
                                 }
                             }
@@ -403,8 +427,12 @@ struct AdminCourseCreatorView: View {
 private struct ManualLessonVideoBackupRow: View {
     let moduleId: UUID
     let lesson: AdminLessonDraft
-    let onSave: (UUID, UUID, String) -> Void
+    let onSave: (UUID, UUID, String, ExternalLessonVideoSource) -> Void
     @State private var urlText = ""
+    @State private var externalSource: ExternalLessonVideoSource = .manual
+    @State private var showFileImporter = false
+    @State private var lastProbe: ManualVideoFileProbe?
+    @State private var probeMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -415,16 +443,49 @@ private struct ManualLessonVideoBackupRow: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
                 .font(.caption)
+            Picker("Prepared with", selection: $externalSource) {
+                ForEach(ExternalLessonVideoSource.allCases) { src in
+                    Text(src.displayLabel).tag(src)
+                }
+            }
+            .pickerStyle(.menu)
+            .font(.caption2)
+
+            Button("Probe local export (validation only)") {
+                showFileImporter = true
+            }
+            .buttonStyle(.bordered)
+            .font(.caption2)
+
+            if let probe = lastProbe {
+                Text(
+                    "\(probe.fileName) · \(ByteCountFormatter.string(fromByteCount: probe.fileSizeBytes, countStyle: .file)) · \(formatDuration(probe.durationSeconds)) · \(probe.pixelWidth)×\(probe.pixelHeight)"
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+            if let probeMessage {
+                Text(probeMessage)
+                    .font(.caption2)
+                    .foregroundStyle(lastProbe == nil ? Color.red : Color.secondary)
+            }
+
+            Text("Learners stream from the HTTPS URL. Host the exported file on your CDN or storage, then paste the public or signed link here.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+
             HStack(spacing: 8) {
                 Button("Save backup URL") {
-                    onSave(moduleId, lesson.id, urlText)
+                    onSave(moduleId, lesson.id, urlText, externalSource)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
                 .font(.caption2)
                 Button("Clear backup") {
                     urlText = ""
-                    onSave(moduleId, lesson.id, "")
+                    lastProbe = nil
+                    probeMessage = nil
+                    onSave(moduleId, lesson.id, "", .manual)
                 }
                 .buttonStyle(.bordered)
                 .font(.caption2)
@@ -433,8 +494,59 @@ private struct ManualLessonVideoBackupRow: View {
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.movie, .video, .mpeg4Movie, .quickTimeMovie],
+            allowsMultipleSelection: false
+        ) { result in
+            handleFileImport(result)
+        }
         .task(id: "\(lesson.id.uuidString)|\(lesson.notes)") {
             urlText = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) ?? ""
+            externalSource = LessonManualVideoBackup.extractExternalSource(from: lesson.notes) ?? .manual
+        }
+    }
+
+    private func formatDuration(_ seconds: Double) -> String {
+        guard seconds.isFinite, seconds > 0 else { return "0:00" }
+        let total = Int(seconds.rounded())
+        let m = total / 60
+        let s = total % 60
+        return String(format: "%d:%02d", m, s)
+    }
+
+    private func handleFileImport(_ result: Result<[URL], Error>) {
+        lastProbe = nil
+        probeMessage = nil
+        switch result {
+        case .failure(let error):
+            probeMessage = error.localizedDescription
+        case .success(let urls):
+            guard let url = urls.first else {
+                probeMessage = "No file selected."
+                return
+            }
+            Task {
+                let ok = url.startAccessingSecurityScopedResource()
+                defer {
+                    if ok { url.stopAccessingSecurityScopedResource() }
+                }
+                guard ok else {
+                    await MainActor.run { probeMessage = "Could not access the selected file." }
+                    return
+                }
+                do {
+                    let probe = try await ManualVideoFileValidator.probe(fileURL: url)
+                    await MainActor.run {
+                        lastProbe = probe
+                        probeMessage = "Ready for upload — copy to your host and paste the HTTPS URL above."
+                    }
+                } catch {
+                    await MainActor.run {
+                        probeMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    }
+                }
+            }
         }
     }
 }
@@ -443,10 +555,23 @@ private struct DraftCard: View {
     let draft: AdminCourseDraft
     let videoStatus: AdminCourseCreatorViewModel.DraftVideoStatus?
     let generatedAssets: [GeneratedVideoAsset]
+    let pipelineStatusText: String?
+    let hasPlannedStoryboard: Bool
+    let isPipelineBusy: Bool
+    let localComposedVideoURL: URL?
+    let localImageSequenceClipURL: URL?
+    let localImageSequencePreviewURL: URL?
+    let imageSequenceSettings: ImageSequenceRenderSettings
     let onPublish: () -> Void
     let onRegenerateVideos: (_ clearCache: Bool) -> Void
-    let onSaveManualLessonVideo: (_ moduleId: UUID, _ lessonId: UUID, _ url: String) -> Void
+    let onPlanStoryboard: () -> Void
+    let onRenderScene: () -> Void
+    let onPreviewScene: () -> Void
+    let onComposeLesson: () -> Void
+    let onUpdateImageSequenceSettings: (ImageSequenceRenderSettings) -> Void
+    let onSaveManualLessonVideo: (_ moduleId: UUID, _ lessonId: UUID, _ url: String, _ source: ExternalLessonVideoSource) -> Void
     @State private var showingRegenerateConfirmation = false
+    @State private var localImageSettings: ImageSequenceRenderSettings = .default
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
@@ -514,12 +639,113 @@ private struct DraftCard: View {
                 Text("Debug assets: \(generatedAssets.count)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Scene pipeline controls")
+                        .font(.caption.weight(.semibold))
+                    if let pipelineStatusText {
+                        Text(pipelineStatusText)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Button("Plan storyboard") {
+                            onPlanStoryboard()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy)
+
+                        Button("Render first scene") {
+                            onRenderScene()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy || !hasPlannedStoryboard)
+
+                        Button("Preview frame") {
+                            onPreviewScene()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy || !hasPlannedStoryboard)
+
+                        Button("Compose lesson") {
+                            onComposeLesson()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy)
+                    }
+                    HStack(spacing: 8) {
+                        Picker("Resolution", selection: Binding(
+                            get: { localImageSettings.resolution },
+                            set: { newValue in
+                                localImageSettings.resolution = newValue
+                                onUpdateImageSequenceSettings(localImageSettings)
+                            }
+                        )) {
+                            ForEach(ImageSequenceResolutionPreset.allCases) { preset in
+                                Text(preset.label).tag(preset)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .font(.caption2)
+
+                        Picker("Diagram", selection: Binding(
+                            get: { localImageSettings.diagramStyle },
+                            set: { newValue in
+                                localImageSettings.diagramStyle = newValue
+                                onUpdateImageSequenceSettings(localImageSettings)
+                            }
+                        )) {
+                            ForEach(DiagramOverlayStyle.allCases) { style in
+                                Text(style.label).tag(style)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .font(.caption2)
+                    }
+                    HStack(spacing: 8) {
+                        Stepper("FPS \(localImageSettings.fps)", value: Binding(
+                            get: { Int(localImageSettings.fps) },
+                            set: { newValue in
+                                localImageSettings.fps = Int32(max(12, min(60, newValue)))
+                                onUpdateImageSequenceSettings(localImageSettings)
+                            }
+                        ), in: 12...60, step: 6)
+                        .font(.caption2)
+
+                        Slider(value: Binding(
+                            get: { localImageSettings.animationIntensity },
+                            set: { newValue in
+                                localImageSettings.animationIntensity = newValue
+                                onUpdateImageSequenceSettings(localImageSettings)
+                            }
+                        ), in: 0.2...2.0)
+                        Text("Motion \(String(format: "%.1f", localImageSettings.animationIntensity))x")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let localComposedVideoURL {
+                        Link("Open local composed video", destination: localComposedVideoURL)
+                            .font(.caption2)
+                    }
+                    if let localImageSequenceClipURL {
+                        Link("Open local image-sequence clip", destination: localImageSequenceClipURL)
+                            .font(.caption2)
+                    }
+                    if let localImageSequencePreviewURL {
+                        Link("Open preview frame", destination: localImageSequencePreviewURL)
+                            .font(.caption2)
+                    }
+                }
             }
 
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                     Text(
-                        "Paste an HTTPS playback URL per video or live lesson. This overrides AI-generated URLs for learners when a backup is set. Host files on your CDN or Supabase Storage, then paste the public or signed URL."
+                        "Paste an HTTPS playback URL per video or live lesson (exports from Mootion, Invideo AI, or any host). This overrides AI-generated URLs for learners when a backup is set. Use “Probe local export” to validate a file before you upload it to your CDN or Supabase Storage."
                     )
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -657,6 +883,12 @@ private struct DraftCard: View {
             }
         } message: {
             Text("This clears archived video assets for this draft and generates fresh recordings in real time.")
+        }
+        .onAppear {
+            localImageSettings = imageSequenceSettings
+        }
+        .onChange(of: imageSequenceSettings) { _, newValue in
+            localImageSettings = newValue
         }
     }
 

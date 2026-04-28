@@ -38,9 +38,56 @@ enum LessonVideoClientPipelineMode: String, Codable, Sendable {
 /// Async clip / module render tracking (BFF ↔ worker); client may poll or subscribe later.
 enum LessonVideoRenderJobStatus: String, Codable, Sendable {
     case queued
+    case planning
+    case planned
+    case awaitingReview = "awaiting_review"
+    case approvedForRender = "approved_for_render"
+    case rendering
+    case partialRenderComplete = "partial_render_complete"
+    case readyForComposition = "ready_for_composition"
+    case composing
+    case qaReview = "qa_review"
     case inProgress = "in_progress"
     case completed
     case failed
+
+    static func normalized(from raw: String) -> LessonVideoRenderJobStatus? {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch t {
+        case "queued": return .queued
+        case "planning": return .planning
+        case "planned": return .planned
+        case "awaiting_review", "awaitingreview": return .awaitingReview
+        case "approved_for_render", "approvedforrender": return .approvedForRender
+        case "rendering": return .rendering
+        case "partial_render_complete", "partialrendercomplete": return .partialRenderComplete
+        case "ready_for_composition", "readyforcomposition": return .readyForComposition
+        case "composing": return .composing
+        case "qa_review", "qareview": return .qaReview
+        case "in_progress", "inprogress", "running": return .inProgress
+        case "completed", "complete", "succeeded": return .completed
+        case "failed", "error": return .failed
+        default: return nil
+        }
+    }
+
+    var displayLabel: String {
+        switch self {
+        case .queued: return "Queued"
+        case .planning: return "Planning"
+        case .planned: return "Planned"
+        case .awaitingReview: return "Awaiting review"
+        case .approvedForRender: return "Approved for render"
+        case .rendering: return "Rendering"
+        case .partialRenderComplete: return "Partial render complete"
+        case .readyForComposition: return "Ready for composition"
+        case .composing: return "Composing"
+        case .qaReview: return "QA review"
+        case .inProgress: return "In progress"
+        case .completed: return "Completed"
+        case .failed: return "Failed"
+        }
+    }
 }
 
 // MARK: - Storyboard schema

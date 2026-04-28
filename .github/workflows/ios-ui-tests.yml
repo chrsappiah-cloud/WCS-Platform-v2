@@ -1,0 +1,45 @@
+# Optional full XCTest UI suite — run before TestFlight / App Store cuts.
+# PR CI keeps UITests skipped for speed/flakiness; use this workflow for human-triggered UI coverage.
+name: iOS UI Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly smoke (Sunday 07:00 UTC); disable in repo Settings → Actions if noisy.
+    - cron: "0 7 * * 0"
+
+concurrency:
+  group: ios-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ui-tests:
+    name: UI Tests (Simulator)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: cd WCS-Platform && xcodegen generate
+
+      - name: Run UI tests only
+        env:
+          CI: "true"
+        run: >
+          xcodebuild test
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=iPhone 17"
+          -sdk iphonesimulator
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformUITests

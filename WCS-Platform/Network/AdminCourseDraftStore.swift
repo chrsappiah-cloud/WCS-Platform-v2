@@ -15,14 +15,10 @@ actor AdminCourseDraftStore {
         "beginners",
         "novice"
     ]
-    private let blockedPublishTerms = [
+    /// Obvious paste-from-Google / FAQ abuse in **AI** draft titles (not applied to manual backup drafts).
+    private let blockedAIPublishTitleSubstrings = [
         "search question",
         "search query",
-        "what is",
-        "how to",
-        "why does",
-        "can i",
-        "?"
     ]
     private let manualBackupReferenceMarker = "manual-backup-authoring"
 
@@ -219,7 +215,8 @@ actor AdminCourseDraftStore {
         draftId: UUID,
         moduleId: UUID,
         lessonId: UUID,
-        urlString: String
+        urlString: String,
+        externalVideoSource: ExternalLessonVideoSource? = nil
     ) async throws {
         guard let idx = drafts.firstIndex(where: { $0.id == draftId }) else {
             throw NSError(domain: "WCSAdminAI", code: 1100, userInfo: [
@@ -256,7 +253,11 @@ actor AdminCourseDraftStore {
             lesson.notes = LessonManualVideoBackup.stripMachineLines(from: lesson.notes)
             await MockLearningStore.shared.clearManualLessonVideoBackup(lessonId: lessonId)
         } else {
-            lesson.notes = LessonManualVideoBackup.mergeURLLine(into: lesson.notes, url: trimmed)
+            lesson.notes = LessonManualVideoBackup.mergeManualVideoMachineLines(
+                into: lesson.notes,
+                httpsURL: trimmed,
+                externalSource: externalVideoSource
+            )
             await MockLearningStore.shared.recordManualLessonVideoBackup(lessonId: lessonId, url: trimmed)
         }
         draft.modules[mIdx].lessons[lIdx] = lesson
@@ -267,7 +268,22 @@ actor AdminCourseDraftStore {
     }
 
     func markPublished(_ id: UUID) async throws {
-        guard let idx = drafts.firstIndex(where: { $0.id == id }) else { return }
+        guard let idx = drafts.firstIndex(where: { $0.id == id }) else {
+            throw NSError(domain: "WCSAdminAI", code: 1005, userInfo: [
+                NSLocalizedDescriptionKey: "Draft not found. Refresh drafts and try again.",
+            ])
+        }
+        // Enforce playback URL safety policy for any manual overrides before publish.
+        for module in drafts[idx].modules {
+            for lesson in module.lessons where lesson.kind == .video || lesson.kind == .live {
+                if let manual = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes),
+                   let reason = LessonVideoSafetyPolicy.validatePlaybackURLString(manual) {
+                    throw NSError(domain: "WCSAdminAI", code: 1106, userInfo: [
+                        NSLocalizedDescriptionKey: "Manual playback URL policy check failed for \"\(lesson.title)\": \(reason)"
+                    ])
+                }
+            }
+        }
         guard isPublishableGeneratedOutput(drafts[idx]) else {
             throw NSError(domain: "WCSAdminAI", code: 1002, userInfo: [
                 NSLocalizedDescriptionKey: "Publish blocked: only structured AI-generated course outputs can be published. Remove search/question-style inputs and regenerate."
@@ -326,9 +342,15 @@ actor AdminCourseDraftStore {
         guard !draft.modules.isEmpty else { return false }
         guard draft.modules.allSatisfy({ !$0.lessons.isEmpty }) else { return false }
 
-        let normalized = "\(draft.title) \(draft.summary)".lowercased()
-        if blockedPublishTerms.contains(where: { normalized.contains($0) }) {
-            return false
+        let isManualBackupDraft = draft.sourceReferences.contains(manualBackupReferenceMarker)
+        if !isManualBackupDraft {
+            let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if blockedAIPublishTitleSubstrings.contains(where: { title.contains($0) }) {
+                return false
+            }
+            if aiGeneratedTitleLooksLikeUnstructuredSearchQuery(title) {
+                return false
+            }
         }
 
         // Must contain evidence of generated course structure, not raw retrieval prompts.
@@ -336,10 +358,20 @@ actor AdminCourseDraftStore {
             draft.reasoningReport != nil &&
             draft.researchTrace != nil &&
             !draft.reportFindings.isEmpty
-        let isManualBackupDraft = draft.sourceReferences.contains(manualBackupReferenceMarker)
         if isManualBackupDraft {
             return !draft.outcomes.isEmpty
         }
         return hasCourseSignals
+    }
+
+    /// Blocks titles that read like a single-line web search / trivia question (not normal course names like “How to Lead Teams”).
+    private func aiGeneratedTitleLooksLikeUnstructuredSearchQuery(_ titleLowercased: String) -> Bool {
+        let t = titleLowercased
+        if t.hasPrefix("what is") || t == "what is" { return true }
+        if t.contains("?") {
+            let interrogativePrefixes = ["how do i ", "why does ", "can i ", "what are ", "when does ", "where can "]
+            if interrogativePrefixes.contains(where: { t.hasPrefix($0) }) { return true }
+        }
+        return false
     }
 }

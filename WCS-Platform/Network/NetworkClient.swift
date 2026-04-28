@@ -125,6 +125,59 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         }
     }
 
+    private func pipelineRequest<T: Decodable>(
+        _ path: String,
+        method: String,
+        body: Data? = nil,
+        timeout: TimeInterval = 30,
+        maxRetries: Int = 2
+    ) async throws -> T {
+        let trimmed = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let baseString = AppEnvironment.platformAPIBaseURL.absoluteString
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let urlString = trimmed.isEmpty ? baseString : "\(baseString)/\(trimmed)"
+        guard let url = URL(string: urlString) else {
+            throw WCSAPIError(underlying: URLError(.badURL), statusCode: nil, body: nil)
+        }
+
+        var lastError: Error?
+        for attempt in 0...maxRetries {
+            do {
+                var req = URLRequest(url: url)
+                req.httpMethod = method
+                req.timeoutInterval = timeout
+                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                let token = loadToken()
+                if !token.isEmpty {
+                    req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                }
+                req.httpBody = body
+
+                let (data, response) = try await session.data(for: req)
+                guard let http = response as? HTTPURLResponse else {
+                    throw WCSAPIError(underlying: URLError(.badServerResponse), statusCode: nil, body: data)
+                }
+                if !(200 ..< 300).contains(http.statusCode) {
+                    // Retry only transient HTTP classes.
+                    if (http.statusCode == 408 || http.statusCode == 429 || (500...599).contains(http.statusCode)),
+                       attempt < maxRetries {
+                        try? await Task.sleep(nanoseconds: UInt64((attempt + 1) * 400_000_000))
+                        continue
+                    }
+                    throw WCSAPIError(underlying: HTTPStatusError(status: http.statusCode), statusCode: http.statusCode, body: data)
+                }
+                return try jsonDecoder.decode(T.self, from: data)
+            } catch {
+                lastError = error
+                if attempt < maxRetries {
+                    try? await Task.sleep(nanoseconds: UInt64((attempt + 1) * 400_000_000))
+                    continue
+                }
+            }
+        }
+        throw (lastError ?? WCSAPIError(underlying: URLError(.cannotLoadFromNetwork), statusCode: nil, body: nil))
+    }
+
     func currentUser() async throws -> User {
         if useMocks {
             return await MockLearningStore.shared.currentUser()
@@ -627,6 +680,100 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         try await AdminCourseDraftStore.shared.markPublished(id)
     }
 
+    func planLessonVideo(_ requestPayload: LessonVideoPlanRequest) async throws -> LessonVideoPlanResponse {
+        if useMocks {
+            let storyboard = LessonVideoStoryboard(
+                storyboardId: "sb-\(requestPayload.lessonId)",
+                pipelineVersion: LessonVideoClientPipelineMode.sceneOrchestrationV1.rawValue,
+                moduleId: requestPayload.moduleId,
+                moduleTitle: requestPayload.moduleTitle,
+                lessonId: requestPayload.lessonId,
+                lessonTitle: requestPayload.lessonTitle,
+                scenes: [
+                    LessonVideoScenePlan(
+                        sceneId: "scene-1",
+                        learningObjective: requestPayload.learningObjectives.first,
+                        narrationText: requestPayload.sourceScript,
+                        visualPrompt: "Educational explainer with clean labels and high contrast text.",
+                        shotType: "wide_explainer",
+                        durationSeconds: 12,
+                        onScreenText: requestPayload.learningObjectives.first,
+                        referenceImageURL: nil,
+                        needsDiagram: true,
+                        assessmentCheckpoint: requestPayload.assessmentPrompts.first
+                    )
+                ],
+                masterVisualPrompt: "Scene-first educational storyboard for \(requestPayload.lessonTitle ?? requestPayload.lessonId)"
+            )
+            return LessonVideoPlanResponse(
+                lessonId: requestPayload.lessonId,
+                storyboard: storyboard,
+                plannerVersion: "planner-mock-v1",
+                status: "planned"
+            )
+        }
+
+        let payload = try jsonEncoder.encode(requestPayload)
+        return try await pipelineRequest("lessons/\(requestPayload.lessonId)/plan", method: "POST", body: payload)
+    }
+
+    func renderLessonScene(_ sceneId: String, request requestPayload: LessonVideoSceneRenderRequest) async throws -> LessonVideoRenderJobResponse {
+        if useMocks {
+            return LessonVideoRenderJobResponse(
+                renderJobId: "job-\(sceneId)",
+                sceneId: sceneId,
+                lessonId: requestPayload.lessonId,
+                status: LessonVideoRenderJobStatus.queued.rawValue,
+                provider: LessonVideoGenerationSettings.providerBackendHint ?? "mock",
+                playbackURL: nil,
+                errorMessage: nil
+            )
+        }
+        let payload = try jsonEncoder.encode(requestPayload)
+        return try await pipelineRequest("scenes/\(sceneId)/render", method: "POST", body: payload)
+    }
+
+    func fetchLessonRenderJob(_ renderJobId: String) async throws -> LessonVideoRenderJobResponse {
+        if useMocks {
+            return LessonVideoRenderJobResponse(
+                renderJobId: renderJobId,
+                sceneId: nil,
+                lessonId: nil,
+                status: LessonVideoRenderJobStatus.completed.rawValue,
+                provider: "mock",
+                playbackURL: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                errorMessage: nil
+            )
+        }
+        return try await pipelineRequest("render-jobs/\(renderJobId)", method: "GET")
+    }
+
+    func composeLessonVideo(_ lessonId: String, request requestPayload: LessonVideoComposeRequest) async throws -> LessonVideoComposeResponse {
+        if useMocks {
+            return LessonVideoComposeResponse(
+                lessonId: lessonId,
+                status: "ready_for_composition",
+                outputURL: nil
+            )
+        }
+        let payload = try jsonEncoder.encode(requestPayload)
+        return try await pipelineRequest("lessons/\(lessonId)/compose", method: "POST", body: payload)
+    }
+
+    func fetchLessonVideoOutput(_ lessonId: String) async throws -> LessonVideoOutputResponse {
+        if useMocks {
+            return LessonVideoOutputResponse(
+                lessonId: lessonId,
+                playbackURL: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                thumbnailURL: nil,
+                chapters: ["Intro", "Core concept", "Recap"],
+                subtitleURL: nil,
+                status: "published"
+            )
+        }
+        return try await pipelineRequest("lessons/\(lessonId)/output", method: "GET")
+    }
+
     func fetchPipelineHealthStatus() async throws -> PipelineHealthStatus {
         let snapshot = try await resolveIdentitySnapshot()
         try await WCSPlatformAccessPolicy.assertAllowed(
@@ -711,6 +858,40 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         }
 
         let openLibrary = await probeReachability("https://openlibrary.org/search.json?q=education&limit=1")
+        checks.append(
+            GenerationCapabilityCheck(
+                system: "Lesson video generation strategy",
+                state: .configured,
+                detail: LessonVideoGenerationSettings.generationApproach.displayLabel
+            )
+        )
+        switch LessonVideoGenerationSettings.generationApproach {
+        case .hybridCloudNativeComposition:
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Hybrid mode expectation",
+                    state: .configured,
+                    detail: "Cloud render + native AVFoundation composition enabled."
+                )
+            )
+        case .imageSequenceAnimation:
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Image-sequence mode expectation",
+                    state: .configured,
+                    detail: "Deterministic still-image animation + native AVFoundation composition."
+                )
+            )
+        case .onDeviceExperimental:
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "On-device CoreML video generation",
+                    state: .offline,
+                    detail: "Experimental mode selected. Production text-to-video model path is not available in this build."
+                )
+            )
+        }
+
         checks.append(
             GenerationCapabilityCheck(
                 system: "Open Library (course references)",
@@ -973,6 +1154,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
 
 struct GenerationCapabilityStatus: Sendable {
     let checkedAt: Date
+    let generationApproach: LessonVideoGenerationApproach = LessonVideoGenerationSettings.generationApproach
     let checks: [GenerationCapabilityCheck]
 }
 

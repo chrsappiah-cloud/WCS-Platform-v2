@@ -20,6 +20,9 @@ nonisolated enum LessonVideoGenerationSettings {
     private static let mockDelayMillisKey = "WCSLessonVideoMockGenerationDelayMillis"
     private static let textToVideoExtraHTTPHeadersJSONKey = "WCSLessonTextToVideoExtraHTTPHeadersJSON"
     private static let lessonVideoJobListSecretKey = "WCSLessonVideoJobListSecret"
+    private static let generationApproachKey = "WCSLessonVideoGenerationApproach"
+    private static let allowedPlaybackHostsKey = "WCSLessonVideoAllowedPlaybackHostsCSV"
+    private static let requireSignedPlaybackURLsKey = "WCSLessonVideoRequireSignedPlaybackURLs"
 
     // MARK: Remote text-to-video (BFF / Supabase Edge)
 
@@ -110,6 +113,40 @@ nonisolated enum LessonVideoGenerationSettings {
         remoteLessonVideoJobHistoryGETURL != nil && lessonVideoJobListSecret != nil
     }
 
+    /// Practical implementation mode for Apple clients:
+    /// - hybridCloudNativeComposition: production default
+    /// - imageSequenceAnimation: reliable Swift-native fallback
+    /// - onDeviceExperimental: CoreML-only experimental path
+    static var generationApproach: LessonVideoGenerationApproach {
+        guard let raw = nonEmptyString(forInfoPlistKey: generationApproachKey),
+              let parsed = LessonVideoGenerationApproach(rawValue: raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+        else {
+            return .hybridCloudNativeComposition
+        }
+        return parsed
+    }
+
+    /// Extra allowlisted playback hosts (comma-separated), merged with built-in safe defaults.
+    static var allowedPlaybackHosts: Set<String> {
+        guard let raw = nonEmptyString(forInfoPlistKey: allowedPlaybackHostsKey) else { return [] }
+        return Set(
+            raw.split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                .filter { !$0.isEmpty }
+        )
+    }
+
+    /// Require signature/token query params for non-YouTube playback URLs.
+    static var requireSignedPlaybackURLs: Bool {
+        if let n = Bundle.main.object(forInfoDictionaryKey: requireSignedPlaybackURLsKey) as? NSNumber {
+            return n.boolValue
+        }
+        if let s = nonEmptyString(forInfoPlistKey: requireSignedPlaybackURLsKey) {
+            return (s as NSString).boolValue
+        }
+        return true
+    }
+
     // MARK: Plist helpers
 
     private static func string(forInfoPlistKey key: String) -> String? {
@@ -130,5 +167,22 @@ nonisolated enum LessonVideoGenerationSettings {
             return v
         }
         return nil
+    }
+}
+
+enum LessonVideoGenerationApproach: String, Codable, Sendable, CaseIterable {
+    case hybridCloudNativeComposition = "hybrid_cloud_native_composition"
+    case imageSequenceAnimation = "image_sequence_animation"
+    case onDeviceExperimental = "on_device_experimental"
+
+    var displayLabel: String {
+        switch self {
+        case .hybridCloudNativeComposition:
+            return "Hybrid cloud + native composition (recommended)"
+        case .imageSequenceAnimation:
+            return "Image-sequence animation (Swift-native reliable path)"
+        case .onDeviceExperimental:
+            return "On-device CoreML generation (experimental)"
+        }
     }
 }

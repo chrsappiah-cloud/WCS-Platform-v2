@@ -13,6 +13,8 @@
 		0B31674F25A0D755A7C5EF62 /* DiscussionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F98281130F58673AEE355659 /* DiscussionView.swift */; };
 		0B5B5FC68A1E763ADDAA4FBB /* AdminCourseDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35635417F6B5BAC2761C3DB /* AdminCourseDraftStore.swift */; };
 		0E7E49DF9976D4B4D73A61E2 /* AdminCourseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */; };
+		F00000020000000000000002 /* ManualExternalLessonVideoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */; };
+		F00000030000000000000002 /* ManualVideoFileValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000030000000000000001 /* ManualVideoFileValidator.swift */; };
 		11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */; };
 		1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */; };
 		1551C615585FABD774D662A8 /* CourseDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6304ABCAC4DCEB84650218 /* CourseDetailViewModel.swift */; };
@@ -58,6 +60,7 @@
 		A7B1DB1275C590800116B54D /* Discussion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */; };
 		A7EE14229CD48BEE2F864AA7 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC13D4C96EA65CA89A72DAC9 /* AppEnvironment.swift */; };
 		F00000010000000000000002 /* LessonVideoGenerationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000010000000000000001 /* LessonVideoGenerationSettings.swift */; };
+		F00000040000000000000002 /* WCSLessonVideoPipelinePayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */; };
 		B20ED49DA9B8324D645D1CD0 /* ExternalServiceResilience.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */; };
 		B291CB5669601DF2A0CF983E /* DiscussionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182B49B76C26A14BE58E754 /* DiscussionViewModel.swift */; };
 		B73019AF4379C87924B2359B /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C4CF88BA458D1DA1805B1F /* Quiz.swift */; };
@@ -82,6 +85,9 @@
 		E9A1C0010000000000000102 /* LessonVideoRenderJobRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */; };
 		E9A1C0010000000000000104 /* LessonVideoStoryboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */; };
 		E9A1C0010000000000000106 /* LessonVideoStoryboard+MotionKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */; };
+		F00000050000000000000002 /* AVFoundationLessonComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000050000000000000001 /* AVFoundationLessonComposer.swift */; };
+		F00000060000000000000002 /* AVFoundationImageSequenceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */; };
+		F00000070000000000000002 /* LessonVideoSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */; };
 		E9A1C0010000000000000109 /* AdminInlineAVVideoPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000108 /* AdminInlineAVVideoPreview.swift */; };
 		E9A1C001000000000000010B /* LessonVideoFeaturesPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C001000000000000010A /* LessonVideoFeaturesPreviews.swift */; };
 		E9A1C0020000000000000202 /* PerplexityAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0020000000000000201 /* PerplexityAPIClient.swift */; };
@@ -125,6 +131,9 @@
 		E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoRenderJobRow.swift; sourceTree = "<group>"; };
 		E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoStoryboardModels.swift; sourceTree = "<group>"; };
 		E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LessonVideoStoryboard+MotionKit.swift"; sourceTree = "<group>"; };
+		F00000050000000000000001 /* AVFoundationLessonComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationLessonComposer.swift; sourceTree = "<group>"; };
+		F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationImageSequenceRenderer.swift; sourceTree = "<group>"; };
+		F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoSafetyPolicy.swift; sourceTree = "<group>"; };
 		E9A1C0010000000000000108 /* AdminInlineAVVideoPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminInlineAVVideoPreview.swift; sourceTree = "<group>"; };
 		E9A1C001000000000000010A /* LessonVideoFeaturesPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoFeaturesPreviews.swift; sourceTree = "<group>"; };
 		E9A1C0020000000000000201 /* PerplexityAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerplexityAPIClient.swift; sourceTree = "<group>"; };
@@ -155,6 +164,8 @@
 		69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSStoreKitSubscriptionManager.swift; sourceTree = "<group>"; };
 		6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAICourseGenerator.swift; sourceTree = "<group>"; };
 		6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseDraft.swift; sourceTree = "<group>"; };
+		F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualExternalLessonVideoModels.swift; sourceTree = "<group>"; };
+		F00000030000000000000001 /* ManualVideoFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualVideoFileValidator.swift; sourceTree = "<group>"; };
 		712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipPaymentsHubView.swift; sourceTree = "<group>"; };
 		71F7FD7BAE011A0EA8C66044 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		7874C6477BAB664C48551926 /* WCSDomainProjections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainProjections.swift; sourceTree = "<group>"; };
@@ -172,6 +183,7 @@
 		BBC3EAAAC22679C61D3BADE7 /* YouTubeEmbedWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeEmbedWebView.swift; sourceTree = "<group>"; };
 		BC13D4C96EA65CA89A72DAC9 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		F00000010000000000000001 /* LessonVideoGenerationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoGenerationSettings.swift; sourceTree = "<group>"; };
+		F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSLessonVideoPipelinePayloads.swift; sourceTree = "<group>"; };
 		F00000010000000000000003 /* VideoGeneration-InfoPlistKeys.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "VideoGeneration-InfoPlistKeys.txt"; sourceTree = "<group>"; };
 		C17474560116B58C8CB7080E /* WCS_PlatformTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformTests.swift; sourceTree = "<group>"; };
 		C182B49B76C26A14BE58E754 /* DiscussionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionViewModel.swift; sourceTree = "<group>"; };
@@ -249,6 +261,7 @@
 			isa = PBXGroup;
 			children = (
 				6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */,
+				F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */,
 				DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */,
 				A2A5B68565C5431264720813 /* Course.swift */,
 				2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */,
@@ -308,6 +321,7 @@
 				F3433B36FD14811F99D62942 /* NetworkClient.swift */,
 				E9A1C0020000000000000201 /* PerplexityAPIClient.swift */,
 				E9A1C0020000000000000205 /* LessonManualVideoBackup.swift */,
+				F00000030000000000000001 /* ManualVideoFileValidator.swift */,
 				1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */,
 				F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */,
 				1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */,
@@ -398,6 +412,7 @@
 			isa = PBXGroup;
 			children = (
 				2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */,
+				F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */,
 				EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */,
 				7874C6477BAB664C48551926 /* WCSDomainProjections.swift */,
 				1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */,
@@ -437,6 +452,9 @@
 				E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */,
 				E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */,
 				E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */,
+				F00000050000000000000001 /* AVFoundationLessonComposer.swift */,
+				F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */,
+				F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */,
 			);
 			path = VideoPipeline;
 			sourceTree = "<group>";
@@ -603,6 +621,7 @@
 				E9A1C001000000000000010B /* LessonVideoFeaturesPreviews.swift in Sources */,
 				9F6EB2B1330141E858120172 /* AdminCourseCreatorViewModel.swift in Sources */,
 				0E7E49DF9976D4B4D73A61E2 /* AdminCourseDraft.swift in Sources */,
+				F00000020000000000000002 /* ManualExternalLessonVideoModels.swift in Sources */,
 				0B5B5FC68A1E763ADDAA4FBB /* AdminCourseDraftStore.swift in Sources */,
 				A7EE14229CD48BEE2F864AA7 /* AppEnvironment.swift in Sources */,
 				F00000010000000000000002 /* LessonVideoGenerationSettings.swift in Sources */,
@@ -634,6 +653,9 @@
 				E9A1C0010000000000000102 /* LessonVideoRenderJobRow.swift in Sources */,
 				E9A1C0010000000000000104 /* LessonVideoStoryboardModels.swift in Sources */,
 				E9A1C0010000000000000106 /* LessonVideoStoryboard+MotionKit.swift in Sources */,
+				F00000050000000000000002 /* AVFoundationLessonComposer.swift in Sources */,
+				F00000060000000000000002 /* AVFoundationImageSequenceRenderer.swift in Sources */,
+				F00000070000000000000002 /* LessonVideoSafetyPolicy.swift in Sources */,
 				49F73151C1A7B55FD03A5DDA /* MembershipPaymentsHubView.swift in Sources */,
 				E7C203D84FA02D118ECBB003 /* WebVTTParser.swift in Sources */,
 				9AE9B2E9CABF5054ACD9F2EC /* MockCourseCatalog.swift in Sources */,
@@ -644,6 +666,7 @@
 				67BFF5F889262FBD25F66D8A /* NetworkClient.swift in Sources */,
 				E9A1C0020000000000000202 /* PerplexityAPIClient.swift in Sources */,
 				E9A1C0020000000000000206 /* LessonManualVideoBackup.swift in Sources */,
+				F00000030000000000000002 /* ManualVideoFileValidator.swift in Sources */,
 				A72F6866744992DB6CD757A2 /* Notifications.swift in Sources */,
 				FC18CF0846D0C15A3A1873BE /* ProfileView.swift in Sources */,
 				B73019AF4379C87924B2359B /* Quiz.swift in Sources */,
@@ -663,6 +686,7 @@
 				F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */,
 				87040CCBD1A0CF862EBCD556 /* WCSAdminFinanceDashboardView.swift in Sources */,
 				887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */,
+				F00000040000000000000002 /* WCSLessonVideoPipelinePayloads.swift in Sources */,
 				513D887D95B3DC89560FD437 /* WCSCommerceModels.swift in Sources */,
 				DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */,
 				C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */,
