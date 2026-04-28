@@ -132,8 +132,11 @@ jobs:
             -configuration "$CONFIGURATION" \
             -destination "generic/platform=iOS" \
             -archivePath "$ARCHIVE_PATH" \
-            -allowProvisioningUpdates \
-            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=TM2WG7HH96 \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            "PROVISIONING_PROFILE_SPECIFIER=iOS Team Store Provisioning Profile: wcs.WCS-Platform" \
+            "OTHER_CODE_SIGN_FLAGS=--keychain $KEYCHAIN_PATH" \
             archive
 
       - name: Export signed IPA
@@ -142,8 +145,7 @@ jobs:
             -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportPath "$EXPORT_PATH" \
-            -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" \
-            -allowProvisioningUpdates
+            -exportOptionsPlist "$EXPORT_OPTIONS_PLIST"
 
       - name: Locate IPA
         id: locate
