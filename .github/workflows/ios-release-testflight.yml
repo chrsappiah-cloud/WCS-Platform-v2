@@ -43,9 +43,10 @@ jobs:
       ARCHIVE_PATH: ${{ github.workspace }}/build/WCS-Platform-AppStore.xcarchive
       EXPORT_PATH: ${{ github.workspace }}/build/AppStoreExport
       EXPORT_OPTIONS_PLIST: ${{ github.workspace }}/production/ExportOptions-AppStore.plist
-      KEYCHAIN_PATH: ${{ runner.temp }}/wcs-release.keychain-db
       KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
-      ASC_AUTH_KEY_DIR: ${{ runner.temp }}/asc-auth-keys
+      # NOTE: KEYCHAIN_PATH and ASC_AUTH_KEY_DIR are derived at step time from
+      # $RUNNER_TEMP because the `runner` context is not available in job-level
+      # env per GitHub Actions context-availability rules.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,6 +75,8 @@ jobs:
             echo "Missing APPLE_DISTRIBUTION_CERT_P12_BASE64 or APPLE_DISTRIBUTION_CERT_P12_PASSWORD secret"
             exit 1
           fi
+          KEYCHAIN_PATH="$RUNNER_TEMP/wcs-release.keychain-db"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           CERT_PATH="$RUNNER_TEMP/distribution.p12"
           echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -107,10 +110,12 @@ jobs:
             echo "Missing ASC_API_KEY_ID or ASC_API_PRIVATE_KEY_BASE64 secret"
             exit 1
           fi
+          ASC_AUTH_KEY_DIR="$RUNNER_TEMP/asc-auth-keys"
           mkdir -p "$ASC_AUTH_KEY_DIR"
           KEY_PATH="$ASC_AUTH_KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
           echo "$ASC_API_PRIVATE_KEY_BASE64" | base64 --decode > "$KEY_PATH"
           chmod 600 "$KEY_PATH"
+          echo "ASC_AUTH_KEY_DIR=$ASC_AUTH_KEY_DIR" >> "$GITHUB_ENV"
           echo "API_PRIVATE_KEYS_DIR=$ASC_AUTH_KEY_DIR" >> "$GITHUB_ENV"
 
       - name: Create signed archive
