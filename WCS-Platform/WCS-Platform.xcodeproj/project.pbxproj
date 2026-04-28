@@ -13,9 +13,8 @@
 		0B31674F25A0D755A7C5EF62 /* DiscussionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F98281130F58673AEE355659 /* DiscussionView.swift */; };
 		0B5B5FC68A1E763ADDAA4FBB /* AdminCourseDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35635417F6B5BAC2761C3DB /* AdminCourseDraftStore.swift */; };
 		0E7E49DF9976D4B4D73A61E2 /* AdminCourseDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */; };
-		F00000020000000000000002 /* ManualExternalLessonVideoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */; };
-		F00000030000000000000002 /* ManualVideoFileValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000030000000000000001 /* ManualVideoFileValidator.swift */; };
 		11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */; };
+		13D1E5DE55CFE062ADF86159 /* AVFoundationImageSequenceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E94C4DCA521DDCD9860A9747 /* AVFoundationImageSequenceRenderer.swift */; };
 		1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */; };
 		1551C615585FABD774D662A8 /* CourseDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6304ABCAC4DCEB84650218 /* CourseDetailViewModel.swift */; };
 		19520449363228C7829BA111 /* WCS_PlatformUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD2E7C0E43801AEECE31098 /* WCS_PlatformUITests.swift */; };
@@ -23,28 +22,29 @@
 		278DA1DB4180160547740DEE /* Lesson.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD840C97475E980E4849200 /* Lesson.swift */; };
 		2E8F6B4EC51BD3E275E5E13C /* CourseListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09B519BFA90957005BCF91A8 /* CourseListViewModel.swift */; };
 		34714BE866CA9ECDFCFA2F35 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF031A29C4F07AEABE60252 /* Telemetry.swift */; };
+		367CF2C3C496D286B06D7E60 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D0CA7A4079C2F1E7F486981 /* Assets.xcassets */; };
 		375E92F20FC538CC05DF6DED /* QuizStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61069ED3967742504EF8D5DA /* QuizStartView.swift */; };
 		3864C2308A1D3D1B3231AD3A /* LessonRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBE87F50C43953ECCBE4C20 /* LessonRowView.swift */; };
 		46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */; };
 		49F73151C1A7B55FD03A5DDA /* MembershipPaymentsHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */; };
 		4F3C29C0F5C01E6FDAB7721B /* CourseHydration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B97BE3FC5B786BC2FF881795 /* CourseHydration.swift */; };
 		513D887D95B3DC89560FD437 /* WCSCommerceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85463E9EED8C095A2FFE41C5 /* WCSCommerceModels.swift */; };
+		532495956040AE198C266317 /* VideoGeneration-InfoPlistKeys.txt in Resources */ = {isa = PBXBuildFile; fileRef = 30EB387DAA4A5B42A1D0DE49 /* VideoGeneration-InfoPlistKeys.txt */; };
 		5448D38865FE8D7B6A17255A /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BF0E1953E75ACEA03727D48 /* HomeTabView.swift */; };
-		E9B103C84FA02D118ECAA002 /* HomeTrustClusterContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B103C84FA02D118ECAA001 /* HomeTrustClusterContent.swift */; };
-		E9B103C84FA02D118ECAA004 /* HomeTrustClusterViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B103C84FA02D118ECAA003 /* HomeTrustClusterViews.swift */; };
 		56C0C66659C43E126C36760A /* Enrollment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDB72807D275CC1CAED4C98 /* Enrollment.swift */; };
 		5A6E681E4B131A4DF7698394 /* ModuleVideoDiscoveryPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */; };
-		E8C203D84FA02D118ECBB002 /* LessonVideoPlaybackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C203D84FA02D118ECBB001 /* LessonVideoPlaybackPolicy.swift */; };
-		E7C203D84FA02D118ECBB003 /* WebVTTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C203D84FA02D118ECBB001 /* WebVTTParser.swift */; };
 		5CB794EBE213D22C0DB84150 /* MockLearningStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66FD55D44EE2D598667B6EB /* MockLearningStore.swift */; };
 		65DC6DC7D31D85994D9AC766 /* WCS_PlatformUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA89E03EC3E4FE70E670FCDF /* WCS_PlatformUITestsLaunchTests.swift */; };
 		676971626F107E95D41C2F3E /* QuizViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9851D632CA9C8185D24B69 /* QuizViewModel.swift */; };
 		67BFF5F889262FBD25F66D8A /* NetworkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3433B36FD14811F99D62942 /* NetworkClient.swift */; };
 		68519CFF546FB55C3958E56D /* AdminAICourseGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */; };
+		6B7502B94CA727FDA06F643D /* HomeTrustClusterViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751C751E3B38903A1A8A475F /* HomeTrustClusterViews.swift */; };
 		6C38459DCCD4BC84904E48E9 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */; };
 		768D4B13BE6BB0F298BF2369 /* MockDiscussionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */; };
+		806ECAA505DE9DD9BAC666F1 /* LessonVideoFeaturesPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24D5322F0000706A092BDF /* LessonVideoFeaturesPreviews.swift */; };
 		87040CCBD1A0CF862EBCD556 /* WCSAdminFinanceDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 887901DB1B77F90C6D322C4A /* WCSAdminFinanceDashboardView.swift */; };
 		887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */; };
+		8B1C07F2A94FEDD886835687 /* AVFoundationLessonComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4D0F3018DB77E4990E3B93 /* AVFoundationLessonComposer.swift */; };
 		8EB345FCA606C168A927D94F /* TelemetryEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */; };
 		8EEC9A3D60C58605AD4AFE8B /* StorageArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */; };
 		9044C88257850A13B4E2FA1E /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5B68565C5431264720813 /* Course.swift */; };
@@ -52,29 +52,43 @@
 		9A03208743445A866E73F9F4 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FD5C640490977CE9A34763 /* CourseDetailView.swift */; };
 		9AE9B2E9CABF5054ACD9F2EC /* MockCourseCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D5B9DDEE5941EA181E2F2E /* MockCourseCatalog.swift */; };
 		9B0DC185E9A042C35BCA186C /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92ACD9F9C1F337500EBC88BE /* VideoPlayerView.swift */; };
+		9E6B646E25825740F6A817AC /* WCSLessonVideoPipelinePayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E6708870A0501CB04E47E0 /* WCSLessonVideoPipelinePayloads.swift */; };
 		9EBAF97A15249A1865E62D68 /* VideoPlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AA475298D2DB4032CEFEDED /* VideoPlayerViewModel.swift */; };
 		9F528517279F0563ACA9055F /* View+SimulatorStability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60820261114D2D2A475D4822 /* View+SimulatorStability.swift */; };
 		9F6EB2B1330141E858120172 /* AdminCourseCreatorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C833CE4D85864C62F7D6691 /* AdminCourseCreatorViewModel.swift */; };
 		A052A3B1034AC95213E4D7B0 /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BABC0E16BB018A8B5BA4017 /* Module.swift */; };
+		A05E118D224606728BDA2F64 /* LessonVideoWithYouTubeBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6130B2EAFAB456A1DF1546 /* LessonVideoWithYouTubeBackupView.swift */; };
+		A12CE915F958DB5CE872B513 /* LessonManualVideoBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A78232286EBE51D55AFAAC9 /* LessonManualVideoBackup.swift */; };
 		A72F6866744992DB6CD757A2 /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */; };
 		A7B1DB1275C590800116B54D /* Discussion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */; };
 		A7EE14229CD48BEE2F864AA7 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC13D4C96EA65CA89A72DAC9 /* AppEnvironment.swift */; };
-		F00000010000000000000002 /* LessonVideoGenerationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000010000000000000001 /* LessonVideoGenerationSettings.swift */; };
-		F00000040000000000000002 /* WCSLessonVideoPipelinePayloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */; };
+		AFB595449D26A22C4F38D681 /* ManualExternalLessonVideoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2C820F8434ED2FF0E2F6EAF /* ManualExternalLessonVideoModels.swift */; };
 		B20ED49DA9B8324D645D1CD0 /* ExternalServiceResilience.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */; };
 		B291CB5669601DF2A0CF983E /* DiscussionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182B49B76C26A14BE58E754 /* DiscussionViewModel.swift */; };
+		B4946310C5DD287CD2C9FCC9 /* AdminInlineAVVideoPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC388D551BCF3BD750FE590 /* AdminInlineAVVideoPreview.swift */; };
 		B73019AF4379C87924B2359B /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C4CF88BA458D1DA1805B1F /* Quiz.swift */; };
 		BB18445FC4FC191938A6AE39 /* AudioPresentationReadiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35BEE9FAA5CE54E3D400B6F6 /* AudioPresentationReadiness.swift */; };
+		BB5E68E0050176F9E80BACA0 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 44C7A76601F4BF0D2816555E /* PrivacyInfo.xcprivacy */; };
 		BCD6D482AA72B064A1991177 /* BrandOutboundLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A950A07D76E4E91EECA949 /* BrandOutboundLinks.swift */; };
+		BEB9141B0CA2B048081E7373 /* LessonVideoRenderJobRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E1E5B2DD62B614126E2F209 /* LessonVideoRenderJobRow.swift */; };
+		C0D2F94AB4D067310F42D646 /* LessonVideoSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CEA9D50DDF10D03D165CF91 /* LessonVideoSafetyPolicy.swift */; };
 		C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7874C6477BAB664C48551926 /* WCSDomainProjections.swift */; };
 		C3D615464982B36D34F0B07A /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */; };
 		C4E172D8CA95F2B8209B9447 /* CrossrefWorksAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */; };
+		C9EBACBAEED26CD6CC23023A /* LessonVideoStoryboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7AE3432BBD15E5AD0C7E4 /* LessonVideoStoryboardModels.swift */; };
 		CD1CA64245D616360EFD0E69 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60ABF3B78D740911D3BD5D7 /* APIError.swift */; };
+		D2F735A57E32EDAB4DBE6842 /* ManualVideoFileValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5047869B14162FF503F8A2 /* ManualVideoFileValidator.swift */; };
+		D3A158C72808EB2CBE04693B /* LessonVideoPlaybackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B25C4DDF8D97B96D6178D11 /* LessonVideoPlaybackPolicy.swift */; };
+		D893B3D893889D3E6BF50BEE /* LessonVideoGenerationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FD4C8D6260B637494DCFA7 /* LessonVideoGenerationSettings.swift */; };
 		D99D490D14871370DEBF6AB1 /* WCSStoreKitSubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */; };
 		D9F58EA01DA0EF7D3E8D8C55 /* CourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EC65D149D994F3DA726A6EA /* CourseListView.swift */; };
+		DA4B3B331290BA969B1F862D /* PerplexityAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF377C83BB82265C8F612AA3 /* PerplexityAPIClient.swift */; };
 		DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */; };
+		E2A96159C0EC08398F04B68D /* WebVTTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D4A7CBE82FF1BCE3AE2438 /* WebVTTParser.swift */; };
 		E2C5F4DB8C8C9E5910CA537D /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D42CB6BF06F1D5953B1DB57 /* DesignTokens.swift */; };
+		E3E3C299695A3566C780FB97 /* HomeTrustClusterContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79A2F7B6E8A03E66E2E72808 /* HomeTrustClusterContent.swift */; };
 		E9754C3A2484464A37C27A64 /* Subscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E844D4C89354A7C29261E2 /* Subscription.swift */; };
+		EA34CAB043B6705D183E9A39 /* LessonVideoStoryboard+MotionKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43633818C46FCD23AD80776B /* LessonVideoStoryboard+MotionKit.swift */; };
 		F1B879D2E8FBB061E91D34D6 /* YouTubeEmbedWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC3EAAAC22679C61D3BADE7 /* YouTubeEmbedWebView.swift */; };
 		F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */; };
 		F78B8DD02D1234D2AFCEF0D9 /* SubscriptionBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */; };
@@ -82,17 +96,6 @@
 		F90D52DA457C2AA6DE3E3E26 /* AdminAIVideoGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35CA3D7C3B35A247FE1BCD0C /* AdminAIVideoGenerator.swift */; };
 		FC18CF0846D0C15A3A1873BE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F7FD7BAE011A0EA8C66044 /* ProfileView.swift */; };
 		FF386D0DF03CF30DE4FED197 /* AdminCourseCreatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97BC246229AB40E8B18EAF8 /* AdminCourseCreatorView.swift */; };
-		E9A1C0010000000000000102 /* LessonVideoRenderJobRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */; };
-		E9A1C0010000000000000104 /* LessonVideoStoryboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */; };
-		E9A1C0010000000000000106 /* LessonVideoStoryboard+MotionKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */; };
-		F00000050000000000000002 /* AVFoundationLessonComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000050000000000000001 /* AVFoundationLessonComposer.swift */; };
-		F00000060000000000000002 /* AVFoundationImageSequenceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */; };
-		F00000070000000000000002 /* LessonVideoSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */; };
-		E9A1C0010000000000000109 /* AdminInlineAVVideoPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0010000000000000108 /* AdminInlineAVVideoPreview.swift */; };
-		E9A1C001000000000000010B /* LessonVideoFeaturesPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C001000000000000010A /* LessonVideoFeaturesPreviews.swift */; };
-		E9A1C0020000000000000202 /* PerplexityAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0020000000000000201 /* PerplexityAPIClient.swift */; };
-		E9A1C0020000000000000206 /* LessonManualVideoBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0020000000000000205 /* LessonManualVideoBackup.swift */; };
-		E9A1C0030000000000000302 /* LessonVideoWithYouTubeBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1C0030000000000000301 /* LessonVideoWithYouTubeBackupView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,34 +119,26 @@
 		05B3B0F4C221C558F2544E00 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		09B519BFA90957005BCF91A8 /* CourseListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListViewModel.swift; sourceTree = "<group>"; };
 		0BABC0E16BB018A8B5BA4017 /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
+		0C24D5322F0000706A092BDF /* LessonVideoFeaturesPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoFeaturesPreviews.swift; sourceTree = "<group>"; };
 		0D42CB6BF06F1D5953B1DB57 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		0EC65D149D994F3DA726A6EA /* CourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListView.swift; sourceTree = "<group>"; };
 		12A9AFF8ABBCF19959C62BD6 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		18A7AE3432BBD15E5AD0C7E4 /* LessonVideoStoryboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoStoryboardModels.swift; sourceTree = "<group>"; };
 		1A6304ABCAC4DCEB84650218 /* CourseDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailViewModel.swift; sourceTree = "<group>"; };
+		1A78232286EBE51D55AFAAC9 /* LessonManualVideoBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonManualVideoBackup.swift; sourceTree = "<group>"; };
+		1B25C4DDF8D97B96D6178D11 /* LessonVideoPlaybackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoPlaybackPolicy.swift; sourceTree = "<group>"; };
 		1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageArchitecture.swift; sourceTree = "<group>"; };
 		1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchAPIClient.swift; sourceTree = "<group>"; };
 		1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainRepositories.swift; sourceTree = "<group>"; };
 		2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSBFFPayloads.swift; sourceTree = "<group>"; };
 		247A3929E99D95ABC59927EB /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleVideoDiscoveryPipeline.swift; sourceTree = "<group>"; };
-		E8C203D84FA02D118ECBB001 /* LessonVideoPlaybackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoPlaybackPolicy.swift; sourceTree = "<group>"; };
-		E7C203D84FA02D118ECBB001 /* WebVTTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebVTTParser.swift; sourceTree = "<group>"; };
-		E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoRenderJobRow.swift; sourceTree = "<group>"; };
-		E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoStoryboardModels.swift; sourceTree = "<group>"; };
-		E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LessonVideoStoryboard+MotionKit.swift"; sourceTree = "<group>"; };
-		F00000050000000000000001 /* AVFoundationLessonComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationLessonComposer.swift; sourceTree = "<group>"; };
-		F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationImageSequenceRenderer.swift; sourceTree = "<group>"; };
-		F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoSafetyPolicy.swift; sourceTree = "<group>"; };
-		E9A1C0010000000000000108 /* AdminInlineAVVideoPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminInlineAVVideoPreview.swift; sourceTree = "<group>"; };
-		E9A1C001000000000000010A /* LessonVideoFeaturesPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoFeaturesPreviews.swift; sourceTree = "<group>"; };
-		E9A1C0020000000000000201 /* PerplexityAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerplexityAPIClient.swift; sourceTree = "<group>"; };
-		E9A1C0020000000000000205 /* LessonManualVideoBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonManualVideoBackup.swift; sourceTree = "<group>"; };
-		E9A1C0030000000000000301 /* LessonVideoWithYouTubeBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoWithYouTubeBackupView.swift; sourceTree = "<group>"; };
 		2AA475298D2DB4032CEFEDED /* VideoPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerViewModel.swift; sourceTree = "<group>"; };
 		2B8521B4CFAD521767793ED7 /* WCS-Platform.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discussion.swift; sourceTree = "<group>"; };
 		2DBE87F50C43953ECCBE4C20 /* LessonRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonRowView.swift; sourceTree = "<group>"; };
 		2FD840C97475E980E4849200 /* Lesson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lesson.swift; sourceTree = "<group>"; };
+		30EB387DAA4A5B42A1D0DE49 /* VideoGeneration-InfoPlistKeys.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "VideoGeneration-InfoPlistKeys.txt"; sourceTree = "<group>"; };
 		35BEE9FAA5CE54E3D400B6F6 /* AudioPresentationReadiness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPresentationReadiness.swift; sourceTree = "<group>"; };
 		35CA3D7C3B35A247FE1BCD0C /* AdminAIVideoGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAIVideoGenerator.swift; sourceTree = "<group>"; };
 		39C4CF88BA458D1DA1805B1F /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
@@ -151,48 +146,58 @@
 		3BD2E7C0E43801AEECE31098 /* WCS_PlatformUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformUITests.swift; sourceTree = "<group>"; };
 		3DF031A29C4F07AEABE60252 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSAboutPlatformView.swift; sourceTree = "<group>"; };
+		43633818C46FCD23AD80776B /* LessonVideoStoryboard+MotionKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LessonVideoStoryboard+MotionKit.swift"; sourceTree = "<group>"; };
 		43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
+		44C7A76601F4BF0D2816555E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		46FD5C640490977CE9A34763 /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		4C833CE4D85864C62F7D6691 /* AdminCourseCreatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseCreatorViewModel.swift; sourceTree = "<group>"; };
 		59E844D4C89354A7C29261E2 /* Subscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subscription.swift; sourceTree = "<group>"; };
 		5BF0E1953E75ACEA03727D48 /* HomeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTabView.swift; sourceTree = "<group>"; };
-		E9B103C84FA02D118ECAA001 /* HomeTrustClusterContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTrustClusterContent.swift; sourceTree = "<group>"; };
-		E9B103C84FA02D118ECAA003 /* HomeTrustClusterViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTrustClusterViews.swift; sourceTree = "<group>"; };
+		5CEA9D50DDF10D03D165CF91 /* LessonVideoSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoSafetyPolicy.swift; sourceTree = "<group>"; };
 		5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossrefWorksAPIClient.swift; sourceTree = "<group>"; };
 		60820261114D2D2A475D4822 /* View+SimulatorStability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SimulatorStability.swift"; sourceTree = "<group>"; };
 		61069ED3967742504EF8D5DA /* QuizStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizStartView.swift; sourceTree = "<group>"; };
 		69A497777DA5DA784F00D531 /* WCSStoreKitSubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSStoreKitSubscriptionManager.swift; sourceTree = "<group>"; };
 		6B46DBA8710BD6FCC2AAEF25 /* AdminAICourseGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAICourseGenerator.swift; sourceTree = "<group>"; };
+		6E1E5B2DD62B614126E2F209 /* LessonVideoRenderJobRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoRenderJobRow.swift; sourceTree = "<group>"; };
 		6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseDraft.swift; sourceTree = "<group>"; };
-		F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualExternalLessonVideoModels.swift; sourceTree = "<group>"; };
-		F00000030000000000000001 /* ManualVideoFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualVideoFileValidator.swift; sourceTree = "<group>"; };
 		712C4A49941F040BE70FD336 /* MembershipPaymentsHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MembershipPaymentsHubView.swift; sourceTree = "<group>"; };
 		71F7FD7BAE011A0EA8C66044 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		751C751E3B38903A1A8A475F /* HomeTrustClusterViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTrustClusterViews.swift; sourceTree = "<group>"; };
 		7874C6477BAB664C48551926 /* WCSDomainProjections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainProjections.swift; sourceTree = "<group>"; };
+		79A2F7B6E8A03E66E2E72808 /* HomeTrustClusterContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTrustClusterContent.swift; sourceTree = "<group>"; };
+		7FC388D551BCF3BD750FE590 /* AdminInlineAVVideoPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminInlineAVVideoPreview.swift; sourceTree = "<group>"; };
 		801EE1D1B9153672C18A5BE3 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		819B08829E36EC821515F9B9 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		85463E9EED8C095A2FFE41C5 /* WCSCommerceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSCommerceModels.swift; sourceTree = "<group>"; };
+		85FD4C8D6260B637494DCFA7 /* LessonVideoGenerationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoGenerationSettings.swift; sourceTree = "<group>"; };
 		887901DB1B77F90C6D322C4A /* WCSAdminFinanceDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSAdminFinanceDashboardView.swift; sourceTree = "<group>"; };
 		8D05AB9956D32F55F2C70F68 /* SubscriptionBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionBadgeView.swift; sourceTree = "<group>"; };
+		8D0CA7A4079C2F1E7F486981 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryEvent.swift; sourceTree = "<group>"; };
 		92ACD9F9C1F337500EBC88BE /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizQuestionView.swift; sourceTree = "<group>"; };
 		A2A5B68565C5431264720813 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
+		A2C820F8434ED2FF0E2F6EAF /* ManualExternalLessonVideoModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualExternalLessonVideoModels.swift; sourceTree = "<group>"; };
 		A8789C4F207CA456FED64FED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B97BE3FC5B786BC2FF881795 /* CourseHydration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseHydration.swift; sourceTree = "<group>"; };
+		B9E6708870A0501CB04E47E0 /* WCSLessonVideoPipelinePayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSLessonVideoPipelinePayloads.swift; sourceTree = "<group>"; };
 		BBC3EAAAC22679C61D3BADE7 /* YouTubeEmbedWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeEmbedWebView.swift; sourceTree = "<group>"; };
 		BC13D4C96EA65CA89A72DAC9 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
-		F00000010000000000000001 /* LessonVideoGenerationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoGenerationSettings.swift; sourceTree = "<group>"; };
-		F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSLessonVideoPipelinePayloads.swift; sourceTree = "<group>"; };
-		F00000010000000000000003 /* VideoGeneration-InfoPlistKeys.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "VideoGeneration-InfoPlistKeys.txt"; sourceTree = "<group>"; };
+		BC5047869B14162FF503F8A2 /* ManualVideoFileValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualVideoFileValidator.swift; sourceTree = "<group>"; };
+		BF4D0F3018DB77E4990E3B93 /* AVFoundationLessonComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationLessonComposer.swift; sourceTree = "<group>"; };
 		C17474560116B58C8CB7080E /* WCS_PlatformTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformTests.swift; sourceTree = "<group>"; };
 		C182B49B76C26A14BE58E754 /* DiscussionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionViewModel.swift; sourceTree = "<group>"; };
 		C35635417F6B5BAC2761C3DB /* AdminCourseDraftStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseDraftStore.swift; sourceTree = "<group>"; };
+		C4D4A7CBE82FF1BCE3AE2438 /* WebVTTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebVTTParser.swift; sourceTree = "<group>"; };
+		CF377C83BB82265C8F612AA3 /* PerplexityAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerplexityAPIClient.swift; sourceTree = "<group>"; };
 		D60ABF3B78D740911D3BD5D7 /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
+		DD6130B2EAFAB456A1DF1546 /* LessonVideoWithYouTubeBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoWithYouTubeBackupView.swift; sourceTree = "<group>"; };
 		DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assignment.swift; sourceTree = "<group>"; };
 		DEDB72807D275CC1CAED4C98 /* Enrollment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enrollment.swift; sourceTree = "<group>"; };
 		E452FA949B46382D3D3C87DA /* WCS_PlatformApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformApp.swift; sourceTree = "<group>"; };
 		E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalServiceResilience.swift; sourceTree = "<group>"; };
+		E94C4DCA521DDCD9860A9747 /* AVFoundationImageSequenceRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVFoundationImageSequenceRenderer.swift; sourceTree = "<group>"; };
 		EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDiscussionStore.swift; sourceTree = "<group>"; };
 		EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainContracts.swift; sourceTree = "<group>"; };
 		F1D5B9DDEE5941EA181E2F2E /* MockCourseCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCourseCatalog.swift; sourceTree = "<group>"; };
@@ -218,6 +223,8 @@
 		110AE839CD1BA909DAD0621A = {
 			isa = PBXGroup;
 			children = (
+				8D0CA7A4079C2F1E7F486981 /* Assets.xcassets */,
+				44C7A76601F4BF0D2816555E /* PrivacyInfo.xcprivacy */,
 				E452FA949B46382D3D3C87DA /* WCS_PlatformApp.swift */,
 				F4C530F7558FC0ED6DC4A025 /* Core */,
 				F73C3D2D184E413B5671FC29 /* Learning */,
@@ -237,8 +244,8 @@
 				0EC65D149D994F3DA726A6EA /* CourseListView.swift */,
 				F98281130F58673AEE355659 /* DiscussionView.swift */,
 				5BF0E1953E75ACEA03727D48 /* HomeTabView.swift */,
-				E9B103C84FA02D118ECAA001 /* HomeTrustClusterContent.swift */,
-				E9B103C84FA02D118ECAA003 /* HomeTrustClusterViews.swift */,
+				79A2F7B6E8A03E66E2E72808 /* HomeTrustClusterContent.swift */,
+				751C751E3B38903A1A8A475F /* HomeTrustClusterViews.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -261,12 +268,12 @@
 			isa = PBXGroup;
 			children = (
 				6EFFD0BE899E829E110F0680 /* AdminCourseDraft.swift */,
-				F00000020000000000000001 /* ManualExternalLessonVideoModels.swift */,
 				DE2B1BCEF0346EE6E42B35C0 /* Assignment.swift */,
 				A2A5B68565C5431264720813 /* Course.swift */,
 				2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */,
 				DEDB72807D275CC1CAED4C98 /* Enrollment.swift */,
 				2FD840C97475E980E4849200 /* Lesson.swift */,
+				A2C820F8434ED2FF0E2F6EAF /* ManualExternalLessonVideoModels.swift */,
 				0BABC0E16BB018A8B5BA4017 /* Module.swift */,
 				39C4CF88BA458D1DA1805B1F /* Quiz.swift */,
 				59E844D4C89354A7C29261E2 /* Subscription.swift */,
@@ -315,13 +322,13 @@
 				B97BE3FC5B786BC2FF881795 /* CourseHydration.swift */,
 				5DE3247D62B524BDADE02067 /* CrossrefWorksAPIClient.swift */,
 				E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */,
+				1A78232286EBE51D55AFAAC9 /* LessonManualVideoBackup.swift */,
+				BC5047869B14162FF503F8A2 /* ManualVideoFileValidator.swift */,
 				F1D5B9DDEE5941EA181E2F2E /* MockCourseCatalog.swift */,
 				EC823371BBF841EEE0BE7A10 /* MockDiscussionStore.swift */,
 				F66FD55D44EE2D598667B6EB /* MockLearningStore.swift */,
 				F3433B36FD14811F99D62942 /* NetworkClient.swift */,
-				E9A1C0020000000000000201 /* PerplexityAPIClient.swift */,
-				E9A1C0020000000000000205 /* LessonManualVideoBackup.swift */,
-				F00000030000000000000001 /* ManualVideoFileValidator.swift */,
+				CF377C83BB82265C8F612AA3 /* PerplexityAPIClient.swift */,
 				1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */,
 				F2233AAE50E846B1EC23BAC8 /* WCSPlatformAccessControl.swift */,
 				1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */,
@@ -363,8 +370,8 @@
 			isa = PBXGroup;
 			children = (
 				F97BC246229AB40E8B18EAF8 /* AdminCourseCreatorView.swift */,
-				E9A1C0010000000000000108 /* AdminInlineAVVideoPreview.swift */,
-				E9A1C001000000000000010A /* LessonVideoFeaturesPreviews.swift */,
+				7FC388D551BCF3BD750FE590 /* AdminInlineAVVideoPreview.swift */,
+				0C24D5322F0000706A092BDF /* LessonVideoFeaturesPreviews.swift */,
 			);
 			path = Admin;
 			sourceTree = "<group>";
@@ -386,13 +393,26 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		D054AD0E7590599605C178B6 /* VideoPipeline */ = {
+			isa = PBXGroup;
+			children = (
+				E94C4DCA521DDCD9860A9747 /* AVFoundationImageSequenceRenderer.swift */,
+				BF4D0F3018DB77E4990E3B93 /* AVFoundationLessonComposer.swift */,
+				6E1E5B2DD62B614126E2F209 /* LessonVideoRenderJobRow.swift */,
+				5CEA9D50DDF10D03D165CF91 /* LessonVideoSafetyPolicy.swift */,
+				43633818C46FCD23AD80776B /* LessonVideoStoryboard+MotionKit.swift */,
+				18A7AE3432BBD15E5AD0C7E4 /* LessonVideoStoryboardModels.swift */,
+			);
+			path = VideoPipeline;
+			sourceTree = "<group>";
+		};
 		D0637555C4D7B147056927AC /* Course */ = {
 			isa = PBXGroup;
 			children = (
 				46FD5C640490977CE9A34763 /* CourseDetailView.swift */,
 				2DBE87F50C43953ECCBE4C20 /* LessonRowView.swift */,
+				DD6130B2EAFAB456A1DF1546 /* LessonVideoWithYouTubeBackupView.swift */,
 				92ACD9F9C1F337500EBC88BE /* VideoPlayerView.swift */,
-				E9A1C0030000000000000301 /* LessonVideoWithYouTubeBackupView.swift */,
 			);
 			path = Course;
 			sourceTree = "<group>";
@@ -412,10 +432,10 @@
 			isa = PBXGroup;
 			children = (
 				2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */,
-				F00000040000000000000001 /* WCSLessonVideoPipelinePayloads.swift */,
 				EEF93ECC98BA9F3796DA1679 /* WCSDomainContracts.swift */,
 				7874C6477BAB664C48551926 /* WCSDomainProjections.swift */,
 				1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */,
+				B9E6708870A0501CB04E47E0 /* WCSLessonVideoPipelinePayloads.swift */,
 			);
 			path = Architecture;
 			sourceTree = "<group>";
@@ -424,9 +444,9 @@
 			isa = PBXGroup;
 			children = (
 				BC13D4C96EA65CA89A72DAC9 /* AppEnvironment.swift */,
-				F00000010000000000000001 /* LessonVideoGenerationSettings.swift */,
-				F00000010000000000000003 /* VideoGeneration-InfoPlistKeys.txt */,
 				F7A950A07D76E4E91EECA949 /* BrandOutboundLinks.swift */,
+				85FD4C8D6260B637494DCFA7 /* LessonVideoGenerationSettings.swift */,
+				30EB387DAA4A5B42A1D0DE49 /* VideoGeneration-InfoPlistKeys.txt */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -446,26 +466,13 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
-		E9A1C0010000000000000107 /* VideoPipeline */ = {
-			isa = PBXGroup;
-			children = (
-				E9A1C0010000000000000101 /* LessonVideoRenderJobRow.swift */,
-				E9A1C0010000000000000103 /* LessonVideoStoryboardModels.swift */,
-				E9A1C0010000000000000105 /* LessonVideoStoryboard+MotionKit.swift */,
-				F00000050000000000000001 /* AVFoundationLessonComposer.swift */,
-				F00000060000000000000001 /* AVFoundationImageSequenceRenderer.swift */,
-				F00000070000000000000001 /* LessonVideoSafetyPolicy.swift */,
-			);
-			path = VideoPipeline;
-			sourceTree = "<group>";
-		};
 		F73C3D2D184E413B5671FC29 /* Learning */ = {
 			isa = PBXGroup;
 			children = (
-				E8C203D84FA02D118ECBB001 /* LessonVideoPlaybackPolicy.swift */,
+				1B25C4DDF8D97B96D6178D11 /* LessonVideoPlaybackPolicy.swift */,
 				25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */,
-				E7C203D84FA02D118ECBB001 /* WebVTTParser.swift */,
-				E9A1C0010000000000000107 /* VideoPipeline */,
+				C4D4A7CBE82FF1BCE3AE2438 /* WebVTTParser.swift */,
+				D054AD0E7590599605C178B6 /* VideoPipeline */,
 			);
 			path = Learning;
 			sourceTree = "<group>";
@@ -516,6 +523,7 @@
 			buildConfigurationList = D7C8905FF00D96598DDD5FC2 /* Build configuration list for PBXNativeTarget "WCS-Platform" */;
 			buildPhases = (
 				D88C56033ED9D733F00CD88C /* Sources */,
+				E46AEAB7DE3FDF7DFF828027 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -591,6 +599,19 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		E46AEAB7DE3FDF7DFF828027 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				367CF2C3C496D286B06D7E60 /* Assets.xcassets in Resources */,
+				BB5E68E0050176F9E80BACA0 /* PrivacyInfo.xcprivacy in Resources */,
+				532495956040AE198C266317 /* VideoGeneration-InfoPlistKeys.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		6E42A9C13A6894F3519E7E0E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -614,17 +635,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				CD1CA64245D616360EFD0E69 /* APIError.swift in Sources */,
+				13D1E5DE55CFE062ADF86159 /* AVFoundationImageSequenceRenderer.swift in Sources */,
+				8B1C07F2A94FEDD886835687 /* AVFoundationLessonComposer.swift in Sources */,
 				68519CFF546FB55C3958E56D /* AdminAICourseGenerator.swift in Sources */,
 				F90D52DA457C2AA6DE3E3E26 /* AdminAIVideoGenerator.swift in Sources */,
 				FF386D0DF03CF30DE4FED197 /* AdminCourseCreatorView.swift in Sources */,
-				E9A1C0010000000000000109 /* AdminInlineAVVideoPreview.swift in Sources */,
-				E9A1C001000000000000010B /* LessonVideoFeaturesPreviews.swift in Sources */,
 				9F6EB2B1330141E858120172 /* AdminCourseCreatorViewModel.swift in Sources */,
 				0E7E49DF9976D4B4D73A61E2 /* AdminCourseDraft.swift in Sources */,
-				F00000020000000000000002 /* ManualExternalLessonVideoModels.swift in Sources */,
 				0B5B5FC68A1E763ADDAA4FBB /* AdminCourseDraftStore.swift in Sources */,
+				B4946310C5DD287CD2C9FCC9 /* AdminInlineAVVideoPreview.swift in Sources */,
 				A7EE14229CD48BEE2F864AA7 /* AppEnvironment.swift in Sources */,
-				F00000010000000000000002 /* LessonVideoGenerationSettings.swift in Sources */,
 				0AF8BC5335CF169449017324 /* AppRootView.swift in Sources */,
 				C3D615464982B36D34F0B07A /* AppViewModel.swift in Sources */,
 				6C38459DCCD4BC84904E48E9 /* Assignment.swift in Sources */,
@@ -645,29 +665,30 @@
 				56C0C66659C43E126C36760A /* Enrollment.swift in Sources */,
 				B20ED49DA9B8324D645D1CD0 /* ExternalServiceResilience.swift in Sources */,
 				5448D38865FE8D7B6A17255A /* HomeTabView.swift in Sources */,
-				E9B103C84FA02D118ECAA002 /* HomeTrustClusterContent.swift in Sources */,
-				E9B103C84FA02D118ECAA004 /* HomeTrustClusterViews.swift in Sources */,
+				E3E3C299695A3566C780FB97 /* HomeTrustClusterContent.swift in Sources */,
+				6B7502B94CA727FDA06F643D /* HomeTrustClusterViews.swift in Sources */,
 				278DA1DB4180160547740DEE /* Lesson.swift in Sources */,
+				A12CE915F958DB5CE872B513 /* LessonManualVideoBackup.swift in Sources */,
 				3864C2308A1D3D1B3231AD3A /* LessonRowView.swift in Sources */,
-				E8C203D84FA02D118ECBB002 /* LessonVideoPlaybackPolicy.swift in Sources */,
-				E9A1C0010000000000000102 /* LessonVideoRenderJobRow.swift in Sources */,
-				E9A1C0010000000000000104 /* LessonVideoStoryboardModels.swift in Sources */,
-				E9A1C0010000000000000106 /* LessonVideoStoryboard+MotionKit.swift in Sources */,
-				F00000050000000000000002 /* AVFoundationLessonComposer.swift in Sources */,
-				F00000060000000000000002 /* AVFoundationImageSequenceRenderer.swift in Sources */,
-				F00000070000000000000002 /* LessonVideoSafetyPolicy.swift in Sources */,
+				806ECAA505DE9DD9BAC666F1 /* LessonVideoFeaturesPreviews.swift in Sources */,
+				D893B3D893889D3E6BF50BEE /* LessonVideoGenerationSettings.swift in Sources */,
+				D3A158C72808EB2CBE04693B /* LessonVideoPlaybackPolicy.swift in Sources */,
+				BEB9141B0CA2B048081E7373 /* LessonVideoRenderJobRow.swift in Sources */,
+				C0D2F94AB4D067310F42D646 /* LessonVideoSafetyPolicy.swift in Sources */,
+				EA34CAB043B6705D183E9A39 /* LessonVideoStoryboard+MotionKit.swift in Sources */,
+				C9EBACBAEED26CD6CC23023A /* LessonVideoStoryboardModels.swift in Sources */,
+				A05E118D224606728BDA2F64 /* LessonVideoWithYouTubeBackupView.swift in Sources */,
+				AFB595449D26A22C4F38D681 /* ManualExternalLessonVideoModels.swift in Sources */,
+				D2F735A57E32EDAB4DBE6842 /* ManualVideoFileValidator.swift in Sources */,
 				49F73151C1A7B55FD03A5DDA /* MembershipPaymentsHubView.swift in Sources */,
-				E7C203D84FA02D118ECBB003 /* WebVTTParser.swift in Sources */,
 				9AE9B2E9CABF5054ACD9F2EC /* MockCourseCatalog.swift in Sources */,
 				768D4B13BE6BB0F298BF2369 /* MockDiscussionStore.swift in Sources */,
 				5CB794EBE213D22C0DB84150 /* MockLearningStore.swift in Sources */,
 				A052A3B1034AC95213E4D7B0 /* Module.swift in Sources */,
 				5A6E681E4B131A4DF7698394 /* ModuleVideoDiscoveryPipeline.swift in Sources */,
 				67BFF5F889262FBD25F66D8A /* NetworkClient.swift in Sources */,
-				E9A1C0020000000000000202 /* PerplexityAPIClient.swift in Sources */,
-				E9A1C0020000000000000206 /* LessonManualVideoBackup.swift in Sources */,
-				F00000030000000000000002 /* ManualVideoFileValidator.swift in Sources */,
 				A72F6866744992DB6CD757A2 /* Notifications.swift in Sources */,
+				DA4B3B331290BA969B1F862D /* PerplexityAPIClient.swift in Sources */,
 				FC18CF0846D0C15A3A1873BE /* ProfileView.swift in Sources */,
 				B73019AF4379C87924B2359B /* Quiz.swift in Sources */,
 				993269EFC5B02DE459F0C50F /* QuizQuestionView.swift in Sources */,
@@ -680,20 +701,20 @@
 				8EB345FCA606C168A927D94F /* TelemetryEvent.swift in Sources */,
 				F8D4AF429EB50A1DEF470E67 /* User.swift in Sources */,
 				9B0DC185E9A042C35BCA186C /* VideoPlayerView.swift in Sources */,
-				E9A1C0030000000000000302 /* LessonVideoWithYouTubeBackupView.swift in Sources */,
 				9EBAF97A15249A1865E62D68 /* VideoPlayerViewModel.swift in Sources */,
 				9F528517279F0563ACA9055F /* View+SimulatorStability.swift in Sources */,
 				F56AA44E280A57EB38802451 /* WCSAboutPlatformView.swift in Sources */,
 				87040CCBD1A0CF862EBCD556 /* WCSAdminFinanceDashboardView.swift in Sources */,
 				887F9A04F903EF2429F21EE0 /* WCSBFFPayloads.swift in Sources */,
-				F00000040000000000000002 /* WCSLessonVideoPipelinePayloads.swift in Sources */,
 				513D887D95B3DC89560FD437 /* WCSCommerceModels.swift in Sources */,
 				DCA92101EBCE82F4FA082515 /* WCSDomainContracts.swift in Sources */,
 				C3D14711F896A88A0BDB461B /* WCSDomainProjections.swift in Sources */,
 				46669C24E342E9F4CEDBF75A /* WCSDomainRepositories.swift in Sources */,
+				9E6B646E25825740F6A817AC /* WCSLessonVideoPipelinePayloads.swift in Sources */,
 				1437FD4F579C24A155E355AF /* WCSPlatformAccessControl.swift in Sources */,
 				D99D490D14871370DEBF6AB1 /* WCSStoreKitSubscriptionManager.swift in Sources */,
 				00ACCAA5418F28C3AB47B7A5 /* WCS_PlatformApp.swift in Sources */,
+				E2A96159C0EC08398F04B68D /* WebVTTParser.swift in Sources */,
 				F1B879D2E8FBB061E91D34D6 /* YouTubeEmbedWebView.swift in Sources */,
 				11150D34B89BFB8EE93C171C /* YouTubeSearchAPIClient.swift in Sources */,
 			);
@@ -787,7 +808,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -828,7 +849,7 @@
 				);
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				WCS_PERPLEXITY_API_KEY = "7249d645-a81d-44c1-be08-87a98b15a547";
+				WCS_PERPLEXITY_API_KEY = "";
 				YOUTUBE_DATA_API_KEY = "";
 			};
 			name = Release;
@@ -905,7 +926,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -953,7 +974,7 @@
 				);
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				WCS_PERPLEXITY_API_KEY = "7249d645-a81d-44c1-be08-87a98b15a547";
+				WCS_PERPLEXITY_API_KEY = "";
 				YOUTUBE_DATA_API_KEY = "";
 			};
 			name = Debug;

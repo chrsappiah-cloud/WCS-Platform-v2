@@ -24,8 +24,9 @@ targets:
       - path: Core
       - path: Learning
       - path: WCS_PlatformApp.swift
-    resources:
       - path: Assets.xcassets
+      - path: PrivacyInfo.xcprivacy
+        optional: true
     settings:
       base:
         INFOPLIST_FILE: Info.plist
