@@ -105,6 +105,18 @@ final class CourseDetailViewModel: ObservableObject {
         return ns.domain == NSURLErrorDomain && ns.code == NSURLErrorCancelled
     }
 
+    /// Classifies networking errors so analytics dashboards can separate transient timeouts/offline conditions from genuine failures.
+    private static func networkFailureReason(_ error: Error) -> String {
+        let ns = error as NSError
+        guard ns.domain == NSURLErrorDomain else { return "other" }
+        switch ns.code {
+        case NSURLErrorTimedOut: return "timeout"
+        case NSURLErrorNotConnectedToInternet, NSURLErrorNetworkConnectionLost: return "offline"
+        case NSURLErrorCannotFindHost, NSURLErrorCannotConnectToHost, NSURLErrorDNSLookupFailed: return "dns_or_host"
+        default: return "url_error_\(ns.code)"
+        }
+    }
+
     private func loadScholarshipAndCompanionVideos(for course: Course) async {
         do {
             crossrefScholarship = try await CrossrefWorksAPIClient.searchWorks(
@@ -116,7 +128,10 @@ final class CourseDetailViewModel: ObservableObject {
         } catch {
             if Task.isCancelled || Self.isCancellationLikeError(error) { return }
             crossrefScholarship = []
-            Telemetry.event("crossref.fetch.failure", attributes: ["courseId": course.id.uuidString])
+            Telemetry.event("crossref.fetch.failure", attributes: [
+                "courseId": course.id.uuidString,
+                "reason": Self.networkFailureReason(error)
+            ])
         }
 
         companionVideoResults = []
@@ -137,7 +152,10 @@ final class CourseDetailViewModel: ObservableObject {
         } catch {
             if Task.isCancelled || Self.isCancellationLikeError(error) { return }
             companionVideoResults = []
-            Telemetry.event("youtube.companion.failure", attributes: ["courseId": course.id.uuidString])
+            Telemetry.event("youtube.companion.failure", attributes: [
+                "courseId": course.id.uuidString,
+                "reason": Self.networkFailureReason(error)
+            ])
         }
     }
 

@@ -350,12 +350,12 @@ final class VideoPlayerViewModel: ObservableObject {
 
     /// Resolves the manifest `.legible` selection group using async AVFoundation loading.
     ///
-    /// `isolation: nil` avoids the default `#isolation` argument, which has triggered Swift “failed to produce diagnostic”
-    /// failures for some toolchains when omitted.
+    /// We deliberately call `load(_:)` without the `isolation:` parameter so the same source compiles on
+    /// Xcode 16.4 (where `AVAsyncProperty.load` has no `isolation:` overload) and on newer Xcodes (where the
+    /// default `#isolation` value is fine for this `nonisolated` static helper).
     private static func loadManifestLegibleGroup(from asset: AVAsset) async throws -> AVMediaSelectionGroup? {
         let characteristics: [AVMediaCharacteristic] = try await asset.load(
-            .availableMediaCharacteristicsWithMediaSelectionOptions,
-            isolation: nil
+            .availableMediaCharacteristicsWithMediaSelectionOptions
         )
         guard characteristics.contains(AVMediaCharacteristic.legible) else { return nil }
         return try await asset.loadMediaSelectionGroup(for: AVMediaCharacteristic.legible)

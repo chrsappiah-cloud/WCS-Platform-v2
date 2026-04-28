@@ -53,6 +53,41 @@ Compliance narrative and outbound-link policy live in **`docs/AppStore_Review_Co
 - Internal testing first; then external beta if needed (beta App Review)
 - Test notes: sign-in, payments (if any), admin studio / demo account steps
 
+### Automated TestFlight delivery (GitHub Actions)
+
+The `.github/workflows/ios-release-testflight.yml` workflow archives a signed
+Release build and uploads it to TestFlight on every `v*` tag push (or via
+`workflow_dispatch`). It uses the existing
+`production/ExportOptions-AppStore.plist` and the `archive-appstore.sh` /
+`upload-appstore.sh` script semantics. Required GitHub Actions secrets:
+
+| Secret | Purpose |
+| --- | --- |
+| `APPLE_DISTRIBUTION_CERT_P12_BASE64` | Base64-encoded `Apple Distribution` `.p12` |
+| `APPLE_DISTRIBUTION_CERT_P12_PASSWORD` | Password used when exporting the `.p12` |
+| `APPLE_PROVISIONING_PROFILE_BASE64` | Base64-encoded App Store `.mobileprovision` |
+| `ASC_API_KEY_ID` | App Store Connect API Key ID |
+| `ASC_API_ISSUER_ID` | App Store Connect Issuer ID |
+| `ASC_API_PRIVATE_KEY_BASE64` | Base64-encoded contents of `AuthKey_<ID>.p8` |
+
+Optional secrets forwarded into the build (used by `Info.plist`
+substitutions):
+
+`WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT`, `WCS_SUPABASE_PUBLISHABLE_KEY`,
+`WCS_LESSON_VIDEO_JOB_LIST_SECRET`, `YOUTUBE_DATA_API_KEY`.
+
+To cut a release:
+
+```bash
+# bump MARKETING_VERSION / CURRENT_PROJECT_VERSION in WCS-Platform/project.yml
+# (or directly in project.pbxproj for ad-hoc cuts), then:
+git tag -a v1.1.0 -m "WCS Platform 1.1.0 (build 3)"
+git push origin v1.1.0
+```
+
+GitHub Actions will archive, sign with the imported Distribution identity,
+export an App Store IPA, and submit to TestFlight via App Store Connect API.
+
 ## 8) Submit for review
 
 - All required fields complete; build attached
