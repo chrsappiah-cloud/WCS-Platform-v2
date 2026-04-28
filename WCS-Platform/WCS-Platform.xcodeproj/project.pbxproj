@@ -116,7 +116,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		05B3B0F4C221C558F2544E00 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		05B3B0F4C221C558F2544E00 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		09B519BFA90957005BCF91A8 /* CourseListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListViewModel.swift; sourceTree = "<group>"; };
 		0BABC0E16BB018A8B5BA4017 /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
 		0C24D5322F0000706A092BDF /* LessonVideoFeaturesPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonVideoFeaturesPreviews.swift; sourceTree = "<group>"; };
@@ -131,10 +131,10 @@
 		1C4C7446564487CDCCC86AAC /* YouTubeSearchAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchAPIClient.swift; sourceTree = "<group>"; };
 		1FF9CAB425B1E71EDCC1B5E9 /* WCSDomainRepositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSDomainRepositories.swift; sourceTree = "<group>"; };
 		2019CFBA420AE7272314490B /* WCSBFFPayloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSBFFPayloads.swift; sourceTree = "<group>"; };
-		247A3929E99D95ABC59927EB /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		247A3929E99D95ABC59927EB /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		25C66B4992F14DDEC7762B03 /* ModuleVideoDiscoveryPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleVideoDiscoveryPipeline.swift; sourceTree = "<group>"; };
 		2AA475298D2DB4032CEFEDED /* VideoPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerViewModel.swift; sourceTree = "<group>"; };
-		2B8521B4CFAD521767793ED7 /* WCS-Platform.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B8521B4CFAD521767793ED7 /* WCS-Platform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D90AF29FF4EF8D651B3AB1A /* Discussion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discussion.swift; sourceTree = "<group>"; };
 		2DBE87F50C43953ECCBE4C20 /* LessonRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonRowView.swift; sourceTree = "<group>"; };
 		2FD840C97475E980E4849200 /* Lesson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lesson.swift; sourceTree = "<group>"; };
@@ -148,7 +148,7 @@
 		3EB55747B1C7BCAB6072D9F8 /* WCSAboutPlatformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSAboutPlatformView.swift; sourceTree = "<group>"; };
 		43633818C46FCD23AD80776B /* LessonVideoStoryboard+MotionKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LessonVideoStoryboard+MotionKit.swift"; sourceTree = "<group>"; };
 		43EDBCA02D8DCD8B20F14E90 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
-		44C7A76601F4BF0D2816555E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		44C7A76601F4BF0D2816555E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		46FD5C640490977CE9A34763 /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		4C833CE4D85864C62F7D6691 /* AdminCourseCreatorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminCourseCreatorViewModel.swift; sourceTree = "<group>"; };
 		59E844D4C89354A7C29261E2 /* Subscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subscription.swift; sourceTree = "<group>"; };
@@ -561,7 +561,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					036E2D628D05D50176CA1B20 = {
 						DevelopmentTeam = TM2WG7HH96;
@@ -777,6 +777,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -813,6 +814,7 @@
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -828,6 +830,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -895,6 +898,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -931,6 +935,7 @@
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -953,6 +958,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
