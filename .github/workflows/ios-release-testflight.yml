@@ -175,7 +175,8 @@ jobs:
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
         run: |
           xcrun altool \
-            --upload-package "${{ steps.locate.outputs.ipa }}" \
+            --upload-app \
+            -f "${{ steps.locate.outputs.ipa }}" \
             --type ios \
             --apiKey "$ASC_API_KEY_ID" \
             --apiIssuer "$ASC_API_ISSUER_ID" \
