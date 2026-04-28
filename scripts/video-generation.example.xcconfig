@@ -1,0 +1,22 @@
+# WCS iOS build secrets — copy lines into a **local** xcconfig (gitignored), or set User-Defined build
+# settings on the WCS-Platform target. Do not commit real API keys.
+#
+# Xcode (recommended): create `LocalSecrets.xcconfig` at repo root (see .gitignore), paste values below,
+# then Xcode → Project (blue icon) → Info → Configurations → Debug / Release → WCS-Platform row →
+# select your xcconfig under “Based on Configuration File”.
+#
+# Lesson text-to-video — Info.plist: $(WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT) and $(WCS_SUPABASE_PUBLISHABLE_KEY) (see project.pbxproj defaults).
+# WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = https://YOUR_PROJECT_REF.supabase.co/functions/v1/wcs-lesson-text-to-video
+# WCS_SUPABASE_PUBLISHABLE_KEY = sb_publishable_...
+# Same value as Supabase Edge secret WCS_JOB_LIST_SECRET on wcs-lesson-video-jobs (admin job list).
+# WCS_LESSON_VIDEO_JOB_LIST_SECRET = your-long-random-secret
+# WCSLessonTextToVideoAPIKey = $(WCS_T2V_BEARER_SECRET)
+# WCSLessonTextToVideoRequestTimeoutSeconds = 180
+# WCSLessonTextToVideoProviderBackendHint = sora
+# WCSLessonTextToVideoExtraHTTPHeadersJSON = {}
+# WCSLessonVideoMockGenerationDelayMillis = 600
+
+# --- YouTube Data API v3 (optional: Phase 4 embeds + in-lesson “YouTube backup”) ---
+# Merges into Info.plist as WCSYouTubeDataAPIKey. If you also set the scheme env var
+# YOUTUBE_DATA_API_KEY, the environment value wins at runtime.
+# YOUTUBE_DATA_API_KEY = AIza...your_key_here

@@ -117,7 +117,12 @@ enum ModuleVideoDiscoveryPipeline {
             let filtered = page.items.filter {
                 isAllowed(snippet: $0, for: line.youTubeSearchQuery)
             }
-            results.append(LessonVideoDiscoveryResult(scriptLine: line, snippets: filtered))
+            let snippets = snippetsForDisplay(
+                relevanceFiltered: filtered,
+                pageItems: page.items,
+                maxResults: maxResultsPerLesson
+            )
+            results.append(LessonVideoDiscoveryResult(scriptLine: line, snippets: snippets))
         }
         return results
     }
@@ -144,9 +149,31 @@ enum ModuleVideoDiscoveryPipeline {
             let filtered = page.items.filter {
                 isAllowed(snippet: $0, for: line.youTubeSearchQuery)
             }
-            results.append(AdminLessonVideoDiscoveryResult(scriptLine: line, snippets: filtered))
+            let snippets = snippetsForDisplay(
+                relevanceFiltered: filtered,
+                pageItems: page.items,
+                maxResults: maxResultsPerLesson
+            )
+            results.append(AdminLessonVideoDiscoveryResult(scriptLine: line, snippets: snippets))
         }
         return results
+    }
+
+    /// Prefer title tokens overlapping the search query; if that yields nothing, fall back to API order
+    /// so enrolled learners still get embeddable backups (strict relevance alone was too brittle).
+    private static func snippetsForDisplay(
+        relevanceFiltered: [YouTubeVideoSnippet],
+        pageItems: [YouTubeVideoSnippet],
+        maxResults: Int
+    ) -> [YouTubeVideoSnippet] {
+        let cap = max(1, min(maxResults, 50))
+        if !relevanceFiltered.isEmpty {
+            return Array(relevanceFiltered.prefix(cap))
+        }
+        let safe = pageItems.filter { snippet in
+            !blockedTerms.contains(where: { snippet.title.lowercased().contains($0) })
+        }
+        return Array(safe.prefix(cap))
     }
 
     private static func isAllowed(snippet: YouTubeVideoSnippet, for query: String) -> Bool {

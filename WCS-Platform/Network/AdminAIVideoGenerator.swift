@@ -2,6 +2,20 @@
 //  AdminAIVideoGenerator.swift
 //  WCS-Platform
 //
+//  Lesson video — Mootion-style **scene pipeline** (client storyboard + BFF orchestration)
+//  ---------------------------------------------------------------------------
+//  Product direction: **ingest → plan → generate → narrate → compose → review**, not one monolithic
+//  “generate entire lesson” call. The app ships a `LessonVideoStoryboard` (`scene_orchestration_v1`) alongside
+//  a legacy master `textToVideoPrompt` so the BFF can adopt short-clip generation + FFmpeg-style composition
+//  while keeping a fallback path. See `Docs/LessonVideoPipelineArchitecture.md` and `LessonVideoStoryboardModels.swift`.
+//
+//  **Provider abstraction:** OpenAI Videos / Sora, Luma, LTX, SVD, etc. live only on the server. Treat OpenAI’s
+//  Videos API as a **replaceable adapter** (vendor has announced deprecation / shutdown timeline for current
+//  Sora 2 video models — plan migration at the BFF layer without rewriting iOS scene contracts).
+//
+//  Configure `WCSLessonTextToVideoEndpoint` + keys per `VideoGeneration-InfoPlistKeys.txt`; POST
+//  `RemoteLessonTextToVideoRequest` → JSON `{ "playbackURL": "https://…" }` (signed MP4/HLS).
+//
 
 import Foundation
 
@@ -24,6 +38,8 @@ struct GeneratedVideoAsset: Codable, Hashable {
     let lecturePresentationOutline: [String]?
     let uploadSafetyReport: VideoUploadSafetyReport?
     let motionTextToVideoKit: MotionTextToVideoKit?
+    /// Scene-based plan sent to the BFF for this lesson (Mootion-style orchestration).
+    let storyboard: LessonVideoStoryboard?
 }
 
 struct VideoUploadSafetyReport: Codable, Hashable {
@@ -35,7 +51,7 @@ struct VideoUploadSafetyReport: Codable, Hashable {
     let rationale: String
 }
 
-/// Motion AI-style reusable text-to-video production kit for one lesson/module.
+/// Legacy single-clip “kit” (master prompt + beats). Prefer `storyboard` on `GeneratedVideoAsset` for BFF v1.
 struct MotionTextToVideoKit: Codable, Hashable {
     let enginePreset: String
     let targetDurationSeconds: Int
@@ -55,6 +71,186 @@ protocol AIVideoGenerating {
         onAssetGenerated: @escaping @Sendable (GeneratedVideoAsset) -> Void
     ) async -> [UUID: GeneratedVideoAsset]
     func clearCachedVideoAssets(for courseID: UUID) async
+}
+
+// MARK: - Remote BFF text-to-video
+
+/// JSON body for `POST` to `LessonVideoGenerationSettings.remoteTextToVideoEndpointURL`.
+struct RemoteLessonTextToVideoRequest: Encodable {
+    let courseId: String
+    let courseTitle: String
+    let moduleId: String
+    let moduleTitle: String
+    let lessonId: String
+    let lessonTitle: String
+    let lessonNotes: String
+    let targetAudience: String
+    let level: String
+    /// Single prompt suitable for frontier text-to-video models (Sora, Luma Ray2, LTX, etc.).
+    let textToVideoPrompt: String
+    let sourceReferences: [String]
+    /// Optional routing hint for your BFF (from `WCSLessonTextToVideoProviderBackendHint`).
+    let providerBackendHint: String?
+    /// Client marketing version for BFF logging only.
+    let clientAppVersion: String
+    /// Structured scenes for orchestrated render; when set with `pipelineMode == .sceneOrchestrationV1`, BFF should prefer clip + compose flow.
+    let storyboard: LessonVideoStoryboard?
+    let pipelineMode: LessonVideoClientPipelineMode?
+}
+
+/// Expected JSON from the BFF after generation (or signed redirect to CDN).
+struct RemoteLessonTextToVideoResponse: Decodable {
+    let playbackURL: String
+    let message: String?
+}
+
+/// Calls your HTTPS BFF (e.g. Supabase Edge Function) for each lesson; falls back to sample MP4s / YouTube discovery when the BFF returns no usable URL.
+struct RemoteLessonVideoGenerator: AIVideoGenerating {
+    private let endpoint: URL
+    private let apiKey: String?
+    private let supabaseAnonKey: String?
+    private let mock: MockAIVideoGenerator
+    private let urlSession: URLSession
+
+    init(
+        endpoint: URL,
+        apiKey: String?,
+        supabaseAnonKey: String?,
+        urlSession: URLSession
+    ) {
+        self.endpoint = endpoint
+        self.apiKey = apiKey
+        self.supabaseAnonKey = supabaseAnonKey
+        self.mock = MockAIVideoGenerator()
+        self.urlSession = urlSession
+    }
+
+    func cachedVideoAssets(for draft: AdminCourseDraft) async -> [UUID: GeneratedVideoAsset] {
+        await mock.cachedVideoAssets(for: draft)
+    }
+
+    func clearCachedVideoAssets(for courseID: UUID) async {
+        await mock.clearCachedVideoAssets(for: courseID)
+    }
+
+    func generateVideoAssets(
+        for draft: AdminCourseDraft,
+        onAssetGenerated: @escaping @Sendable (GeneratedVideoAsset) -> Void
+    ) async -> [UUID: GeneratedVideoAsset] {
+        var assets = await mock.cachedVideoAssets(for: draft)
+        var seed = 0
+
+        for module in draft.modules {
+            for lesson in module.lessons where lesson.kind == .video || lesson.kind == .live {
+                if let existing = assets[lesson.id] {
+                    onAssetGenerated(existing)
+                    continue
+                }
+
+                try? await Task.sleep(nanoseconds: LessonVideoGenerationSettings.mockGenerationDelayNanoseconds)
+
+                let remoteURL = await requestTextToVideoPlaybackURL(
+                    draft: draft,
+                    module: module,
+                    lesson: lesson
+                )
+                let defaultURL = await mock.resolveDefaultPlaybackURL(
+                    lesson: lesson,
+                    module: module,
+                    draft: draft,
+                    seed: seed
+                )
+                seed += 1
+
+                let chosenURL: String
+                let remoteNote: String?
+                if let remoteURL, remoteURL.lowercased().hasPrefix("https://") {
+                    chosenURL = remoteURL
+                    remoteNote = "BFF text-to-video (generative)."
+                } else {
+                    chosenURL = defaultURL
+                    remoteNote = remoteURL == nil ? nil : "BFF text-to-video returned no HTTPS URL; using default discovery."
+                }
+
+                let asset = await mock.makeGeneratedVideoAsset(
+                    draft: draft,
+                    module: module,
+                    lesson: lesson,
+                    playbackURL: chosenURL,
+                    remoteSourceNote: remoteNote
+                )
+                assets[lesson.id] = asset
+                await mock.upsertCached(asset: asset, for: draft.id)
+                onAssetGenerated(asset)
+            }
+        }
+
+        return assets
+    }
+
+    private func requestTextToVideoPlaybackURL(
+        draft: AdminCourseDraft,
+        module: AdminModuleDraft,
+        lesson: AdminLessonDraft
+    ) async -> String? {
+        let motionKit = mock.makeMotionTextToVideoKitForRemote(
+                    lesson: lesson,
+                    module: module,
+                    draft: draft
+                )
+        let storyboard = LessonVideoStoryboard.sceneOrchestrationV1(
+            moduleId: module.id,
+            moduleTitle: module.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            motionKit: motionKit
+        )
+        let body = RemoteLessonTextToVideoRequest(
+            courseId: draft.id.uuidString,
+            courseTitle: draft.title,
+            moduleId: module.id.uuidString,
+            moduleTitle: module.title,
+            lessonId: lesson.id.uuidString,
+            lessonTitle: lesson.title,
+            lessonNotes: lesson.notes,
+            targetAudience: draft.targetAudience,
+            level: draft.level,
+            textToVideoPrompt: motionKit.shotPrompt,
+            sourceReferences: draft.sourceReferences,
+            providerBackendHint: LessonVideoGenerationSettings.providerBackendHint,
+            clientAppVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0",
+            storyboard: storyboard,
+            pipelineMode: .sceneOrchestrationV1
+        )
+
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let apiKey, !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        } else if let supabaseAnonKey, !supabaseAnonKey.isEmpty {
+            // Supabase Edge Functions expect `Authorization: Bearer` for anon/publishable invokes when no user JWT.
+            request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+        }
+        if let supabaseAnonKey, !supabaseAnonKey.isEmpty {
+            request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        }
+        for (headerName, value) in LessonVideoGenerationSettings.remoteTextToVideoExtraHTTPHeaders {
+            request.setValue(value, forHTTPHeaderField: headerName)
+        }
+        do {
+            request.httpBody = try JSONEncoder().encode(body)
+            let (data, response) = try await urlSession.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                return nil
+            }
+            let decoded = try JSONDecoder().decode(RemoteLessonTextToVideoResponse.self, from: data)
+            let url = decoded.playbackURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            return url.isEmpty ? nil : url
+        } catch {
+            return nil
+        }
+    }
 }
 
 struct MockAIVideoGenerator: AIVideoGenerating {
@@ -87,73 +283,21 @@ struct MockAIVideoGenerator: AIVideoGenerating {
                 }
 
                 // Simulate progressive real-time generation work for each lesson.
-                try? await Task.sleep(nanoseconds: 600_000_000)
+                try? await Task.sleep(nanoseconds: LessonVideoGenerationSettings.mockGenerationDelayNanoseconds)
 
-                let sourceHint = draft.sourceReferences.first ?? "internal curriculum guidance"
-                let fallbackURL = sampleVideoURLs[stableIndex(for: lesson.id, offset: seed) % sampleVideoURLs.count]
+                let playbackURL = await resolveDefaultPlaybackURL(
+                    lesson: lesson,
+                    module: module,
+                    draft: draft,
+                    seed: seed
+                )
                 seed += 1
-                let scriptSegments = makeScriptSegments(for: lesson, module: module, draft: draft)
-                let youtubeKeywords = makeYouTubeKeywords(for: lesson, module: module, draft: draft)
-                let audioReadiness = AudioPresentationReadiness.snapshot()
-                let youtubeURL = makeYouTubeSearchURL(keywords: youtubeKeywords)
-                let liveSnippet = try? await resolveLiveLectureSnippet(keywords: youtubeKeywords)
-                let playbackURL = liveSnippet
-                    .map { "https://www.youtube.com/watch?v=\($0.videoID)" }
-                    ?? fallbackURL
-                let narration = makeNarrationText(
-                    lesson: lesson,
-                    module: module,
+                let asset = await makeGeneratedVideoAsset(
                     draft: draft,
-                    scriptSegments: scriptSegments
-                )
-                let syllabus = makeModuleSyllabus(for: module, draft: draft)
-                let lectureOutline = makeLecturePresentationOutline(
-                    lesson: lesson,
                     module: module,
-                    draft: draft
-                )
-                let uploadSafety = makeUploadSafetyReport(playbackURL: playbackURL, lesson: lesson)
-                let apiPipeline = makeAPIPipeline()
-                let motionKit = makeMotionTextToVideoKit(
                     lesson: lesson,
-                    module: module,
-                    draft: draft,
-                    scriptSegments: scriptSegments,
-                    narration: narration
-                )
-
-                let asset = GeneratedVideoAsset(
-                    lessonId: lesson.id,
-                    title: lesson.title,
                     playbackURL: playbackURL,
-                    scriptOutline: """
-                    1) Hook and context for \(draft.title)
-                    2) Core concept walkthrough for \(module.title)
-                    3) Worked example and learner checkpoint
-                    4) Summary and next action
-                    """,
-                    productionNotes: """
-                    AI-generated in real time and archived for replay. Source grounding: \(sourceHint).
-                    Module syllabus: \(syllabus.joined(separator: " | "))
-                    Lecture presentation: \(lectureOutline.joined(separator: " | "))
-                    YouTube companion: \(youtubeURL ?? "Unavailable")
-                    Audio system: \(audioReadiness.audioSystemStatus)
-                    Mic readiness: \(audioReadiness.microphoneChecklist.joined(separator: " | "))
-                    Upload safety: \(uploadSafety.uploadStatus) (\(uploadSafety.rationale))
-                    """,
-                    confidence: draft.sourceReferences.isEmpty ? 0.65 : 0.86,
-                    generatedAt: Date(),
-                    youtubeCompanionURL: liveSnippet.map { "https://www.youtube.com/watch?v=\($0.videoID)" } ?? youtubeURL,
-                    youtubeSearchKeywords: youtubeKeywords,
-                    moduleScriptSegments: scriptSegments,
-                    tutorialNarrationText: narration,
-                    microphoneChecklist: audioReadiness.microphoneChecklist,
-                    audioSystemStatus: audioReadiness.audioSystemStatus,
-                    openAIRecommendedPipeline: apiPipeline,
-                    moduleSyllabus: syllabus,
-                    lecturePresentationOutline: lectureOutline,
-                    uploadSafetyReport: uploadSafety,
-                    motionTextToVideoKit: motionKit
+                    remoteSourceNote: nil
                 )
                 assets[lesson.id] = asset
                 await cache.upsert(asset: asset, for: draft.id)
@@ -162,6 +306,124 @@ struct MockAIVideoGenerator: AIVideoGenerating {
         }
 
         return assets
+    }
+
+    fileprivate func upsertCached(asset: GeneratedVideoAsset, for courseId: UUID) async {
+        await cache.upsert(asset: asset, for: courseId)
+    }
+
+    fileprivate func resolveDefaultPlaybackURL(
+        lesson: AdminLessonDraft,
+        module: AdminModuleDraft,
+        draft: AdminCourseDraft,
+        seed: Int
+    ) async -> String {
+        let fallbackURL = sampleVideoURLs[stableIndex(for: lesson.id, offset: seed) % sampleVideoURLs.count]
+        let youtubeKeywords = makeYouTubeKeywords(for: lesson, module: module, draft: draft)
+        let liveSnippet = try? await resolveLiveLectureSnippet(keywords: youtubeKeywords)
+        return liveSnippet
+            .map { "https://www.youtube.com/watch?v=\($0.videoID)" }
+            ?? fallbackURL
+    }
+
+    fileprivate func makeMotionTextToVideoKitForRemote(
+        lesson: AdminLessonDraft,
+        module: AdminModuleDraft,
+        draft: AdminCourseDraft
+    ) -> MotionTextToVideoKit {
+        let scriptSegments = makeScriptSegments(for: lesson, module: module, draft: draft)
+        let narration = makeNarrationText(
+            lesson: lesson,
+            module: module,
+            draft: draft,
+            scriptSegments: scriptSegments
+        )
+        return makeMotionTextToVideoKit(
+            lesson: lesson,
+            module: module,
+            draft: draft,
+            scriptSegments: scriptSegments,
+            narration: narration
+        )
+    }
+
+    fileprivate func makeGeneratedVideoAsset(
+        draft: AdminCourseDraft,
+        module: AdminModuleDraft,
+        lesson: AdminLessonDraft,
+        playbackURL: String,
+        remoteSourceNote: String?
+    ) async -> GeneratedVideoAsset {
+        let sourceHint = draft.sourceReferences.first ?? "internal curriculum guidance"
+        let scriptSegments = makeScriptSegments(for: lesson, module: module, draft: draft)
+        let youtubeKeywords = makeYouTubeKeywords(for: lesson, module: module, draft: draft)
+        let audioReadiness = AudioPresentationReadiness.snapshot()
+        let youtubeURL = makeYouTubeSearchURL(keywords: youtubeKeywords)
+        let liveSnippet = try? await resolveLiveLectureSnippet(keywords: youtubeKeywords)
+        let narration = makeNarrationText(
+            lesson: lesson,
+            module: module,
+            draft: draft,
+            scriptSegments: scriptSegments
+        )
+        let syllabus = makeModuleSyllabus(for: module, draft: draft)
+        let lectureOutline = makeLecturePresentationOutline(
+            lesson: lesson,
+            module: module,
+            draft: draft
+        )
+        let uploadSafety = makeUploadSafetyReport(playbackURL: playbackURL, lesson: lesson)
+        let apiPipeline = makeAPIPipeline()
+        let motionKit = makeMotionTextToVideoKit(
+            lesson: lesson,
+            module: module,
+            draft: draft,
+            scriptSegments: scriptSegments,
+            narration: narration
+        )
+        let storyboard = LessonVideoStoryboard.sceneOrchestrationV1(
+            moduleId: module.id,
+            moduleTitle: module.title,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            motionKit: motionKit
+        )
+        let remoteLine = remoteSourceNote.map { "\n\($0)" } ?? ""
+
+        return GeneratedVideoAsset(
+            lessonId: lesson.id,
+            title: lesson.title,
+            playbackURL: playbackURL,
+            scriptOutline: """
+            1) Hook and context for \(draft.title)
+            2) Core concept walkthrough for \(module.title)
+            3) Worked example and learner checkpoint
+            4) Summary and next action
+            """,
+            productionNotes: """
+            AI-generated in real time and archived for replay. Source grounding: \(sourceHint).
+            Module syllabus: \(syllabus.joined(separator: " | "))
+            Lecture presentation: \(lectureOutline.joined(separator: " | "))
+            YouTube companion: \(youtubeURL ?? "Unavailable")
+            Audio system: \(audioReadiness.audioSystemStatus)
+            Mic readiness: \(audioReadiness.microphoneChecklist.joined(separator: " | "))
+            Upload safety: \(uploadSafety.uploadStatus) (\(uploadSafety.rationale))\(remoteLine)
+            """,
+            confidence: draft.sourceReferences.isEmpty ? 0.65 : 0.86,
+            generatedAt: Date(),
+            youtubeCompanionURL: liveSnippet.map { "https://www.youtube.com/watch?v=\($0.videoID)" } ?? youtubeURL,
+            youtubeSearchKeywords: youtubeKeywords,
+            moduleScriptSegments: scriptSegments,
+            tutorialNarrationText: narration,
+            microphoneChecklist: audioReadiness.microphoneChecklist,
+            audioSystemStatus: audioReadiness.audioSystemStatus,
+            openAIRecommendedPipeline: apiPipeline,
+            moduleSyllabus: syllabus,
+            lecturePresentationOutline: lectureOutline,
+            uploadSafetyReport: uploadSafety,
+            motionTextToVideoKit: motionKit,
+            storyboard: storyboard
+        )
     }
 
     private func stableIndex(for id: UUID, offset: Int) -> Int {
@@ -274,8 +536,10 @@ struct MockAIVideoGenerator: AIVideoGenerating {
 
     private func makeAPIPipeline() -> [String] {
         [
-            "POST /v1/videos (sora-2 or sora-2-pro) for generated lesson video jobs",
-            "GET /v1/videos/{id} polling then GET /v1/videos/{id}/content for MP4 retrieval",
+            "iOS: configure WCSLessonText* keys in Info.plist (see VideoGeneration-InfoPlistKeys.txt)",
+            "POST JSON to WCSLessonTextToVideoEndpoint → { playbackURL, message? }; optional Bearer + apikey headers",
+            "Pipeline: scene_orchestration_v1 — storyboard.scenes[] short clips (5–20s) + TTS + compose (BFF); textToVideoPrompt remains fallback master prompt",
+            "OpenAI Videos / Sora: async POST /v1/videos, poll GET /v1/videos/{id}, download GET /v1/videos/{id}/content; plan provider swap — current Sora 2 video API deprecated with announced sunset (verify OpenAI docs)",
             "POST /v1/audio/speech for narration (gpt-4o-mini-tts)",
             "POST /v1/audio/transcriptions for microphone transcript QA (gpt-4o-transcribe)",
             "GET https://cloudaicompanion.googleapis.com/v1/projects/{project}/locations for Google model location discovery",

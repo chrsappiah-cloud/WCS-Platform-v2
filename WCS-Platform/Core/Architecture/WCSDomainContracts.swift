@@ -125,6 +125,13 @@ protocol CatalogService {
 protocol LearningService {
     func enroll(programId: UUID) async throws -> Enrollment
     func markProgress(programId: UUID, moduleId: UUID, lessonId: UUID, complete: Bool) async throws -> Enrollment
+    func saveWatchProgress(
+        programId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        positionSeconds: Double,
+        durationSeconds: Double
+    ) async throws
 }
 
 protocol CommunityService {

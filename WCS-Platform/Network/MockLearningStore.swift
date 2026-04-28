@@ -16,14 +16,32 @@ struct CourseVideoGenerationStatus: Hashable {
 actor MockLearningStore {
     static let shared = MockLearningStore()
 
+    private let videoGenerator: any AIVideoGenerating
+
     private let userId = UUID(uuidString: "F0000000-0000-0000-0000-000000000001")!
     private var enrollmentDates: [UUID: Date] = [:]
     private var enrollmentIds: [UUID: UUID] = [:]
     private var completedLessonIds: Set<UUID> = []
+    /// Server-mocked last watched position per lesson (seconds).
+    private var watchPositionsByLessonId: [UUID: Double] = [:]
     private var submittedAssignments: [UUID: Submission] = [:]
     private var publishedCourses: [Course] = []
-    private let videoGenerator = MockAIVideoGenerator()
     private var activeVideoGenerationCourseIDs: Set<UUID> = []
+    /// HTTPS lesson playback overrides (admin manual backup); blocks generated assets from overwriting `Lesson.videoURL`.
+    private var manualLessonVideoPlaybackURLByLessonId: [UUID: String] = [:]
+
+    private init() {
+        if let endpoint = LessonVideoGenerationSettings.remoteTextToVideoEndpointURL {
+            videoGenerator = RemoteLessonVideoGenerator(
+                endpoint: endpoint,
+                apiKey: LessonVideoGenerationSettings.remoteTextToVideoBearerToken,
+                supabaseAnonKey: LessonVideoGenerationSettings.remoteTextToVideoSupabaseAnonKey,
+                urlSession: LessonVideoGenerationSettings.makeURLSessionForTextToVideo()
+            )
+        } else {
+            videoGenerator = MockAIVideoGenerator()
+        }
+    }
 
     private var enrolledCourseIds: Set<UUID> {
         Set(enrollmentDates.keys)
@@ -65,6 +83,7 @@ actor MockLearningStore {
             notifyChange()
             return
         }
+        seedManualVideoBackupsFromDraftNotes(draft)
         let cachedAssets = await videoGenerator.cachedVideoAssets(for: draft)
         let course = makeCourse(from: draft, generatedVideoAssets: cachedAssets, isVideoGenerationInFlight: true)
         if let index = publishedCourses.firstIndex(where: { $0.id == course.id }) {
@@ -85,8 +104,40 @@ actor MockLearningStore {
         enrollmentDates.removeAll()
         enrollmentIds.removeAll()
         completedLessonIds.removeAll()
+        watchPositionsByLessonId.removeAll()
         submittedAssignments.removeAll()
+        manualLessonVideoPlaybackURLByLessonId.removeAll()
         notifyChange()
+    }
+
+    func recordManualLessonVideoBackup(lessonId: UUID, url: String) async {
+        manualLessonVideoPlaybackURLByLessonId[lessonId] = url
+    }
+
+    func clearManualLessonVideoBackup(lessonId: UUID) async {
+        manualLessonVideoPlaybackURLByLessonId.removeValue(forKey: lessonId)
+    }
+
+    /// Re-applies `makeCourse` when a published program’s draft was edited (e.g. manual lesson video URL).
+    func rebuildPublishedCourseIfPresent(draft: AdminCourseDraft) async {
+        guard let idx = publishedCourses.firstIndex(where: { $0.id == draft.id }) else { return }
+        seedManualVideoBackupsFromDraftNotes(draft)
+        let cachedAssets = await videoGenerator.cachedVideoAssets(for: draft)
+        let inFlight = activeVideoGenerationCourseIDs.contains(draft.id)
+        publishedCourses[idx] = makeCourse(from: draft, generatedVideoAssets: cachedAssets, isVideoGenerationInFlight: inFlight)
+        notifyChange()
+    }
+
+    private func seedManualVideoBackupsFromDraftNotes(_ draft: AdminCourseDraft) {
+        for module in draft.modules {
+            for lesson in module.lessons where lesson.kind == .video || lesson.kind == .live {
+                if let url = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) {
+                    manualLessonVideoPlaybackURLByLessonId[lesson.id] = url
+                } else {
+                    manualLessonVideoPlaybackURLByLessonId.removeValue(forKey: lesson.id)
+                }
+            }
+        }
     }
 
     func videoGenerationStatus(for draft: AdminCourseDraft) async -> CourseVideoGenerationStatus {
@@ -126,6 +177,7 @@ actor MockLearningStore {
             await videoGenerator.clearCachedVideoAssets(for: draft.id)
         }
         if let index = publishedCourses.firstIndex(where: { $0.id == draft.id }) {
+            seedManualVideoBackupsFromDraftNotes(draft)
             let cachedAssets = await videoGenerator.cachedVideoAssets(for: draft)
             publishedCourses[index] = makeCourse(
                 from: draft,
@@ -143,7 +195,8 @@ actor MockLearningStore {
             base: base,
             enrolledCourseIds: enrolledCourseIds,
             completedLessonIds: completedLessonIds,
-            submittedAssignments: submittedAssignments
+            submittedAssignments: submittedAssignments,
+            watchResumeByLessonId: watchPositionsByLessonId
         )
     }
 
@@ -162,11 +215,18 @@ actor MockLearningStore {
         }
         if complete {
             completedLessonIds.insert(lessonId)
+            watchPositionsByLessonId.removeValue(forKey: lessonId)
         } else {
             completedLessonIds.remove(lessonId)
         }
         notifyChange()
         return makeEnrollment(courseId: courseId)
+    }
+
+    func saveWatchProgress(courseId: UUID, lessonId: UUID, positionSeconds: Double) {
+        guard enrollmentDates[courseId] != nil else { return }
+        watchPositionsByLessonId[lessonId] = positionSeconds
+        notifyChange()
     }
 
     func submitAssignment(_ assignmentId: UUID, content: String?, attachments: [URL]) -> Submission {
@@ -289,20 +349,33 @@ actor MockLearningStore {
                 isUnlocked: true,
                 lessons: module.lessons.map { lesson in
                     let videoAsset = generatedVideoAssets[lesson.id]
-                    let subtitle = [lesson.notes, videoAsset?.productionNotes]
+                    let notesForSubtitle: String = {
+                        if lesson.kind == .video || lesson.kind == .live {
+                            return LessonManualVideoBackup.stripMachineLines(from: lesson.notes)
+                        }
+                        return lesson.notes
+                    }()
+                    let subtitle = [notesForSubtitle, videoAsset?.productionNotes]
                         .compactMap { $0 }
+                        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                         .joined(separator: " ")
                     let generationSubtitle = subtitle.isEmpty && lesson.kind == .video && isVideoGenerationInFlight
                         ? "Generating AI lesson video in real time. This recording will be archived for reuse."
                         : subtitle
                     let fallbackVideoURL = fallbackPlaybackURL(for: lesson.id)
-                    let manualBackupVideoURL = manualVideoURL(from: lesson.notes)
+                    let manualBackupVideoURL = resolvedManualBackupVideoURL(for: lesson)
+                    let resolvedVideoURL: String? = {
+                        guard lesson.kind == .video || lesson.kind == .live else { return nil }
+                        if let manual = manualBackupVideoURL, !manual.isEmpty { return manual }
+                        if let generated = videoAsset?.playbackURL, !generated.isEmpty { return generated }
+                        return fallbackVideoURL
+                    }()
                     return Lesson(
                         id: lesson.id,
                         title: lesson.title,
                         subtitle: generationSubtitle.isEmpty ? nil : generationSubtitle,
                         type: mapLessonKind(lesson.kind),
-                        videoURL: lesson.kind == .video ? (videoAsset?.playbackURL ?? manualBackupVideoURL ?? fallbackVideoURL) : nil,
+                        videoURL: (lesson.kind == .video || lesson.kind == .live) ? resolvedVideoURL : nil,
                         durationSeconds: max(1, lesson.durationMinutes) * 60,
                         isCompleted: false,
                         isAvailable: true,
@@ -317,7 +390,9 @@ actor MockLearningStore {
                             maxAttempts: 1,
                             isSubmitted: false,
                             submission: nil
-                        ) : nil
+                        ) : nil,
+                        captionTracks: [],
+                        serverResumePositionSeconds: nil
                     )
                 }
             )
@@ -361,6 +436,9 @@ actor MockLearningStore {
 
     private func applyGeneratedVideoAsset(_ asset: GeneratedVideoAsset, courseID: UUID) {
         guard let courseIndex = publishedCourses.firstIndex(where: { $0.id == courseID }) else { return }
+        if manualLessonVideoPlaybackURLByLessonId[asset.lessonId] != nil {
+            return
+        }
         var course = publishedCourses[courseIndex]
         let updatedModules = course.modules.map { module in
             let updatedLessons = module.lessons.map { lesson in
@@ -386,7 +464,9 @@ actor MockLearningStore {
                     isUnlocked: lesson.isUnlocked,
                     reading: lesson.reading,
                     quiz: lesson.quiz,
-                    assignment: lesson.assignment
+                    assignment: lesson.assignment,
+                    captionTracks: lesson.captionTracks,
+                    serverResumePositionSeconds: lesson.serverResumePositionSeconds
                 )
             }
             return Module(
@@ -484,15 +564,11 @@ actor MockLearningStore {
         return samples[hash % samples.count]
     }
 
-    private func manualVideoURL(from notes: String) -> String? {
-        guard let range = notes.range(of: "http") else { return nil }
-        let candidate = String(notes[range.lowerBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let url = URL(string: candidate),
-              ["http", "https"].contains((url.scheme ?? "").lowercased())
-        else {
-            return nil
+    private func resolvedManualBackupVideoURL(for lesson: AdminLessonDraft) -> String? {
+        if let pinned = manualLessonVideoPlaybackURLByLessonId[lesson.id] {
+            return pinned
         }
-        return candidate
+        return LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes)
     }
 
     private func isBlockedAICourseTitle(_ title: String) -> Bool {

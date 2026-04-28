@@ -3,7 +3,8 @@
 //  WCS-Platform
 //
 //  YouTube Data API v3 — https://developers.google.com/youtube/v3/docs/search/list
-//  Set `YOUTUBE_DATA_API_KEY` in the Xcode scheme (Run → Environment Variables).
+//  Set `YOUTUBE_DATA_API_KEY` in the scheme environment, or `WCSYouTubeDataAPIKey` in Info.plist
+//  (build setting `YOUTUBE_DATA_API_KEY`, same pattern as Perplexity). Environment wins when set.
 //
 
 import Foundation
@@ -55,7 +56,7 @@ enum YouTubeAPIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            "Set YOUTUBE_DATA_API_KEY in the scheme environment."
+            "Set YOUTUBE_DATA_API_KEY (scheme env) or WCSYouTubeDataAPIKey in Info.plist via build setting YOUTUBE_DATA_API_KEY."
         case .invalidQuery:
             "Search query is empty or invalid."
         case .invalidRequestURL:
@@ -240,11 +241,18 @@ enum YouTubeSearchAPIClient {
     nonisolated private static let maxPageTokenLength = 256
 
     nonisolated static func resolveAPIKey() -> String? {
-        if let env = ProcessInfo.processInfo.environment["YOUTUBE_DATA_API_KEY"],
-           !env.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return env.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let env = ProcessInfo.processInfo.environment["YOUTUBE_DATA_API_KEY"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !env.isEmpty {
+            return env
         }
-        return nil
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "WCSYouTubeDataAPIKey") as? String else {
+            return nil
+        }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return nil }
+        if trimmed.hasPrefix("$(") { return nil }
+        return trimmed
     }
 
     nonisolated static func searchVideos(

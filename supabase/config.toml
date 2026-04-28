@@ -1,0 +1,9 @@
+# Supabase local config — https://supabase.com/docs/guides/cli
+# Hosted project ref (Dashboard URL / `supabase link --project-ref …`).
+project_id = "qbmheroqblpcbuqwnzlp"
+
+[api]
+enabled = true
+
+[functions]
+# Edge Functions live under supabase/functions/

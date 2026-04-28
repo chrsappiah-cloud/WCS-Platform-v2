@@ -53,6 +53,16 @@ nonisolated enum AppEnvironment {
         UserDefaults.standard.set(enabled, forKey: debugSafeModeUserDefaultsKey)
     }
 
+    /// Delegates to `LessonVideoGenerationSettings.remoteTextToVideoEndpointURL`.
+    static var remoteLessonTextToVideoEndpoint: URL? {
+        LessonVideoGenerationSettings.remoteTextToVideoEndpointURL
+    }
+
+    /// Delegates to `LessonVideoGenerationSettings.remoteTextToVideoBearerToken`.
+    static var remoteLessonTextToVideoAPIKey: String? {
+        LessonVideoGenerationSettings.remoteTextToVideoBearerToken
+    }
+
     /// Comma-separated StoreKit product ids from Info.plist key `WCSAppleSubscriptionProductIDs`.
     static var appleSubscriptionProductIDs: Set<String> {
         if let raw = Bundle.main.object(forInfoDictionaryKey: appleSubscriptionProductIDsInfoPlistKey) as? String {

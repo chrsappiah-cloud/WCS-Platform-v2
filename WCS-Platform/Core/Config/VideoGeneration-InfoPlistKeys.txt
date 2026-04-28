@@ -1,0 +1,68 @@
+WCS lesson video generation — Info.plist keys
+==============================================
+
+All keys are read by LessonVideoGenerationSettings (Core/Config/LessonVideoGenerationSettings.swift).
+Use HTTPS-only playback URLs from your BFF. Do not ship production secrets in the main app target;
+prefer xcconfig / CI secrets and merge at build time.
+
+Lesson video pipeline (Mootion-style scene orchestration): Docs/LessonVideoPipelineArchitecture.md
+
+Remote text-to-video (BFF / Supabase Edge)
+-----------------------------------------
+
+WCSLessonTextToVideoEndpoint (String, optional)
+  Full https URL for POST JSON → JSON { "playbackURL": "https://..." }.
+  Empty or missing → remote disabled; MockAIVideoGenerator (samples / YouTube) is used.
+
+  In this repo, Info.plist sets this to $(WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT). The main app target
+  defines a default URL in project.pbxproj; override via xcconfig / Build Settings when needed.
+
+  Supabase (after ./scripts/supabase-deploy-wcs-lesson-video.sh YOUR_PROJECT_REF):
+  https://<PROJECT_REF>.supabase.co/functions/v1/wcs-lesson-text-to-video
+  See repo: supabase/README.md
+
+WCSLessonTextToVideoAPIKey (String, optional)
+  Sent as Authorization: Bearer <value> when non-empty.
+
+WCSLessonTextToVideoSupabaseAnonKey (String, optional)
+  When set, sent as header apikey: <value> (Supabase Edge Functions often expect this).
+  Info.plist uses $(WCS_SUPABASE_PUBLISHABLE_KEY) (publishable or legacy anon JWT).
+
+WCSLessonTextToVideoRequestTimeoutSeconds (Number or String, optional)
+  URLSession timeout for the POST. Default 120; clamped to 10…600.
+
+WCSLessonTextToVideoProviderBackendHint (String, optional)
+  Forwarded in JSON as providerBackendHint for your BFF to route (e.g. sora, luma, ltx).
+
+WCSLessonTextToVideoExtraHTTPHeadersJSON (String, optional)
+  JSON object of extra string headers, e.g. {"X-Custom-Auth":"dev-token"}.
+
+Mock / UX timing
+----------------
+
+WCSLessonVideoMockGenerationDelayMillis (Number or String, optional)
+  Simulated delay before each generated asset (mock path and between remote attempts). Default 600 ms; max 30000.
+
+WCSLessonVideoJobListSecret (String, optional)
+  Must match Edge secret `WCS_JOB_LIST_SECRET` on `wcs-lesson-video-jobs`. When set with a valid text-to-video
+  endpoint URL, the admin studio shows **Lesson video render audit** (GET derived …/wcs-lesson-video-jobs).
+
+Companion discovery (YouTube Data API v3)
+-----------------------------------------
+WCSYouTubeDataAPIKey (String, optional)
+  In Info.plist use $(YOUTUBE_DATA_API_KEY); the app target defines `YOUTUBE_DATA_API_KEY` in
+  build settings (empty by default). Merge a real key via xcconfig / CI like other secrets.
+
+  Process environment `YOUTUBE_DATA_API_KEY` (Xcode scheme → Run → Environment Variables) overrides
+  the plist when non-empty. Used for optional YouTube companion snippets alongside lesson playback URLs.
+
+Admin AI course draft research (Perplexity)
+-------------------------------------------
+WCSPerplexityAPIKey (String, optional)
+  Bearer token for https://api.perplexity.ai/chat/completions (model `sonar`). In this repo, Info.plist
+  uses $(WCS_PERPLEXITY_API_KEY) on the app target. Override in xcconfig / Build Settings for CI.
+
+  Scheme environment `PERPLEXITY_API_KEY` overrides the plist value when non-empty.
+
+  Used by MockAICourseGenerator’s OpenSourceResearchService to prepend web-grounded reference lines
+  alongside Open Library + OpenAlex (admin mock path only).

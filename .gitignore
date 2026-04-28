@@ -8,3 +8,13 @@
 build/
 DerivedData/
 
+# Supabase CLI local credentials (scripts/supabase-bootstrap-lesson-video.sh)
+.env.supabase.local
+
+# Local Xcode xcconfig (API keys). Use LocalSecrets.xcconfig.example as a template.
+LocalSecrets.xcconfig
+
+# Xcode archives and local export trees (do not commit binaries)
+*.xcarchive/
+production/WCS-Platform-Prod.xcarchive/
+

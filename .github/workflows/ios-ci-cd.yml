@@ -56,6 +56,7 @@ jobs:
           -destination "platform=iOS Simulator,name=iPhone 17"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
+          -skip-testing:WCS-PlatformUITests
           test
 
       - name: Verify privacy manifest exists

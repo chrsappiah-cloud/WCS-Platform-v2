@@ -135,6 +135,15 @@ struct LessonProgressRequest: Codable {
     let complete: Bool
 }
 
+/// BFF payload for periodic watch position (Udemy-style resume across devices).
+struct LessonWatchProgressRequest: Codable {
+    let courseId: UUID
+    let moduleId: UUID
+    let lessonId: UUID
+    let positionSeconds: Double
+    let durationSeconds: Double
+}
+
 struct EnrollmentCreateRequest: Codable {
     let courseId: UUID
 }

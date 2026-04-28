@@ -324,6 +324,47 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         return result
     }
 
+    func saveWatchProgress(
+        programId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        positionSeconds: Double,
+        durationSeconds: Double
+    ) async throws {
+        let courseId = programId
+        let snapshot = try await resolveIdentitySnapshot()
+        try await WCSPlatformAccessPolicy.assertAllowed(
+            snapshot: snapshot,
+            operation: .learningProgress(courseId: courseId, moduleId: moduleId, lessonId: lessonId),
+            courseProvider: { id in try await self.rawFetchCourse(id) }
+        )
+
+        if useMocks {
+            try await Task.sleep(nanoseconds: 40_000_000)
+            await MockLearningStore.shared.saveWatchProgress(
+                courseId: courseId,
+                lessonId: lessonId,
+                positionSeconds: positionSeconds
+            )
+            return
+        }
+        let payload = LessonWatchProgressRequest(
+            courseId: courseId,
+            moduleId: moduleId,
+            lessonId: lessonId,
+            positionSeconds: positionSeconds,
+            durationSeconds: durationSeconds
+        )
+        let encoded = try jsonEncoder.encode(payload)
+        struct EmptyResponse: Decodable {}
+        let _: EmptyResponse = try await request(
+            "enrollments/\(courseId.uuidString)/watch-progress",
+            method: "PUT",
+            body: encoded
+        )
+        broadcastLearningChange()
+    }
+
     func submitQuiz(
         _ quizId: UUID,
         answers: [UUID: Int],
@@ -701,7 +742,28 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                 GenerationCapabilityCheck(
                     system: "YouTube Data API v3",
                     state: .missingConfig,
-                    detail: "Missing YOUTUBE_DATA_API_KEY"
+                    detail: "Missing YOUTUBE_DATA_API_KEY (scheme) or WCSYouTubeDataAPIKey (Info.plist)"
+                )
+            )
+        }
+
+        if PerplexityAPIClient.resolveAPIKey() != nil {
+            let perplexityReachable = await probeReachability("https://api.perplexity.ai/chat/completions")
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Perplexity API (admin research)",
+                    state: perplexityReachable ? .configured : .offline,
+                    detail: perplexityReachable
+                        ? "WCSPerplexityAPIKey or PERPLEXITY_API_KEY set; endpoint reachable"
+                        : "Key configured but chat endpoint probe failed"
+                )
+            )
+        } else {
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Perplexity API (admin research)",
+                    state: .missingConfig,
+                    detail: "Missing WCSPerplexityAPIKey / WCS_PERPLEXITY_API_KEY or PERPLEXITY_API_KEY"
                 )
             )
         }

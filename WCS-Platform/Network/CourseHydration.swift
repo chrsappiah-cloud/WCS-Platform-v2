@@ -10,7 +10,8 @@ enum CourseHydration {
         base: Course,
         enrolledCourseIds: Set<UUID>,
         completedLessonIds: Set<UUID>,
-        submittedAssignments: [UUID: Submission]
+        submittedAssignments: [UUID: Submission],
+        watchResumeByLessonId: [UUID: Double] = [:]
     ) -> Course {
         let enrolled = enrolledCourseIds.contains(base.id)
         let modules = base.modules.map { module in
@@ -41,6 +42,7 @@ enum CourseHydration {
                     } else {
                         assignment = nil
                     }
+                    let serverResume = watchResumeByLessonId[lesson.id] ?? lesson.serverResumePositionSeconds
                     return Lesson(
                         id: lesson.id,
                         title: lesson.title,
@@ -53,7 +55,9 @@ enum CourseHydration {
                         isUnlocked: lesson.isUnlocked,
                         reading: lesson.reading,
                         quiz: lesson.quiz,
-                        assignment: assignment
+                        assignment: assignment,
+                        captionTracks: lesson.captionTracks,
+                        serverResumePositionSeconds: serverResume
                     )
                 }
             )

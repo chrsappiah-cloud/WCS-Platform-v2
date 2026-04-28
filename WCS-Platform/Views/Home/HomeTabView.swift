@@ -58,6 +58,10 @@ struct HomeTabView: View {
                     }
                 }
 
+                HomeCourseDesignerContactCard()
+
+                HomeLearnerTestimonialsSection()
+
                 if let enrollments = appViewModel.user?.enrollments, !enrollments.isEmpty {
                     VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                         Text("Resume learning")

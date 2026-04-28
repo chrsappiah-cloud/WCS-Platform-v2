@@ -27,6 +27,13 @@ protocol CatalogRepository {
 protocol LearningRepository {
     func enroll(programId: UUID) async throws -> Enrollment
     func markProgress(programId: UUID, moduleId: UUID, lessonId: UUID, complete: Bool) async throws -> Enrollment
+    func saveWatchProgress(
+        programId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        positionSeconds: Double,
+        durationSeconds: Double
+    ) async throws
     func submitQuiz(quizId: UUID, answers: [UUID: Int], courseId: UUID?, moduleId: UUID?, lessonId: UUID?) async throws -> QuizSubmissionResult
     func submitAssignment(
         assignmentId: UUID,
@@ -86,6 +93,21 @@ nonisolated struct WCSLiveRepositories: IdentityRepository, CatalogRepository, L
     func enroll(programId: UUID) async throws -> Enrollment { try await client.enroll(programId: programId) }
     func markProgress(programId: UUID, moduleId: UUID, lessonId: UUID, complete: Bool) async throws -> Enrollment {
         try await client.markProgress(programId: programId, moduleId: moduleId, lessonId: lessonId, complete: complete)
+    }
+    func saveWatchProgress(
+        programId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        positionSeconds: Double,
+        durationSeconds: Double
+    ) async throws {
+        try await client.saveWatchProgress(
+            programId: programId,
+            moduleId: moduleId,
+            lessonId: lessonId,
+            positionSeconds: positionSeconds,
+            durationSeconds: durationSeconds
+        )
     }
     func submitQuiz(quizId: UUID, answers: [UUID: Int], courseId: UUID?, moduleId: UUID?, lessonId: UUID?) async throws -> QuizSubmissionResult {
         try await client.submitQuiz(quizId, answers: answers, courseId: courseId, moduleId: moduleId, lessonId: lessonId)

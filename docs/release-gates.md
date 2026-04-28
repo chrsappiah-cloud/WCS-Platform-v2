@@ -8,6 +8,15 @@ Maintain fast delivery without shipping regressions by enforcing automated gates
 - Feature branches: PR required, all required checks must pass.
 - Tag-based release for signed distribution and archival.
 
+## GitHub enforcement (recommended)
+On the repository **Settings → Rules → Rulesets** (or classic branch protection for `main`):
+- Require a pull request before merging.
+- Require status check **“CI Build and Test”** (workflow `iOS CI/CD`) to pass.
+- Require branches to be up to date before merging (optional but reduces drift).
+- Block force-push to `main` where policy allows.
+
+The workflow lives at `.github/workflows/ios-ci-cd.yml` and runs on every PR and push to `main`.
+
 ## Required CI Gates (per PR and push to main)
 1. Project generation integrity
    - `xcodegen generate` success
@@ -16,8 +25,8 @@ Maintain fast delivery without shipping regressions by enforcing automated gates
 3. Build gate
    - iOS simulator build succeeds
 4. Test gate
-   - unit tests pass
-   - stable UI smoke tests pass
+   - unit tests pass (`WCS-PlatformTests`; GitHub Actions skips `WCS-PlatformUITests` on PR/push until UI harness is stabilized locally)
+   - optional UI smoke tests (run in Xcode or a dedicated workflow when ready)
 5. Artifact gate (push to main)
    - unsigned/signed archive artifact created and uploaded
 6. Manifest and compliance checks
@@ -48,3 +57,6 @@ Maintain fast delivery without shipping regressions by enforcing automated gates
 - Revert-to-green policy on severe regressions.
 - Incident note required for any failed release candidate.
 
+## Manual QA playbooks (reference)
+Optional human-run checklists for features that sit alongside automated gates (Tier 2 / exploratory):
+- [Module lesson video backups and YouTube companion streaming](./MANUAL_TESTING_MODULE_VIDEO_AND_YOUTUBE.md)

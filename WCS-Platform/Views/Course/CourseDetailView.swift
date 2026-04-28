@@ -344,7 +344,7 @@ struct CourseDetailView: View {
                     .font(.headline.weight(.semibold))
                 Text(
                     "Each enrolled video lesson maps to a live YouTube search from your module titles and lesson names. "
-                        + "Configure `YOUTUBE_DATA_API_KEY` in the scheme; this complements the course `videoURL` player."
+                        + "Configure `YOUTUBE_DATA_API_KEY` (scheme or Info.plist via build setting). Open any video lesson to switch between the course feed and a selectable YouTube backup clip."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -386,7 +386,7 @@ struct CourseDetailView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 Text("Optional companion YouTube embeds")
                     .font(.headline.weight(.semibold))
-                Text("`YOUTUBE_DATA_API_KEY` is only needed for Phase 4 companion embeds. Core lecture playback uses the lesson `videoURL` and works without this key.")
+                Text("`YOUTUBE_DATA_API_KEY` (environment or `WCSYouTubeDataAPIKey` in Info.plist) is only needed for Phase 4 companion embeds. Core lecture playback uses the lesson `videoURL` and works without this key.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -398,16 +398,34 @@ struct CourseDetailView: View {
     private func lessonDestination(course: Course, module: Module, lesson: Lesson) -> some View {
         switch lesson.type {
         case .video:
-            if let urlString = lesson.videoURL, let url = URL(string: urlString) {
-                VideoPlayerView(
-                    url: url,
+            let backupSnippets = viewModel.companionSnippets(forLessonId: lesson.id)
+            let primaryURL = lesson.videoURL.flatMap { URL(string: $0) }
+            if backupSnippets.isEmpty {
+                if let url = primaryURL {
+                    VideoPlayerView(
+                        url: url,
+                        courseId: course.id,
+                        moduleId: module.id,
+                        lessonId: lesson.id,
+                        title: lesson.title,
+                        captionTracks: lesson.captionTracks,
+                        serverResumePositionSeconds: lesson.serverResumePositionSeconds
+                    )
+                } else {
+                    ContentUnavailableView(
+                        "Missing video",
+                        systemImage: "video.slash",
+                        description: Text("This lesson has no playable URL yet. When enrolled with YouTube search configured, backup clips from your module can appear here.")
+                    )
+                }
+            } else {
+                LessonVideoWithYouTubeBackupView(
                     courseId: course.id,
                     moduleId: module.id,
-                    lessonId: lesson.id,
-                    title: lesson.title
+                    lesson: lesson,
+                    primaryVideoURL: primaryURL,
+                    youtubeBackupSnippets: backupSnippets
                 )
-            } else {
-                ContentUnavailableView("Missing video", systemImage: "video.slash", description: Text("This lesson has no playable URL yet."))
             }
         case .reading:
             ScrollView {

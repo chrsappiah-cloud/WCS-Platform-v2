@@ -67,6 +67,9 @@ final class AdminCourseCreatorViewModel: ObservableObject {
     @Published var videoStatusByDraftID: [UUID: DraftVideoStatus] = [:]
     @Published var generatedAssetsByDraftID: [UUID: [GeneratedVideoAsset]] = [:]
     @Published var errorMessage: String?
+    /// Supabase Edge `wcs-lesson-video-jobs` (requires `WCSLessonVideoJobListSecret` + deployed function).
+    @Published var lessonVideoRenderJobs: [LessonVideoRenderJobRow] = []
+    @Published var lessonVideoJobsLoadError: String?
 
     init() {
         loadSavedConfiguration()
@@ -122,21 +125,26 @@ final class AdminCourseCreatorViewModel: ObservableObject {
             return
         }
         saveCurrentAsDefaultConfiguration()
-        _ = await AdminCourseDraftStore.shared.createManualBackupDraft(
-            createdBy: createdBy,
-            accessTier: selectedAccessTier,
-            courseTitle: manualCourseTitle,
-            summary: manualSummary,
-            moduleTitle: manualModuleTitle,
-            videoTitle: manualVideoTitle,
-            videoURL: manualVideoURL,
-            readingTitle: manualReadingTitle,
-            readingMaterial: manualReadingMaterial,
-            quizTitle: manualQuizTitle,
-            quizPrompt: manualQuizPrompt,
-            assignmentTitle: manualAssignmentTitle,
-            assignmentBrief: manualAssignmentBrief
-        )
+        do {
+            _ = try await AdminCourseDraftStore.shared.createManualBackupDraft(
+                createdBy: createdBy,
+                accessTier: selectedAccessTier,
+                courseTitle: manualCourseTitle,
+                summary: manualSummary,
+                moduleTitle: manualModuleTitle,
+                videoTitle: manualVideoTitle,
+                videoURL: manualVideoURL,
+                readingTitle: manualReadingTitle,
+                readingMaterial: manualReadingMaterial,
+                quizTitle: manualQuizTitle,
+                quizPrompt: manualQuizPrompt,
+                assignmentTitle: manualAssignmentTitle,
+                assignmentBrief: manualAssignmentBrief
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+            return
+        }
         clearManualBackupInputs()
         drafts = await AdminCourseDraftStore.shared.allDrafts()
         await refreshVideoStatuses()
@@ -164,6 +172,24 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         guard let draft = drafts.first(where: { $0.id == draftID }) else { return }
         await MockLearningStore.shared.regenerateVideoAssets(for: draft, clearCache: clearCache)
         await refreshVideoStatuses()
+        await loadLessonVideoRenderJobs()
+    }
+
+    func saveManualLessonVideoBackup(draftID: UUID, moduleID: UUID, lessonID: UUID, url: String) async {
+        errorMessage = nil
+        do {
+            try await AdminCourseDraftStore.shared.setManualLessonVideoPlaybackURL(
+                draftId: draftID,
+                moduleId: moduleID,
+                lessonId: lessonID,
+                urlString: url
+            )
+            drafts = await AdminCourseDraftStore.shared.allDrafts()
+            await refreshVideoStatuses()
+            NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func applyTemplate(_ template: KajabiBlueprintTemplate) {
@@ -234,6 +260,52 @@ final class AdminCourseCreatorViewModel: ObservableObject {
             manualAssignmentTitle,
             manualAssignmentBrief,
         ].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    func loadLessonVideoRenderJobs() async {
+        guard LessonVideoGenerationSettings.isLessonVideoJobHistoryEnabled,
+              let url = LessonVideoGenerationSettings.remoteLessonVideoJobHistoryGETURL,
+              let secret = LessonVideoGenerationSettings.lessonVideoJobListSecret
+        else {
+            lessonVideoRenderJobs = []
+            lessonVideoJobsLoadError = nil
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        let apiKey = LessonVideoGenerationSettings.remoteTextToVideoSupabaseAnonKey
+        let bearer = LessonVideoGenerationSettings.remoteTextToVideoBearerToken ?? apiKey
+        if let bearer, !bearer.isEmpty {
+            request.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization")
+        }
+        if let apiKey, !apiKey.isEmpty {
+            request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        }
+        request.setValue(secret, forHTTPHeaderField: "x-wcs-job-list-secret")
+        for (name, value) in LessonVideoGenerationSettings.remoteTextToVideoExtraHTTPHeaders {
+            request.setValue(value, forHTTPHeaderField: name)
+        }
+
+        let session = LessonVideoGenerationSettings.makeURLSessionForTextToVideo()
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                lessonVideoJobsLoadError = "Invalid response."
+                return
+            }
+            guard (200...299).contains(http.statusCode) else {
+                lessonVideoJobsLoadError = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
+                lessonVideoRenderJobs = []
+                return
+            }
+            let decoded = try JSONDecoder().decode(LessonVideoRenderJobListResponse.self, from: data)
+            lessonVideoRenderJobs = decoded.jobs
+            lessonVideoJobsLoadError = nil
+        } catch {
+            lessonVideoRenderJobs = []
+            lessonVideoJobsLoadError = error.localizedDescription
+        }
     }
 
     func refreshVideoStatuses() async {

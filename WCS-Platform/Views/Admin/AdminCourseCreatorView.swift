@@ -23,6 +23,7 @@ struct AdminCourseCreatorView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .task { await viewModel.loadDrafts() }
+        .task { await viewModel.loadLessonVideoRenderJobs() }
         .task { await viewModel.startRealtimeVideoPolling() }
         .onReceive(NotificationCenter.default.publisher(for: .wcsAdminDraftsDidChange)) { _ in
             guard !AppEnvironment.debugSafeMode else { return }
@@ -69,11 +70,91 @@ struct AdminCourseCreatorView: View {
         }
     }
 
+    @ViewBuilder
+    private var lessonVideoJobAuditPanel: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            Text("Lesson video render audit (Supabase)")
+                .font(.headline.weight(.semibold))
+
+            if !LessonVideoGenerationSettings.isRemoteTextToVideoEnabled {
+                Text("Set WCSLessonTextToVideoEndpoint to enable remote generation and job-list URL derivation.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else if !LessonVideoGenerationSettings.isLessonVideoJobHistoryEnabled {
+                Text(
+                    "Deploy Edge `wcs-lesson-video-jobs`, set secret `WCS_JOB_LIST_SECRET` on the function, and set WCSLessonVideoJobListSecret (same value) in the app. Run `supabase db push` for table `wcs_lesson_video_render_jobs`."
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            } else {
+                HStack {
+                    Button("Refresh job list") {
+                        Task { await viewModel.loadLessonVideoRenderJobs() }
+                    }
+                    .buttonStyle(.bordered)
+                    .font(.caption)
+                    Spacer()
+                }
+
+                if let err = viewModel.lessonVideoJobsLoadError {
+                    Text(err)
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                }
+
+                if viewModel.lessonVideoRenderJobs.isEmpty && viewModel.lessonVideoJobsLoadError == nil {
+                    Text("No jobs yet — generate module videos or invoke the Edge function.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                ForEach(viewModel.lessonVideoRenderJobs) { job in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(job.status) · \(job.provider) · lesson \(job.lessonId.prefix(8))…")
+                            .font(.caption.weight(.semibold))
+                        if let mode = job.pipelineMode {
+                            Text("Pipeline: \(mode)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        if let at = job.createdAt {
+                            Text(at)
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(.tertiary)
+                        }
+                        if let urlString = job.playbackUrl, let url = URL(string: urlString) {
+                            Link("Open playback URL", destination: url)
+                                .font(.caption2)
+                        }
+                        if let excerpt = job.generationPromptExcerpt {
+                            Text(excerpt)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(4)
+                        }
+                        if let err = job.errorMessage {
+                            Text(err)
+                                .font(.caption2)
+                                .foregroundStyle(.red)
+                                .lineLimit(4)
+                        }
+                    }
+                    .padding(DesignTokens.Spacing.sm)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+            }
+        }
+        .wcsInsetPanel()
+    }
+
     private var console: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 Text("WCS AI Course Generation Studio")
                     .wcsSectionTitle()
+
+                lessonVideoJobAuditPanel
 
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     Button("Save these settings as defaults") {
@@ -293,6 +374,16 @@ struct AdminCourseCreatorView: View {
                             },
                             onRegenerateVideos: { clearCache in
                                 Task { await viewModel.regenerateVideos(for: draft.id, clearCache: clearCache) }
+                            },
+                            onSaveManualLessonVideo: { moduleId, lessonId, url in
+                                Task {
+                                    await viewModel.saveManualLessonVideoBackup(
+                                        draftID: draft.id,
+                                        moduleID: moduleId,
+                                        lessonID: lessonId,
+                                        url: url
+                                    )
+                                }
                             }
                         )
                     }
@@ -309,12 +400,52 @@ struct AdminCourseCreatorView: View {
     }
 }
 
+private struct ManualLessonVideoBackupRow: View {
+    let moduleId: UUID
+    let lesson: AdminLessonDraft
+    let onSave: (UUID, UUID, String) -> Void
+    @State private var urlText = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(lesson.title)
+                .font(.caption2.weight(.semibold))
+            TextField("https://… (MP4, HLS, signed URL)", text: $urlText)
+                .textFieldStyle(.roundedBorder)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+                .font(.caption)
+            HStack(spacing: 8) {
+                Button("Save backup URL") {
+                    onSave(moduleId, lesson.id, urlText)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .font(.caption2)
+                Button("Clear backup") {
+                    urlText = ""
+                    onSave(moduleId, lesson.id, "")
+                }
+                .buttonStyle(.bordered)
+                .font(.caption2)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .task(id: "\(lesson.id.uuidString)|\(lesson.notes)") {
+            urlText = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) ?? ""
+        }
+    }
+}
+
 private struct DraftCard: View {
     let draft: AdminCourseDraft
     let videoStatus: AdminCourseCreatorViewModel.DraftVideoStatus?
     let generatedAssets: [GeneratedVideoAsset]
     let onPublish: () -> Void
     let onRegenerateVideos: (_ clearCache: Bool) -> Void
+    let onSaveManualLessonVideo: (_ moduleId: UUID, _ lessonId: UUID, _ url: String) -> Void
     @State private var showingRegenerateConfirmation = false
 
     var body: some View {
@@ -385,6 +516,37 @@ private struct DraftCard: View {
                     .foregroundStyle(.secondary)
             }
 
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                    Text(
+                        "Paste an HTTPS playback URL per video or live lesson. This overrides AI-generated URLs for learners when a backup is set. Host files on your CDN or Supabase Storage, then paste the public or signed URL."
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                    ForEach(draft.modules) { module in
+                        let videoLessons = module.lessons.filter { $0.kind == .video || $0.kind == .live }
+                        if !videoLessons.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(module.title)
+                                    .font(.caption.weight(.semibold))
+                                ForEach(videoLessons) { lesson in
+                                    ManualLessonVideoBackupRow(
+                                        moduleId: module.id,
+                                        lesson: lesson,
+                                        onSave: onSaveManualLessonVideo
+                                    )
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+            } label: {
+                Text("Manual lesson video backups (per module)")
+                    .font(.caption.weight(.semibold))
+            }
+
             if !generatedAssets.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Generated module videos (real-time)")
@@ -401,6 +563,16 @@ private struct DraftCard: View {
                                         YouTubeEmbedWebView(videoID: videoID)
                                             .frame(width: 220, height: 124)
                                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    } else if let playback = URL(string: asset.playbackURL),
+                                              LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(playback) {
+                                        AdminInlineAVVideoPreview(
+                                            url: playback,
+                                            courseId: draft.id,
+                                            moduleId: moduleId(containingLessonId: asset.lessonId),
+                                            lessonId: asset.lessonId
+                                        )
+                                        .frame(width: 220, height: 124)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                     } else {
                                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                                             .fill(Color(.tertiarySystemFill))
@@ -486,6 +658,10 @@ private struct DraftCard: View {
         } message: {
             Text("This clears archived video assets for this draft and generates fresh recordings in real time.")
         }
+    }
+
+    private func moduleId(containingLessonId lessonId: UUID) -> UUID {
+        draft.modules.first(where: { $0.lessons.contains(where: { $0.id == lessonId }) })?.id ?? lessonId
     }
 
     private func youtubeVideoID(from rawURL: String?) -> String? {

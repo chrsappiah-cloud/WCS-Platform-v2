@@ -11,14 +11,24 @@ struct VideoPlayerView: View {
     let title: String
     @State private var liveEvents: [String] = []
 
-    init(url: URL, courseId: UUID, moduleId: UUID, lessonId: UUID, title: String) {
+    init(
+        url: URL,
+        courseId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        title: String,
+        captionTracks: [LessonCaptionTrack] = [],
+        serverResumePositionSeconds: Double? = nil
+    ) {
         self.title = title
         _viewModel = StateObject(
             wrappedValue: VideoPlayerViewModel(
                 url: url,
                 courseId: courseId,
                 moduleId: moduleId,
-                lessonId: lessonId
+                lessonId: lessonId,
+                captionTracks: captionTracks,
+                serverResumePositionSeconds: serverResumePositionSeconds
             )
         )
     }
@@ -26,11 +36,24 @@ struct VideoPlayerView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                Group {
-                    if viewModel.usesEmbeddedWebPlayer, let videoID = viewModel.embeddedYouTubeID {
-                        YouTubeEmbedWebView(videoID: videoID)
-                    } else {
-                        VideoPlayer(player: viewModel.player)
+                ZStack(alignment: .bottom) {
+                    Group {
+                        if viewModel.usesEmbeddedWebPlayer, let videoID = viewModel.embeddedYouTubeID {
+                            YouTubeEmbedWebView(videoID: videoID)
+                        } else {
+                            VideoPlayer(player: viewModel.player)
+                        }
+                    }
+                    if let caption = viewModel.sidecarCaptionText, !caption.isEmpty {
+                        Text(caption)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, DesignTokens.Spacing.md)
+                            .padding(.vertical, DesignTokens.Spacing.sm)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.black.opacity(0.62))
+                            .accessibilityIdentifier("lessonVideoSidecarCaptionOverlay")
                     }
                 }
                 .frame(height: 220)
@@ -57,6 +80,13 @@ struct VideoPlayerView: View {
                 }
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    if LessonVideoPlaybackPolicy.isHLSStreamURL(viewModel.sourceURL) {
+                        Text("Adaptive streaming (HLS)")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                            .accessibilityIdentifier("lessonVideoHLSBadge")
+                    }
+
                     HStack(spacing: DesignTokens.Spacing.md) {
                         if !viewModel.usesEmbeddedWebPlayer {
                             Button {
@@ -66,12 +96,13 @@ struct VideoPlayerView: View {
                                     viewModel.isPlaying ? "Pause" : "Play",
                                     systemImage: viewModel.isPlaying ? "pause.fill" : "play.fill"
                                 )
-                                .labelStyle(.iconOnly)
-                                .font(.title2)
-                                .frame(width: 52, height: 52)
+                                    .labelStyle(.iconOnly)
+                                    .font(.title2)
+                                    .frame(width: 52, height: 52)
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(DesignTokens.brand)
+                            .accessibilityIdentifier("lessonVideoPlayPause")
                         }
 
                         Spacer(minLength: 0)
@@ -84,6 +115,117 @@ struct VideoPlayerView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(DesignTokens.brandAccent)
+                    }
+
+                    if !viewModel.usesEmbeddedWebPlayer {
+                        HStack(spacing: DesignTokens.Spacing.md) {
+                            Button {
+                                viewModel.skip(by: -10)
+                            } label: {
+                                Image(systemName: "gobackward.10")
+                                    .font(.title3.weight(.semibold))
+                                    .frame(minWidth: 44, minHeight: 44)
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityLabel("Skip back 10 seconds")
+
+                            Button {
+                                viewModel.skip(by: 10)
+                            } label: {
+                                Image(systemName: "goforward.10")
+                                    .font(.title3.weight(.semibold))
+                                    .frame(minWidth: 44, minHeight: 44)
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityLabel("Skip forward 10 seconds")
+
+                            Menu {
+                                ForEach(LessonVideoPlaybackPolicy.udemyStylePlaybackRates, id: \.self) { rate in
+                                    Button {
+                                        viewModel.setPlaybackRate(rate)
+                                    } label: {
+                                        HStack {
+                                            Text("\(Self.playbackSpeedMenuLabel(rate))×")
+                                            if abs(viewModel.playbackRate - rate) < 0.0001 {
+                                                Image(systemName: "checkmark")
+                                            }
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Label(
+                                    "Speed \(Self.playbackSpeedMenuLabel(viewModel.playbackRate))×",
+                                    systemImage: "gauge.with.dots.needle.67percent"
+                                )
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, DesignTokens.Spacing.sm)
+                                .padding(.vertical, DesignTokens.Spacing.xs)
+                            }
+                            .buttonStyle(.bordered)
+                            .accessibilityIdentifier("lessonVideoSpeedMenu")
+
+                            Spacer(minLength: 0)
+                        }
+                    }
+
+                    if !viewModel.usesEmbeddedWebPlayer {
+                        HStack(spacing: DesignTokens.Spacing.sm) {
+                            if !viewModel.captionTracks.isEmpty {
+                                Menu {
+                                    Button("Off") { viewModel.selectSidecarCaptionIndex(0) }
+                                    ForEach(Array(viewModel.captionTracks.enumerated()), id: \.offset) { offset, track in
+                                        Button(track.label) {
+                                            viewModel.selectSidecarCaptionIndex(offset + 1)
+                                        }
+                                    }
+                                } label: {
+                                    Label("Captions", systemImage: "captions.bubble")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .buttonStyle(.bordered)
+                                .accessibilityIdentifier("lessonVideoSidecarCaptionMenu")
+                            }
+
+                            if !viewModel.manifestCaptionMenuLabels.isEmpty {
+                                Menu {
+                                    Button("Automatic") { viewModel.selectManifestCaptionMenuIndex(0) }
+                                    ForEach(Array(viewModel.manifestCaptionMenuLabels.enumerated()), id: \.offset) { offset, label in
+                                        Button(label) {
+                                            viewModel.selectManifestCaptionMenuIndex(offset + 1)
+                                        }
+                                    }
+                                } label: {
+                                    Label("Stream captions", systemImage: "text.bubble")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .buttonStyle(.bordered)
+                                .accessibilityIdentifier("lessonVideoManifestCaptionMenu")
+                            }
+
+                            if LessonVideoPlaybackPolicy.isHLSStreamURL(viewModel.sourceURL) {
+                                Menu {
+                                    ForEach(HLSQualityPreset.allCases) { preset in
+                                        Button {
+                                            viewModel.setQualityPreset(preset)
+                                        } label: {
+                                            HStack {
+                                                Text(preset.menuLabel)
+                                                if viewModel.qualityPreset == preset {
+                                                    Image(systemName: "checkmark")
+                                                }
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    Label("Quality", systemImage: "film")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .buttonStyle(.bordered)
+                                .accessibilityIdentifier("lessonVideoQualityMenu")
+                            }
+
+                            Spacer(minLength: 0)
+                        }
                     }
 
                     if !viewModel.usesEmbeddedWebPlayer, viewModel.totalSeconds > 0 {
@@ -163,6 +305,18 @@ struct VideoPlayerView: View {
         return String(format: "%d:%02d", m, s)
     }
 
+    private static func playbackSpeedMenuLabel(_ rate: Float) -> String {
+        switch rate {
+        case 0.75: return "0.75"
+        case 1.0: return "1"
+        case 1.25: return "1.25"
+        case 1.5: return "1.5"
+        case 2.0: return "2"
+        default:
+            return String(format: "%g", rate)
+        }
+    }
+
     private func refreshLiveEvents() {
         liveEvents = Telemetry.recentEvents(prefix: "lesson.video.playback", limit: 8)
     }
@@ -171,11 +325,19 @@ struct VideoPlayerView: View {
 #Preview {
     NavigationStack {
         VideoPlayerView(
-            url: URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!,
+            url: URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8")!,
             courseId: UUID(),
             moduleId: UUID(),
             lessonId: UUID(),
-            title: "Preview"
+            title: "Preview (HLS)",
+            captionTracks: [
+                LessonCaptionTrack(
+                    language: "en",
+                    label: "English (demo)",
+                    webvttURL: "embedded:wcs-investor-en"
+                ),
+            ],
+            serverResumePositionSeconds: nil
         )
     }
 }

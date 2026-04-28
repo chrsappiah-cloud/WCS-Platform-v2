@@ -78,7 +78,15 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [
+                        LessonCaptionTrack(
+                            language: "en",
+                            label: "English (investor demo)",
+                            webvttURL: "embedded:wcs-investor-en"
+                        ),
+                    ],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonReading,
@@ -92,7 +100,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: ReadingContent(markdown: "## Welcome\n\nTrack progress from the **Programs** tab. Complete each unit in order—quizzes grade instantly in mock mode.\n\n### What you’ll build\n- Focus habits\n- Retrieval practice\n- Self-paced mastery"),
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonQuiz,
@@ -106,7 +116,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: sampleQuiz,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonAssignment,
@@ -120,7 +132,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: nil,
-                    assignment: sampleAssignment
+                    assignment: sampleAssignment,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
             ]
         )
@@ -150,7 +164,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonB2,
@@ -184,7 +200,9 @@ enum MockCourseCatalog {
                             ),
                         ]
                     ),
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
             ]
         )
@@ -216,7 +234,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonC2,
@@ -251,7 +271,9 @@ enum MockCourseCatalog {
                     - [Mental health advocacy policy design](https://www.youtube.com/results?search_query=mental+health+advocacy+policy+design)
                     """),
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonC3,
@@ -297,7 +319,9 @@ enum MockCourseCatalog {
                             ),
                         ]
                     ),
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonC4,
@@ -319,7 +343,9 @@ enum MockCourseCatalog {
                         maxAttempts: 1,
                         isSubmitted: false,
                         submission: nil
-                    )
+                    ),
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
             ]
         )
@@ -350,7 +376,9 @@ enum MockCourseCatalog {
                     isUnlocked: true,
                     reading: nil,
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonD2,
@@ -375,7 +403,9 @@ enum MockCourseCatalog {
                     - [Ethical nonprofit digital marketing](https://www.youtube.com/results?search_query=ethical+nonprofit+digital+marketing)
                     """),
                     quiz: nil,
-                    assignment: nil
+                    assignment: nil,
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
                 Lesson(
                     id: lessonD3,
@@ -397,7 +427,9 @@ enum MockCourseCatalog {
                         maxAttempts: 1,
                         isSubmitted: false,
                         submission: nil
-                    )
+                    ),
+                    captionTracks: [],
+                    serverResumePositionSeconds: nil
                 ),
             ]
         )

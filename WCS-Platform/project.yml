@@ -32,6 +32,10 @@ targets:
         CODE_SIGN_ENTITLEMENTS: WCS_Platform.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
+        # Info.plist: WCSYouTubeDataAPIKey → $(YOUTUBE_DATA_API_KEY); override via LocalSecrets.xcconfig or CI secret.
+        YOUTUBE_DATA_API_KEY: ""
+        # Matches Info.plist $(WCS_PERPLEXITY_API_KEY); set in CI via repository secret if needed.
+        WCS_PERPLEXITY_API_KEY: ""
 
   WCS-PlatformTests:
     type: bundle.unit-test

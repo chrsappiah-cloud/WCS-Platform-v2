@@ -32,6 +32,8 @@
 		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -157,6 +159,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		5EAC84032FA010FD00CCCDC3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5ED10C8B2FA0336D00886E59 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -274,8 +290,16 @@
 					ProjectRef = 5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */;
 				},
 				{
+					ProductGroup = 5EAC84032FA010FD00CCCDC3 /* Products */;
+					ProjectRef = 5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */;
+				},
+				{
 					ProductGroup = 5E42C4E82F9D320400FC1A03 /* Products */;
 					ProjectRef = 5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */;
+				},
+				{
+					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;
+					ProjectRef = 5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */;
 				},
 				{
 					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
@@ -395,6 +419,9 @@
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
+				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
+				WCS_SUPABASE_PUBLISHABLE_KEY = sb_publishable_VmBFsAln9J7F6ot30XsyAA_9i3OlTmh;
 			};
 			name = Debug;
 		};
@@ -436,6 +463,9 @@
 				SWIFT_VERSION = 5.0;
 				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
+				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
+				WCS_SUPABASE_PUBLISHABLE_KEY = sb_publishable_VmBFsAln9J7F6ot30XsyAA_9i3OlTmh;
 			};
 			name = Release;
 		};

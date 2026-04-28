@@ -182,7 +182,9 @@ struct WCS_PlatformTests {
                             isUnlocked: true,
                             reading: nil,
                             quiz: nil,
-                            assignment: nil
+                            assignment: nil,
+                            captionTracks: [],
+                            serverResumePositionSeconds: nil
                         )
                     ]
                 )
@@ -226,6 +228,31 @@ struct WCS_PlatformTests {
         #expect(page.items.count <= 2)
     }
 
+    @Test func manualBackupDraft_createRejectsNonHTTPSVideoURL() async throws {
+        await AdminCourseDraftStore.shared.clearAll()
+        do {
+            _ = try await AdminCourseDraftStore.shared.createManualBackupDraft(
+                createdBy: "admin@wcs",
+                accessTier: .freePublic,
+                courseTitle: "Bad URL Course",
+                summary: "Summary.",
+                moduleTitle: "Module",
+                videoTitle: "Video",
+                videoURL: "http://insecure.example.com/a.mp4",
+                readingTitle: "Reading",
+                readingMaterial: "Body.",
+                quizTitle: "Quiz",
+                quizPrompt: "Q?",
+                assignmentTitle: "Assignment",
+                assignmentBrief: "Brief."
+            )
+            Issue.record("Expected createManualBackupDraft to reject non-https video URL.")
+        } catch let error as NSError {
+            #expect(error.domain == "WCSAdminAI")
+            #expect(error.code == 1105)
+        }
+    }
+
     @Test func manualBackupDraft_publishesWithManualVideoAndLearningArtifacts() async throws {
         await AdminCourseDraftStore.shared.clearAll()
         await MockLearningStore.shared.deleteBlockedAICourses()
@@ -235,7 +262,7 @@ struct WCS_PlatformTests {
         UserDefaults.standard.set(true, forKey: "wcs.mockAdminMode")
 
         let manualVideoURL = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8"
-        let draft = await AdminCourseDraftStore.shared.createManualBackupDraft(
+        let draft = try await AdminCourseDraftStore.shared.createManualBackupDraft(
             createdBy: "admin@wcs",
             accessTier: .freePublic,
             courseTitle: "Manual Continuity Course",
@@ -508,6 +535,128 @@ struct WCS_PlatformTests {
         #expect(analytics.monetizationSignals >= 1)
     }
 
+    @Test func homeDiscover_trustCluster_contentContract() {
+        #expect(HomeTrustClusterContent.learnerTestimonialPages.count == 3)
+        #expect(HomeTrustClusterContent.learnerTestimonialPages.allSatisfy { !$0.quote.isEmpty && !$0.name.isEmpty && !$0.role.isEmpty })
+        #expect(HomeTrustClusterContent.courseTeamMailURL != nil)
+        #expect(HomeTrustClusterContent.supportEmail.contains("@"))
+        #expect(HomeTrustClusterContent.designerName.contains("Christopher"))
+        let first = HomeTrustClusterContent.learnerTestimonialPages[0]
+        #expect(first.quote.localizedCaseInsensitiveContains("creative arts"))
+        #expect(first.quote.localizedCaseInsensitiveContains("dementia"))
+    }
+
+    @Test func homeDiscover_trustCluster_linkedInStoriesURL_isAllowlisted() {
+        let url = BrandOutboundLinks.current.linkedInURL
+        #expect(url != nil)
+        let host = url!.host?.lowercased() ?? ""
+        #expect(host.contains("linkedin"))
+    }
+
+    @Test func lessonVideoPlaybackPolicy_detectsAppleSampleHLS() throws {
+        let url = URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8")!
+        #expect(LessonVideoPlaybackPolicy.isHLSStreamURL(url))
+    }
+
+    @Test func lessonVideoPlaybackPolicy_plainMp4IsNotHLS() throws {
+        let url = URL(string: "https://example.com/media/trailer.mp4")!
+        #expect(!LessonVideoPlaybackPolicy.isHLSStreamURL(url))
+    }
+
+    @Test func lessonVideoRenderJobListResponse_decodesFromEdgeShape() throws {
+        let json = """
+        {"jobs":[{"id":"550e8400-e29b-41d4-a716-446655440000","course_id":"c1","module_id":"m1","lesson_id":"l1","pipeline_mode":"scene_orchestration_v1","provider":"mock","status":"completed","playback_url":"https://example.com/a.mp4","error_message":null,"client_app_version":"1.0","created_at":"2026-04-28T00:00:00Z","generation_prompt_excerpt":"hook"}]}
+        """
+        let decoded = try JSONDecoder().decode(LessonVideoRenderJobListResponse.self, from: Data(json.utf8))
+        #expect(decoded.jobs.count == 1)
+        #expect(decoded.jobs[0].status == "completed")
+        #expect(decoded.jobs[0].provider == "mock")
+        #expect(decoded.jobs[0].playbackUrl?.contains("example.com") == true)
+    }
+
+    @Test func lessonVideoStoryboard_encodesForBFFPayload() throws {
+        let scene = LessonVideoScenePlan(
+            sceneId: "scene-1",
+            learningObjective: "Define overfitting",
+            narrationText: "Overfitting means the model memorizes training noise.",
+            visualPrompt: "Clean motion graphic, chart axis labels legible",
+            shotType: "explain",
+            durationSeconds: 12,
+            onScreenText: "Overfitting",
+            referenceImageURL: nil,
+            needsDiagram: true,
+            assessmentCheckpoint: "Name one symptom of overfitting."
+        )
+        let board = LessonVideoStoryboard(
+            storyboardId: "sb-test",
+            pipelineVersion: "scene_orchestration_v1",
+            moduleId: "m1",
+            moduleTitle: "Foundations",
+            lessonId: "l1",
+            lessonTitle: "Bias vs variance",
+            scenes: [scene],
+            masterVisualPrompt: "Educational 16:9 module intro"
+        )
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(board)
+        let json = try #require(String(data: data, encoding: .utf8))
+        #expect(json.contains("\"sceneId\":\"scene-1\""))
+        #expect(json.contains("\"scenes\""))
+        let decoded = try JSONDecoder().decode(LessonVideoStoryboard.self, from: data)
+        #expect(decoded.scenes.count == 1)
+        #expect(decoded.scenes[0].needsDiagram == true)
+    }
+
+    @Test func lessonVideoPlaybackPolicy_nativeHttpsExcludesYouTube() throws {
+        let mp4 = URL(string: "https://storage.example.co/object/sign/lesson.mp4?token=abc")!
+        #expect(LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(mp4))
+        let hls = URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8")!
+        #expect(LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(hls))
+        let yt = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")!
+        #expect(!LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(yt))
+        let httpMp4 = URL(string: "http://example.com/a.mp4")!
+        #expect(!LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(httpMp4))
+    }
+
+    @Test func lessonVideoPlaybackPolicy_extractsYouTubeWatchId() throws {
+        let url = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")!
+        #expect(LessonVideoPlaybackPolicy.youTubeVideoID(from: url) == "dQw4w9WgXcQ")
+    }
+
+    @Test func lessonVideoPlaybackPolicy_nearestUdemyStyleRate() {
+        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 0.9) == 1.0)
+        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.11) == 1.25)
+        #expect(LessonVideoPlaybackPolicy.nearestPlaybackRate(to: 1.8) == 2.0)
+    }
+
+    @Test func webVTTParser_findsActiveCue() {
+        let doc = InvestorDemoEmbeddedCaptions.englishDocument
+        let cues = WebVTTParser.parseCues(from: doc)
+        #expect(!cues.isEmpty)
+        let atOne = WebVTTParser.activeCue(for: 1.0, in: cues)
+        #expect(atOne?.localizedCaseInsensitiveContains("WCS") == true)
+    }
+
+    @Test func mockLearning_watchProgressSurfacesOnHydratedLesson() async {
+        let courseId = UUID(uuidString: "10000000-0000-0000-0000-000000000001")!
+        let lessonId = UUID(uuidString: "30000000-0000-0000-0000-000000000001")!
+        await MockLearningStore.shared.resetLearningStateForTests()
+        _ = await MockLearningStore.shared.enroll(courseId)
+        await MockLearningStore.shared.saveWatchProgress(courseId: courseId, lessonId: lessonId, positionSeconds: 41.5)
+        let hydrated = await MockLearningStore.shared.snapshotCourse(courseId)
+        let resume = hydrated?.modules.flatMap(\.lessons).first { $0.id == lessonId }?.serverResumePositionSeconds
+        #expect(resume == 41.5)
+    }
+
+    @Test func mockCatalog_sampleVideoLessonsPreferHLSMaster() {
+        let courses = MockCourseCatalog.courses
+        let videoURLs = courses.flatMap(\.modules).flatMap(\.lessons).compactMap(\.videoURL).map { URL(string: $0) }.compactMap { $0 }
+        #expect(!videoURLs.isEmpty)
+        let hlsCount = videoURLs.filter { LessonVideoPlaybackPolicy.isHLSStreamURL($0) }.count
+        #expect(hlsCount > 0, "Catalog should include at least one HLS master for native AVPlayer adaptive streaming.")
+    }
+
     @Test func discoverPayload_aggregatesDomainProjections() async throws {
         let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
         defer {
@@ -524,6 +673,41 @@ struct WCS_PlatformTests {
         #expect(!payload.featuredPrograms.isEmpty)
         #expect(payload.allPrograms.allSatisfy { !$0.catalog.tags.isEmpty })
         #expect(payload.allPrograms.allSatisfy { !$0.commerce.sku.isEmpty })
+    }
+
+    @Test func lessonManualVideoBackup_mergeExtractAndStrip() {
+        let merged = LessonManualVideoBackup.mergeURLLine(
+            into: "Instructor notes here.",
+            url: "https://cdn.example.com/lesson.mp4"
+        )
+        #expect(merged.contains("wcs.manualVideoURL:"))
+        #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == "https://cdn.example.com/lesson.mp4")
+        let stripped = LessonManualVideoBackup.stripMachineLines(from: merged)
+        #expect(stripped == "Instructor notes here.")
+    }
+
+    @Test @MainActor
+    func courseDetailViewModel_companionSnippets_matchesLessonScriptLineId() {
+        let courseId = UUID(uuidString: "10000000-0000-0000-0000-00000000AA01")!
+        let lessonId = UUID(uuidString: "30000000-0000-0000-0000-00000000AA01")!
+        let vm = CourseDetailViewModel(courseId: courseId)
+        let line = LessonVideoScriptLine(
+            id: lessonId,
+            courseTitle: "Preview course",
+            moduleTitle: "Module A",
+            lessonTitle: "Video lesson",
+            lessonSubtitle: nil
+        )
+        let snippets = [
+            YouTubeVideoSnippet(videoID: "aqz-KE-bpKQ", title: "Clip A", thumbnailURL: nil),
+            YouTubeVideoSnippet(videoID: "eOrNdBpGMv8", title: "Clip B", thumbnailURL: nil),
+        ]
+        vm.injectCompanionResultsForTests([
+            LessonVideoDiscoveryResult(scriptLine: line, snippets: snippets),
+        ])
+        let got = vm.companionSnippets(forLessonId: lessonId)
+        #expect(got.count == 2)
+        #expect(got.first?.videoID == "aqz-KE-bpKQ")
     }
 
 }

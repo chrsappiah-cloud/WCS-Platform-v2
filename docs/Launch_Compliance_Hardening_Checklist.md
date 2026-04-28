@@ -32,3 +32,6 @@ Use this checklist before each beta/prod release candidate.
 - [ ] Relevance filtering and unsafe-term filtering thresholds tuned with beta feedback.
 - [ ] Support runbook exercised for key rotation and quota exhaustion.
 - [ ] Device matrix pass on at least two physical iPhone models.
+
+## Manual QA playbooks
+- [Module lesson video backups and YouTube companion streaming](./MANUAL_TESTING_MODULE_VIDEO_AND_YOUTUBE.md) — step-through for admin HTTPS fallbacks and enrolled YouTube backup UI (pairs with P0/P1 YouTube items above).

@@ -390,7 +390,9 @@ enum WCSPlatformAccessPolicy: Sendable {
             isUnlocked: false,
             reading: ReadingContent(markdown: "_Preview mode: enroll or upgrade to unlock this lesson._"),
             quiz: nil,
-            assignment: nil
+            assignment: nil,
+            captionTracks: [],
+            serverResumePositionSeconds: nil
         )
     }
 }

@@ -69,9 +69,15 @@ actor AdminCourseDraftStore {
         quizPrompt: String,
         assignmentTitle: String,
         assignmentBrief: String
-    ) -> AdminCourseDraft {
+    ) throws -> AdminCourseDraft {
         let cleanCourseTitle = courseTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanSummary = summary.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedVideoURL = videoURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let validatedVideoURL = LessonManualVideoBackup.validatedHTTPSURL(trimmedVideoURL) else {
+            throw NSError(domain: "WCSAdminAI", code: 1105, userInfo: [
+                NSLocalizedDescriptionKey: "Video URL must be a valid https:// playback link (MP4, HLS, or signed CDN URL).",
+            ])
+        }
         let module = AdminModuleDraft(
             id: UUID(),
             title: moduleTitle.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -85,7 +91,10 @@ actor AdminCourseDraftStore {
                     title: videoTitle.trimmingCharacters(in: .whitespacesAndNewlines),
                     kind: .video,
                     durationMinutes: 20,
-                    notes: "Manual video backup URL: \(videoURL.trimmingCharacters(in: .whitespacesAndNewlines))"
+                    notes: LessonManualVideoBackup.mergeURLLine(
+                        into: "",
+                        url: validatedVideoURL
+                    )
                 ),
                 AdminLessonDraft(
                     id: UUID(),
@@ -203,6 +212,58 @@ actor AdminCourseDraftStore {
         drafts.insert(draft, at: 0)
         notifyChange()
         return draft
+    }
+
+    /// Persists a per-lesson HTTPS playback URL used when AI/BFF video is missing or unreliable (`MockLearningStore` prefers this URL).
+    func setManualLessonVideoPlaybackURL(
+        draftId: UUID,
+        moduleId: UUID,
+        lessonId: UUID,
+        urlString: String
+    ) async throws {
+        guard let idx = drafts.firstIndex(where: { $0.id == draftId }) else {
+            throw NSError(domain: "WCSAdminAI", code: 1100, userInfo: [
+                NSLocalizedDescriptionKey: "Draft not found.",
+            ])
+        }
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty, LessonManualVideoBackup.validatedHTTPSURL(trimmed) == nil {
+            throw NSError(domain: "WCSAdminAI", code: 1101, userInfo: [
+                NSLocalizedDescriptionKey: "Enter a valid https:// playback URL (MP4, HLS, or signed CDN).",
+            ])
+        }
+
+        var draft = drafts[idx]
+        guard let mIdx = draft.modules.firstIndex(where: { $0.id == moduleId }) else {
+            throw NSError(domain: "WCSAdminAI", code: 1102, userInfo: [
+                NSLocalizedDescriptionKey: "Module not found in this draft.",
+            ])
+        }
+        guard let lIdx = draft.modules[mIdx].lessons.firstIndex(where: { $0.id == lessonId }) else {
+            throw NSError(domain: "WCSAdminAI", code: 1103, userInfo: [
+                NSLocalizedDescriptionKey: "Lesson not found in this module.",
+            ])
+        }
+        let kind = draft.modules[mIdx].lessons[lIdx].kind
+        guard kind == .video || kind == .live else {
+            throw NSError(domain: "WCSAdminAI", code: 1104, userInfo: [
+                NSLocalizedDescriptionKey: "Manual video backup applies to video or live lessons only.",
+            ])
+        }
+
+        var lesson = draft.modules[mIdx].lessons[lIdx]
+        if trimmed.isEmpty {
+            lesson.notes = LessonManualVideoBackup.stripMachineLines(from: lesson.notes)
+            await MockLearningStore.shared.clearManualLessonVideoBackup(lessonId: lessonId)
+        } else {
+            lesson.notes = LessonManualVideoBackup.mergeURLLine(into: lesson.notes, url: trimmed)
+            await MockLearningStore.shared.recordManualLessonVideoBackup(lessonId: lessonId, url: trimmed)
+        }
+        draft.modules[mIdx].lessons[lIdx] = lesson
+        draft.updatedAt = Date()
+        drafts[idx] = draft
+        await MockLearningStore.shared.rebuildPublishedCourseIfPresent(draft: draft)
+        notifyChange()
     }
 
     func markPublished(_ id: UUID) async throws {

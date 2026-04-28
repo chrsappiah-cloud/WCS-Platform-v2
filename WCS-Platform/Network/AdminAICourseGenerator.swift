@@ -466,11 +466,14 @@ struct OpenSourceResearchService {
     func fetch(topic: String) async -> OpenSourceResearchSnapshot {
         async let books = fetchOpenLibrary(topic: topic)
         async let works = fetchOpenAlex(topic: topic)
-        let (bookTitles, workTitles) = await (books, works)
+        async let perplexityLines = PerplexityAPIClient.fetchResearchLines(topic: topic, maxLines: 5)
+        let (bookTitles, workTitles, perplexity) = await (books, works, perplexityLines)
+        let mergedWorks = Array((perplexity + workTitles).prefix(8))
         var sources: [String] = []
         if !bookTitles.isEmpty { sources.append("Open Library API") }
         if !workTitles.isEmpty { sources.append("OpenAlex API") }
-        return OpenSourceResearchSnapshot(bookTitles: bookTitles, workTitles: workTitles, sources: sources)
+        if !perplexity.isEmpty { sources.append("Perplexity (web-grounded)") }
+        return OpenSourceResearchSnapshot(bookTitles: bookTitles, workTitles: mergedWorks, sources: sources)
     }
 
     private func fetchOpenLibrary(topic: String) async -> [String] {
