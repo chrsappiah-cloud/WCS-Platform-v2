@@ -139,8 +139,10 @@ final class WCS_PlatformUITests: XCTestCase {
         publishButton.tap()
         // Wait for the async publish to complete: the button disappears once the
         // draft transitions to .published, so its absence is a reliable signal.
+        // Not asserting on the result: if publish doesn't settle in time the
+        // catalog-polling loop and "Published badge" fallback below handle it.
         let publishGonePredicate = NSPredicate(format: "exists == false")
-        XCTWaiter().wait(
+        _ = XCTWaiter().wait(
             for: [XCTNSPredicateExpectation(predicate: publishGonePredicate, object: publishButton)],
             timeout: 10
         )
@@ -153,9 +155,10 @@ final class WCS_PlatformUITests: XCTestCase {
             // Guard the tap: if the tab bar is not yet hittable (e.g. the view
             // hierarchy is still updating), poll briefly rather than letting
             // XCTest throw kAXErrorCannotComplete and bypass the fallback below.
+            // Not asserting on the result: guard on line below handles the timeout case.
             if !programsTab.isHittable {
                 let hittablePredicate = NSPredicate(format: "isHittable == true")
-                XCTWaiter().wait(
+                _ = XCTWaiter().wait(
                     for: [XCTNSPredicateExpectation(predicate: hittablePredicate, object: programsTab)],
                     timeout: 4
                 )
