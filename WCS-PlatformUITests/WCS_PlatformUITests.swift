@@ -137,21 +137,30 @@ final class WCS_PlatformUITests: XCTestCase {
         scrollToElementIfNeeded(publishButton, in: app)
         XCTAssertTrue(publishButton.waitForExistence(timeout: 8))
         publishButton.tap()
-        // Allow the async publish operation to settle before navigating away.
-        sleep(2)
+        // Wait for the async publish to complete: the button disappears once the
+        // draft transitions to .published, so its absence is a reliable signal.
+        let publishGonePredicate = NSPredicate(format: "exists == false")
+        XCTWaiter().wait(
+            for: [XCTNSPredicateExpectation(predicate: publishGonePredicate, object: publishButton)],
+            timeout: 10
+        )
 
         let programsTab = app.tabBars.buttons["Programs"]
         XCTAssertTrue(programsTab.waitForExistence(timeout: 8))
         let publishedCourse = app.staticTexts[courseTitle]
         var foundPublishedCourse = false
         for _ in 0 ..< 8 where !foundPublishedCourse {
-            // Guard the tap: if the tab bar is not yet hittable (e.g. a publish
-            // confirmation sheet is still animating), wait and retry rather than
-            // letting XCTest throw and bypass the "Published badge" fallback below.
-            guard programsTab.isHittable else {
-                sleep(2)
-                continue
+            // Guard the tap: if the tab bar is not yet hittable (e.g. the view
+            // hierarchy is still updating), poll briefly rather than letting
+            // XCTest throw kAXErrorCannotComplete and bypass the fallback below.
+            if !programsTab.isHittable {
+                let hittablePredicate = NSPredicate(format: "isHittable == true")
+                XCTWaiter().wait(
+                    for: [XCTNSPredicateExpectation(predicate: hittablePredicate, object: programsTab)],
+                    timeout: 4
+                )
             }
+            guard programsTab.isHittable else { continue }
             programsTab.tap()
             if publishedCourse.waitForExistence(timeout: 6) {
                 foundPublishedCourse = true
