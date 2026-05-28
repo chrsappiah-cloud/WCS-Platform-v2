@@ -11,9 +11,13 @@ struct AdminCourseCreatorView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
     @StateObject private var viewModel = AdminCourseCreatorViewModel()
 
+    private var isUITestHarness: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestMode")
+    }
+
     var body: some View {
         Group {
-            if !viewModel.isUnlocked {
+            if !viewModel.isUnlocked && !isUITestHarness {
                 lockedGate
             } else {
                 console
@@ -23,6 +27,9 @@ struct AdminCourseCreatorView: View {
         .navigationTitle("WCS AI Course Generation")
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .onAppear {
+            viewModel.applyUITestUnlockIfNeeded()
+        }
         .task { await viewModel.loadDrafts() }
         .task { await viewModel.loadLessonVideoRenderJobs() }
         .task { await viewModel.startRealtimeVideoPolling() }
@@ -94,6 +101,7 @@ struct AdminCourseCreatorView: View {
                     }
                     .buttonStyle(.bordered)
                     .font(.caption)
+                    .accessibilityIdentifier("adminRefreshVideoJobsButton")
                     Spacer()
                 }
 
@@ -154,6 +162,7 @@ struct AdminCourseCreatorView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 Text("WCS AI Course Generation Studio")
                     .wcsSectionTitle()
+                    .accessibilityIdentifier("adminStudioConsoleTitle")
 
                 lessonVideoJobAuditPanel
 
@@ -256,6 +265,7 @@ struct AdminCourseCreatorView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(DesignTokens.brandAccent)
                     .disabled(!viewModel.canGenerate || viewModel.isGenerating)
+                    .accessibilityIdentifier("adminGenerateDraftButton")
 
                     Text("WCS AI Course Generation uses retrieval planning, reranking, and citation-grounded synthesis with Open Library + OpenAlex evidence.")
                         .font(.caption2)
@@ -655,6 +665,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminPlanStoryboardButton")
 
                         Button("Render first scene") {
                             onRenderScene()
@@ -662,6 +673,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy || !hasPlannedStoryboard)
+                        .accessibilityIdentifier("adminRenderFirstSceneButton")
 
                         Button("Preview frame") {
                             onPreviewScene()
@@ -669,6 +681,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy || !hasPlannedStoryboard)
+                        .accessibilityIdentifier("adminPreviewSceneButton")
 
                         Button("Compose lesson") {
                             onComposeLesson()
@@ -676,6 +689,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminComposeLessonButton")
                     }
                     HStack(spacing: 8) {
                         Picker("Resolution", selection: Binding(

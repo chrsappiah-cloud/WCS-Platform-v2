@@ -1,0 +1,27 @@
+{
+  "iphone_6_7_portrait": {
+    "size": "1290x2796",
+    "files": [
+      "production/apple/promotional/distribution/iphone-6.7/iPhone-1290x2796-1.png",
+      "production/apple/promotional/distribution/iphone-6.7/iPhone-1290x2796-2.png",
+      "production/apple/promotional/distribution/iphone-6.7/iPhone-1290x2796-3.png",
+      "production/apple/promotional/distribution/iphone-6.7/iPhone-1290x2796-4.png"
+    ],
+    "app_store_connect": "iPhone 6.7\" Display"
+  },
+  "ipad_12_9_portrait": {
+    "size": "2048x2732",
+    "files": [
+      "production/apple/promotional/distribution/ipad-12.9/iPad-2048x2732-1.png",
+      "production/apple/promotional/distribution/ipad-12.9/iPad-2048x2732-2.png",
+      "production/apple/promotional/distribution/ipad-12.9/iPad-2048x2732-3.png",
+      "production/apple/promotional/distribution/ipad-12.9/iPad-2048x2732-4.png"
+    ],
+    "app_store_connect": "iPad Pro (12.9-inch) (3rd generation)"
+  },
+  "ipad_12_9_landscape_hero": {
+    "size": "2732x2048",
+    "file": "production/apple/promotional/distribution/ipad-12.9-landscape/iPad-2732x2048-hero.png",
+    "app_store_connect": "iPad Pro (12.9-inch) (2nd generation) \u2014 optional landscape"
+  }
+}

@@ -23,6 +23,7 @@ targets:
       - path: Views
       - path: Core
       - path: Learning
+      - path: TestingSupport
       - path: WCS_PlatformApp.swift
       - path: Assets.xcassets
       - path: PrivacyInfo.xcprivacy
@@ -75,7 +76,7 @@ schemes:
     run:
       config: Debug
     test:
-      gatherCoverageData: false
+      gatherCoverageData: true
       targets:
         - name: WCS-PlatformTests
         - name: WCS-PlatformUITests

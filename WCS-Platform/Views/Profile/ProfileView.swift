@@ -205,6 +205,7 @@ struct ProfileView: View {
                         Label("Check generation APIs", systemImage: "wand.and.stars")
                     }
                 }
+                .accessibilityIdentifier("profileCheckGenerationAPIsButton")
                 if let generationStatus {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Generation API check: \(generationStatus.checkedAt.formatted(date: .omitted, time: .shortened))")

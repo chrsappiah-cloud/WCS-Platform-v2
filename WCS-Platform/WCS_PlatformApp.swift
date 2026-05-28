@@ -14,6 +14,10 @@ struct WCS_PlatformApp: App {
     @Environment(\.scenePhase) private var scenePhase
     private let logger = Logger(subsystem: "org.worldclassscholars.platform", category: "lifecycle")
 
+    init() {
+        AppLaunchEnvironmentBootstrapper.apply()
+    }
+
     var body: some Scene {
         WindowGroup {
             AppRootView()

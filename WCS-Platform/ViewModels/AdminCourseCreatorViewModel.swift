@@ -83,6 +83,19 @@ final class AdminCourseCreatorViewModel: ObservableObject {
 
     init() {
         loadSavedConfiguration()
+        applyUITestUnlockIfNeeded()
+    }
+
+    /// Deterministic admin unlock for UI-test and device E2E runs.
+    func applyUITestUnlockIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestMode") else { return }
+        let injected = ProcessInfo.processInfo.environment["WCS_UI_TEST_ADMIN_ACCESS_CODE"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let code = injected.isEmpty ? AppEnvironment.adminAccessCode : injected
+        accessCodeInput = code
+        if !isUnlocked {
+            unlock()
+        }
     }
 
     func unlock() {

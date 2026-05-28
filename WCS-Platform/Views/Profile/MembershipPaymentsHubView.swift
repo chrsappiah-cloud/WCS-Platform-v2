@@ -59,10 +59,12 @@ struct MembershipPaymentsHubView: View {
             Section("Apple subscriptions (StoreKit)") {
                 if storeKitManager.isLoading {
                     ProgressView("Loading Apple products…")
+                        .accessibilityIdentifier("storeKitProductsLoading")
                 } else if storeKitManager.products.isEmpty {
                     Text("Configure `WCSAppleSubscriptionProductIDs` in Info.plist and App Store Connect products to enable in-app purchases.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("storeKitProductsEmptyMessage")
                 } else {
                     ForEach(storeKitManager.products, id: \.id) { product in
                         Button {
@@ -83,14 +85,17 @@ struct MembershipPaymentsHubView: View {
                             }
                         }
                         .disabled(storeKitManager.isPurchasing)
+                        .accessibilityIdentifier("storeKitPurchaseButton_\(product.id)")
                     }
                 }
                 if let msg = storeKitManager.purchaseMessage {
                     Text(msg)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("storeKitPurchaseMessage")
                 }
             }
+            .accessibilityIdentifier("appleSubscriptionsSection")
 
             Section("Enterprise and investor billing") {
                 if let url = links.enterpriseSalesCheckoutURL {

@@ -86,12 +86,23 @@ cd WCS-Platform && xcodegen generate && xcodebuild \
 
 ## 7) Screenshot / marketing assets
 
-PNG templates live under `production/apple/promotional/`:
+**App Store Connect uploads (generated):**
 
-- `AppStore-Hero-2732x2048.png` — iPad / hero canvas  
-- `Social-1200x630.png` — link preview / Open Graph  
-- `Story-1080x1920.png` — vertical story  
-- `Poster-2048x2732.png` — tall poster  
-- `screenshot-placeholders/iPhone-1290x2796-1.png` … `-4.png` — iPhone 6.5" screenshot shells (**replace** with real UI captures before submission)
+| Device | Path | Size |
+|--------|------|------|
+| iPhone 6.7" | `production/apple/promotional/distribution/iphone-6.7/` | 1290 × 2796 |
+| iPad 12.9" | `production/apple/promotional/distribution/ipad-12.9/` | 2048 × 2732 |
+| iPad landscape hero | `production/apple/promotional/distribution/ipad-12.9-landscape/` | 2732 × 2048 |
 
-Use them in App Store Connect **App Preview and Screenshots** and for social launch posts.
+Regenerate from simulator captures:
+
+```bash
+bash scripts/capture-appstore-screenshots.sh
+```
+
+**Distribution form copy-paste:** `production/apple/APP_STORE_DISTRIBUTION_FORM_RESPONSES.md`
+
+**Legacy / social templates** under `production/apple/promotional/`:
+
+- `AppStore-Hero-2732x2048.png`, `Social-1200x630.png`, `Story-1080x1920.png`, `Poster-2048x2732.png`
+- `screenshot-placeholders/` — older shells (superseded by `distribution/` when regenerated)

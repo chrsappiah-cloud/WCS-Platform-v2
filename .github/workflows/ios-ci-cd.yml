@@ -46,7 +46,22 @@ jobs:
           -parallel-testing-enabled NO
           build
 
-      - name: Run tests
+      - name: Run production unit and integration tests
+        env:
+          CI: "true"
+          WCS_STRICT_REMOTE_VIDEO_TESTS: "1"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=iPhone 17"
+          -sdk iphonesimulator
+          -enableCodeCoverage YES
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformTests
+          test
+
+      - name: Run UI smoke tests
         env:
           CI: "true"
         run: >
@@ -56,7 +71,23 @@ jobs:
           -destination "platform=iOS Simulator,name=iPhone 17"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
-          -skip-testing:WCS-PlatformUITests
+          -only-testing:WCS-PlatformUITests/Smoke
+          -only-testing:WCS-PlatformUITests/ReviewFlows
+          -only-testing:WCS-PlatformUITests/Recovery
+          test
+
+      - name: Run AI video and Apple payments E2E gates
+        env:
+          CI: "true"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=iPhone 17"
+          -sdk iphonesimulator
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformUITests/AIVideoGenerationE2ETests
+          -only-testing:WCS-PlatformUITests/ApplePaymentsE2ETests
           test
 
       - name: Verify privacy manifest exists

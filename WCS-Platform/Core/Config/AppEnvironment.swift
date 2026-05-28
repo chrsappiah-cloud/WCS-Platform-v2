@@ -65,6 +65,13 @@ nonisolated enum AppEnvironment {
 
     /// Comma-separated StoreKit product ids from Info.plist key `WCSAppleSubscriptionProductIDs`.
     static var appleSubscriptionProductIDs: Set<String> {
+        if let override = UserDefaults.standard.string(forKey: "wcs.test.appleSubscriptionProductIDsOverride") {
+            let ids = override
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            return Set(ids)
+        }
         if let raw = Bundle.main.object(forInfoDictionaryKey: appleSubscriptionProductIDsInfoPlistKey) as? String {
             let ids = raw
                 .split(separator: ",")

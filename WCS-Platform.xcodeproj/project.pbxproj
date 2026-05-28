@@ -31,9 +31,11 @@
 		5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5ED072E02FC39DC5001A6493 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -153,6 +155,13 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		5E752DD72FC7E2D600EB2C26 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		5E7D526F2FA0672200671A56 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -168,6 +177,13 @@
 			sourceTree = "<group>";
 		};
 		5EAC84032FA010FD00CCCDC3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5ED072E12FC39DC5001A6493 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -310,8 +326,8 @@
 					ProjectRef = 5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */;
 				},
 				{
-					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;
-					ProjectRef = 5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */;
+					ProductGroup = 5E752DD72FC7E2D600EB2C26 /* Products */;
+					ProjectRef = 5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */;
 				},
 				{
 					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
@@ -320,6 +336,14 @@
 				{
 					ProductGroup = 5E20D58C2F9E3D7E00813B49 /* Products */;
 					ProjectRef = 5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */;
+				},
+				{
+					ProductGroup = 5ED072E12FC39DC5001A6493 /* Products */;
+					ProjectRef = 5ED072E02FC39DC5001A6493 /* WCS-Platform.xcodeproj */;
+				},
+				{
+					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;
+					ProjectRef = 5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */;
 				},
 			);
 			projectRoot = "";
