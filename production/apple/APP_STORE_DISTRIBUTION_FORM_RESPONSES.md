@@ -2,17 +2,19 @@
 
 Copy-paste source for **App Store Connect → App → Distribution / App Information / Pricing and Availability / App Privacy / Version** fields and review questionnaires.
 
-**Release line (from `WCS-Platform/project.yml`):**
+**Release line (from `WCS-Platform/project.yml`) — resubmission after Guideline 3.1.1:**
 
 | Field | Value |
 |-------|--------|
 | App name (store) | WCS Platform |
 | Bundle ID | `wcs.WCS-Platform` |
-| Marketing version | `1.1.0` |
-| Build | `2` |
+| Marketing version | `1.0` |
+| Build | `10` |
 | SKU (example) | `wcs-platform-ios` |
 | Primary language | English (U.S.) |
 | Team ID | `TM2WG7HH96` |
+| IAP product ID (Individual Pro) | `wcs.individual.pro.monthly` |
+| Submission ID (prior rejection) | `bfa381c2-5902-4590-a217-e8d85a1fed22` |
 
 > **Note:** Production docs also reference `org.worldclassscholars.platform`. Before final submission, align **Bundle ID** in `project.yml`, Xcode signing, and App Store Connect to a single identifier.
 
@@ -62,13 +64,14 @@ learning,courses,education,modules,quiz,assignments,discussion,professional deve
 
 ---
 
-## 2) Version information (1.1.0)
+## 2) Version information (1.0 build 10)
 
 ### What’s New
 
-- Stability and discovery improvements for programs, media playback, and offline-tolerant networking.
-- Privacy manifest and compliance alignment for App Store requirements.
-- Expanded automated test coverage for release confidence.
+- **Guideline 3.1.1:** Individual Premium is now sold with **Apple In-App Purchase** (StoreKit 2 `SubscriptionStoreView`, restore purchases, entitlement sync).
+- Removed consumer-facing hosted Stripe membership checkout from **Release** builds.
+- iPad launch stability hardening retained from prior review cycle.
+- Physical-device UI E2E validation and expanded CI E2E gates.
 
 ### Copyright
 
@@ -117,18 +120,24 @@ python3 scripts/generate-appstore-distribution-assets.py
 
 ### Notes for reviewer
 
+Use full text from `production/apple/APP_STORE_NOTES_FOR_REVIEW_v1_0_10.md`.
+
 WCS Platform is an education app: course discovery → course detail → enroll → lessons (video), quizzes, assignments, and discussion.
 
-**Suggested path:**
-1. Open app (mock/demo catalog loads without login if configured for review build).
-2. **Discover** tab — browse featured programs.
-3. **Programs** tab — open a course → view modules/lessons.
-4. **Discussion** tab — view course threads.
-5. **Profile** tab — membership and settings.
+**Required path for Guideline 3.1.1 (IAP):**
+1. **Profile** → **Membership & subscriptions**
+2. **Subscribe with Apple** → purchase **Individual Pro** (`wcs.individual.pro.monthly`) or **Restore purchases**
+3. **Programs** → open subscription-gated course → confirm Premium unlock
 
-- **Login:** Optional for browsing in review configuration; if login is required in your production build, add demo credentials here.
-- **Admin / AI Course Studio:** Restricted to admin users; not required for learner validation.
-- **Payments:** External hosted checkout links are opened only after explicit user tap and are labeled as hosted checkout (see compliance packet). No in-app card entry.
+**General path:**
+1. **Discover** — browse programs
+2. **Programs** — course detail and modules
+3. **Discussion** — threads
+4. **Profile** — account and subscriptions
+
+- **Login:** Optional for browsing in review configuration; add demo credentials if required.
+- **Admin / AI Course Studio:** Debug/admin only; not required for learner validation.
+- **Payments:** Individual Premium = **Apple IAP only** in Release. Enterprise/investor links are B2B procurement only (not a consumer IAP bypass). No in-app card entry.
 - **Hardware:** None required.
 
 ### Demo account (if login required)
@@ -140,7 +149,12 @@ WCS Platform is an education app: course discovery → course detail → enroll 
 
 ### Attachment
 
-Optional: link to `docs/AppStore_Review_Compliance_Packet.md` exported as PDF for internal use; App Store Connect does not accept repo paths directly.
+Upload PDF (generated on Desktop):
+
+- `WCS_App_Store_Review_Reply_v1_0_10.pdf` — Resolution Center reply (Guideline 3.1.1 + reviewer path)
+- `WCS_App_Store_Distribution_Form_v1_0_10.pdf` — duplicate copy for distribution records
+
+Source: `bash scripts/generate-app-store-review-reply-pdf.py`
 
 ---
 
@@ -193,7 +207,15 @@ Confirm against `WCS-Platform/PrivacyInfo.xcprivacy` and live backend before sub
 | Availability | All territories you support, or restrict per business plan |
 | Pre-order | No |
 
-**In-app purchases / subscriptions:** If Stripe or external membership checkout is used, ensure App Store **Guideline 3.1.1** disclosures and in-app copy match `docs/AppStore_Review_Compliance_Packet.md`. Add IAP products in Connect if Apple IAP is required for any entitlement.
+**In-app purchases / subscriptions:**
+
+| Product | Type | Product ID | Status |
+|---------|------|------------|--------|
+| Individual Pro Monthly | Auto-renewable subscription | `wcs.individual.pro.monthly` | Must be **Approved** and linked to version 1.0 (10) |
+
+- Individual Premium digital content: **IAP only** (Guideline 3.1.1).
+- Stripe/hosted membership checkout: **not offered to consumers in Release** (Debug-only in developer builds).
+- Enterprise/investor: external B2B procurement; clearly labeled in app.
 
 ---
 
@@ -207,16 +229,24 @@ Confirm against `WCS-Platform/PrivacyInfo.xcprivacy` and live backend before sub
 
 ---
 
-## 10) Submission checklist
+## 10) Submission checklist (resubmission 1.0 build 10)
 
-- [ ] Bundle ID consistent across Xcode, profiles, and App Store Connect
-- [ ] Build `1.1.0 (2)` or newer uploaded and processed
+- [ ] Bundle ID `wcs.WCS-Platform` consistent across Xcode, profiles, and App Store Connect
+- [ ] IPA uploaded: `build/AppStoreExport/WCS-Platform.ipa` (build **10**, version **1.0**)
+- [ ] IAP `wcs.individual.pro.monthly` approved and attached to this version
 - [ ] iPhone 6.7" and iPad 12.9" screenshots uploaded from `distribution/`
 - [ ] Privacy Policy and Support URLs live (HTTP 200)
 - [ ] App Privacy questionnaire completed
 - [ ] Export compliance answered
-- [ ] Review notes + demo account (if needed)
+- [ ] **Notes for Review** pasted from `APP_STORE_NOTES_FOR_REVIEW_v1_0_10.md`
+- [ ] **Resolution Center reply** pasted from `APP_STORE_RESOLUTION_CENTER_REPLY_v1_0_10.md` (PDF on Desktop)
+- [ ] PDF attachment uploaded if slot available
+- [ ] Demo account (if login required)
 - [ ] **Submit for Review**
+
+### Resolution Center reply (paste)
+
+See `production/apple/APP_STORE_RESOLUTION_CENTER_REPLY_v1_0_10.md` or Desktop PDF.
 
 ---
 
@@ -227,6 +257,8 @@ Confirm against `WCS-Platform/PrivacyInfo.xcprivacy` and live backend before sub
 - `docs/AppStore_Review_Compliance_Packet.md` — commerce, links, media
 - `docs/AppStoreProductionChecklist.md` — end-to-end checklist
 - `production/apple/APPLE_STORE_PRODUCTION.md` — production hub
-- `production/apple/APP_STORE_REVIEW_RESPONSE_MAY27_2026.md` — ready Resolution Center reply for the latest rejection
-- `production/apple/APP_STORE_NOTES_FOR_REVIEW_v1_0_6.md` — Notes for Review text for next submission
+- `production/apple/APP_STORE_RESOLUTION_CENTER_REPLY_v1_0_10.md` — Resolution Center reply (build 10)
+- `production/apple/APP_STORE_REVIEW_RESPONSE_MAY27_2026.md` — combined reply (2.1 + 3.1.1)
+- `production/apple/APP_STORE_NOTES_FOR_REVIEW_v1_0_10.md` — Notes for Review (build 10)
+- `production/apple/WCS_App_Store_Review_Reply_v1_0_10.pdf` — PDF for Connect attachment
 - `production/apple/IPAD_LAUNCH_CRASH_PREFLIGHT_CHECKLIST.md` — iPad launch-crash preflight checklist
