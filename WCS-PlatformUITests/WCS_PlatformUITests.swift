@@ -24,9 +24,13 @@ final class WCS_PlatformUITests: XCTestCase {
 
     @MainActor
     func testLaunchPerformance() throws {
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("Launch performance metric is validated on simulator CI runners.")
+        #else
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }
+        #endif
     }
 
     @MainActor

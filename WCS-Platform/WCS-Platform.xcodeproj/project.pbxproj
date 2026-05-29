@@ -66,6 +66,7 @@
 		8EB6EAF14B696F4814826495 /* MockIdentityRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C6512B05DA34847CBEF4335 /* MockIdentityRepository.swift */; };
 		8EEC9A3D60C58605AD4AFE8B /* StorageArchitecture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA742BD5742F06D95ED94B2 /* StorageArchitecture.swift */; };
 		9044C88257850A13B4E2FA1E /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A5B68565C5431264720813 /* Course.swift */; };
+		935A75736C71F9F0B089BA60 /* WCSStoreKitEntitlementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95CFDF0775B9CDC570E576B5 /* WCSStoreKitEntitlementTests.swift */; };
 		993269EFC5B02DE459F0C50F /* QuizQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */; };
 		99FC1A7C3DB828208C2456AC /* AuthTokenPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052F65C8075C43911C8D3E4 /* AuthTokenPersistenceTests.swift */; };
 		9A03208743445A866E73F9F4 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FD5C640490977CE9A34763 /* CourseDetailView.swift */; };
@@ -227,6 +228,7 @@
 		8EB93D4AE11DDBC5984ACB1C /* TelemetryEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryEvent.swift; sourceTree = "<group>"; };
 		92ACD9F9C1F337500EBC88BE /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		93CEF4AA2A3594F10B871EED /* AppLaunchConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchConfiguration.swift; sourceTree = "<group>"; };
+		95CFDF0775B9CDC570E576B5 /* WCSStoreKitEntitlementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSStoreKitEntitlementTests.swift; sourceTree = "<group>"; };
 		960F8A303A5FB42E97F5EE23 /* QuizQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizQuestionView.swift; sourceTree = "<group>"; };
 		9C6512B05DA34847CBEF4335 /* MockIdentityRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockIdentityRepository.swift; sourceTree = "<group>"; };
 		A2A5B68565C5431264720813 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
@@ -366,6 +368,7 @@
 				FDBD5F443A08DD8A1909D5D0 /* AppLaunchConfigurationTests.swift */,
 				E6807F63DE8B09AC67C597CD /* NetworkChaosHarnessTests.swift */,
 				2350333FBDA029BCADF818CD /* PermissionPolicyMatrixTests.swift */,
+				95CFDF0775B9CDC570E576B5 /* WCSStoreKitEntitlementTests.swift */,
 			);
 			path = Unit;
 			sourceTree = "<group>";
@@ -870,6 +873,7 @@
 				F933B39FDB56E69C05C30048 /* SubscriptionModelTests.swift in Sources */,
 				27D1D9E89CE6E3295519D1DE /* TestFixtures.swift in Sources */,
 				083DBB9C6FB1C0E92C04410F /* UserModelTests.swift in Sources */,
+				935A75736C71F9F0B089BA60 /* WCSStoreKitEntitlementTests.swift in Sources */,
 				26DED2EBA5DB9CCC1B06FCBA /* WCS_PlatformTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1056,7 +1060,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 10;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -1070,7 +1074,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
@@ -1174,7 +1178,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 10;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1194,7 +1198,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

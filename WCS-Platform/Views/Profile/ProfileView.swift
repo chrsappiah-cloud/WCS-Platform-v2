@@ -93,10 +93,18 @@ struct ProfileView: View {
 
             Section {
                 SubscriptionBadgeView(subscriptions: appViewModel.user?.subscriptions ?? [])
+                if appViewModel.user?.isPremium != true {
+                    NavigationLink {
+                        MembershipPaymentsHubView()
+                    } label: {
+                        Label("Get Premium with In-App Purchase", systemImage: "star.fill")
+                    }
+                    .accessibilityIdentifier("profileUpgradeToPremiumLink")
+                }
                 NavigationLink {
                     MembershipPaymentsHubView()
                 } label: {
-                    Label("Membership, subscriptions, and payouts", systemImage: "creditcard")
+                    Label("Membership & subscriptions", systemImage: "creditcard")
                 }
             } header: {
                 Text("Subscriptions")
@@ -126,6 +134,7 @@ struct ProfileView: View {
                     .tracking(0.5)
             }
 
+            #if DEBUG
             Section {
                 Toggle("Use mock API", isOn: Binding(
                     get: { NetworkClient.shared.useMocks },
@@ -310,6 +319,7 @@ struct ProfileView: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
+            #endif
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)

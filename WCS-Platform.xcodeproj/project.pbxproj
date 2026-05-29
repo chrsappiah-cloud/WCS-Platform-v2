@@ -24,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5E1D81772FCA14A7000F62E6 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E4287412F9C54E100FC1A03 /* WCS-Platform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E4287522F9C54E300FC1A03 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -107,6 +108,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5E1D81782FCA14A7000F62E6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		5E20D58C2F9E3D7E00813B49 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -340,6 +348,10 @@
 				{
 					ProductGroup = 5ED072E12FC39DC5001A6493 /* Products */;
 					ProjectRef = 5ED072E02FC39DC5001A6493 /* WCS-Platform.xcodeproj */;
+				},
+				{
+					ProductGroup = 5E1D81782FCA14A7000F62E6 /* Products */;
+					ProjectRef = 5E1D81772FCA14A7000F62E6 /* WCS-Platform.xcodeproj */;
 				},
 				{
 					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;

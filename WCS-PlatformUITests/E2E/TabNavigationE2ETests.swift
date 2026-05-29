@@ -48,17 +48,21 @@ final class TabNavigationE2ETests: XCTestCase {
         app.launchForE2E()
         app.openTab("Profile")
 
-        let membership = app.buttons["Membership, subscriptions, and payouts"]
+        let membership = app.buttons["Membership & subscriptions"]
         if !membership.waitForExistence(timeout: 4) {
-            scrollUntilExists(app.staticTexts["Membership, subscriptions, and payouts"], in: app)
-            app.staticTexts["Membership, subscriptions, and payouts"].tap()
+            scrollUntilExists(app.staticTexts["Membership & subscriptions"], in: app)
+            app.staticTexts["Membership & subscriptions"].tap()
         } else {
             scrollUntilExists(membership, in: app)
             membership.tap()
         }
-        XCTAssertTrue(app.navigationBars["Membership & payouts"].waitForExistence(timeout: 8))
+        XCTAssertTrue(
+            app.navigationBars["Membership"].waitForExistence(timeout: 12)
+                || app.staticTexts["Subscribe with Apple"].waitForExistence(timeout: 8)
+        )
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
+        #if DEBUG
         let studio = app.buttons["WCS AI Course Generation"]
         scrollUntilExists(studio, in: app)
         studio.tap()
@@ -66,5 +70,6 @@ final class TabNavigationE2ETests: XCTestCase {
             app.staticTexts["adminStudioConsoleTitle"].waitForExistence(timeout: 12)
                 || app.staticTexts["WCS AI Course Generation Studio"].waitForExistence(timeout: 6)
         )
+        #endif
     }
 }

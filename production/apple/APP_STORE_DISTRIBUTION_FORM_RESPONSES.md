@@ -227,3 +227,6 @@ Confirm against `WCS-Platform/PrivacyInfo.xcprivacy` and live backend before sub
 - `docs/AppStore_Review_Compliance_Packet.md` — commerce, links, media
 - `docs/AppStoreProductionChecklist.md` — end-to-end checklist
 - `production/apple/APPLE_STORE_PRODUCTION.md` — production hub
+- `production/apple/APP_STORE_REVIEW_RESPONSE_MAY27_2026.md` — ready Resolution Center reply for the latest rejection
+- `production/apple/APP_STORE_NOTES_FOR_REVIEW_v1_0_6.md` — Notes for Review text for next submission
+- `production/apple/IPAD_LAUNCH_CRASH_PREFLIGHT_CHECKLIST.md` — iPad launch-crash preflight checklist

@@ -2,15 +2,16 @@
 //  MembershipPaymentsHubView.swift
 //  WCS-Platform
 //
-//  Deep-links to hosted card checkout and merchant dashboards. Card capture belongs to your PSP or StoreKit.
+//  Individual Premium is sold with Apple In-App Purchase (Guideline 3.1.1).
+//  Enterprise / investor flows remain external B2B procurement only.
 //
 
-import SwiftUI
 import StoreKit
+import SwiftUI
 
 struct MembershipPaymentsHubView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
-    @StateObject private var storeKitManager: WCSStoreKitSubscriptionManager
+    @ObservedObject private var storeKitManager = WCSStoreKitSubscriptionManager.shared
     @State private var plans: [WCSSubscriptionPlan] = []
     @State private var planError: String?
     private let links = BrandOutboundLinks.current
@@ -19,21 +20,81 @@ struct MembershipPaymentsHubView: View {
     @MainActor
     init(commerceRepository: CommerceRepository = WCSAppContainer.shared.commerce) {
         self.commerceRepository = commerceRepository
-        _storeKitManager = StateObject(wrappedValue: WCSStoreKitSubscriptionManager())
     }
 
     var body: some View {
         List {
             Section {
                 Text(
-                    "WCS routes learners and administrators to your payment processor (for example Stripe Checkout + Connect, or Apple In-App Purchase for eligible digital goods). "
-                        + "Configure HTTPS URLs below; the app never collects raw PAN data."
+                    "Premium digital content in WCS is purchased with Apple In-App Purchase on this device. "
+                        + "Restore purchases to re-enable access for an existing Apple ID subscription."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+                .accessibilityIdentifier("iapComplianceNotice")
             }
 
-            Section("Individual learner plans") {
+            Section("Subscribe with Apple") {
+                if storeKitManager.isLoading {
+                    ProgressView("Loading subscription options…")
+                        .accessibilityIdentifier("storeKitProductsLoading")
+                } else if AppEnvironment.appleSubscriptionProductIDs.isEmpty {
+                    Text("Subscription products are not configured for this build.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("storeKitProductsEmptyMessage")
+                } else {
+                    SubscriptionStoreView(productIDs: Array(AppEnvironment.appleSubscriptionProductIDs).sorted()) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Individual Pro")
+                                .font(.headline)
+                            Text("Full course access, assessments, and certificates.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .storeButton(.visible, for: .restorePurchases)
+                    .onInAppPurchaseCompletion { product, result in
+                        Telemetry.event(.upgradeStarted, attributes: [
+                            "provider": "apple_iap",
+                            "product_id": product.id,
+                        ])
+                        storeKitManager.handleInAppPurchaseCompletion(product: product, result: result)
+                    }
+                    .accessibilityIdentifier("appleSubscriptionStoreView")
+
+                    legacyPurchaseButtonsIfNeeded
+
+                    Button {
+                        Task {
+                            Telemetry.event(.upgradeStarted, attributes: ["provider": "apple_iap", "action": "restore"])
+                            await storeKitManager.restorePurchases()
+                        }
+                    } label: {
+                        Label("Restore purchases", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(storeKitManager.isRestoring || storeKitManager.isPurchasing)
+                    .accessibilityIdentifier("storeKitRestorePurchasesButton")
+                }
+
+                if let msg = storeKitManager.purchaseMessage {
+                    Text(msg)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("storeKitPurchaseMessage")
+                }
+
+                if storeKitManager.hasActiveEntitlement {
+                    Label("Premium is active on this Apple ID", systemImage: "checkmark.seal.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.green)
+                        .accessibilityIdentifier("storeKitPremiumActiveBadge")
+                }
+            }
+            .accessibilityIdentifier("appleSubscriptionsSection")
+
+            Section("Plan overview") {
                 ForEach(plans.filter { $0.segment == .individual }) { plan in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
@@ -46,6 +107,11 @@ struct MembershipPaymentsHubView: View {
                         Text(plan.description)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                        if plan.appleProductID != nil, !plan.isFreeTier {
+                            Text("Purchased in-app with Apple In-App Purchase.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .padding(.vertical, 2)
                 }
@@ -56,80 +122,35 @@ struct MembershipPaymentsHubView: View {
                 }
             }
 
-            Section("Apple subscriptions (StoreKit)") {
-                if storeKitManager.isLoading {
-                    ProgressView("Loading Apple products…")
-                        .accessibilityIdentifier("storeKitProductsLoading")
-                } else if storeKitManager.products.isEmpty {
-                    Text("Configure `WCSAppleSubscriptionProductIDs` in Info.plist and App Store Connect products to enable in-app purchases.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("storeKitProductsEmptyMessage")
-                } else {
-                    ForEach(storeKitManager.products, id: \.id) { product in
-                        Button {
-                            Task {
-                                Telemetry.event(.upgradeStarted, attributes: ["provider": "apple_iap", "product_id": product.id])
-                                await storeKitManager.purchase(product: product)
-                            }
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(product.displayName)
-                                    Text(product.description)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Text(product.displayPrice)
-                            }
-                        }
-                        .disabled(storeKitManager.isPurchasing)
-                        .accessibilityIdentifier("storeKitPurchaseButton_\(product.id)")
-                    }
-                }
-                if let msg = storeKitManager.purchaseMessage {
-                    Text(msg)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("storeKitPurchaseMessage")
-                }
-            }
-            .accessibilityIdentifier("appleSubscriptionsSection")
+            Section("Organization & investor procurement") {
+                Text(
+                    "Enterprise seat packs and investor programs are sold outside the app through your organization or WCS sales team. "
+                        + "They do not replace Individual Pro, which must be purchased with In-App Purchase."
+                )
+                .font(.footnote)
+                .foregroundStyle(.secondary)
 
-            Section("Enterprise and investor billing") {
                 if let url = links.enterpriseSalesCheckoutURL {
-                    Link("Open enterprise billing workflow", destination: url)
-                } else {
-                    Text("Set ENTERPRISE_SALES_CHECKOUT_URL for enterprise procurement.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Link("Contact enterprise sales", destination: url)
                 }
                 if let url = links.investorRelationsPaymentURL {
-                    Link("Open investor payment workflow", destination: url)
-                } else {
-                    Text("Set INVESTOR_RELATIONS_PAYMENT_URL for investor commitments.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Link("Investor relations", destination: url)
                 }
             }
 
-            Section("Hosted checkout and policy") {
+            #if DEBUG
+            Section("Developer tools") {
                 if let url = links.membershipCardCheckoutURL {
-                    Link("Open hosted membership checkout", destination: url)
-                } else {
-                    Text("Set STRIPE_MEMBERSHIP_CHECKOUT_URL in the run scheme to enable card checkout in Safari.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    Link("Hosted membership checkout (debug only)", destination: url)
                 }
-
                 if let url = links.appleSubscriptionsMarketingURL {
                     Link("Apple In-App Purchase overview", destination: url)
                 }
             }
+            #endif
 
-            Section("Administrator payouts") {
-                if appViewModel.user?.isAdmin == true {
+            if appViewModel.user?.isAdmin == true {
+                Section("Administrator payouts") {
                     NavigationLink {
                         WCSAdminFinanceDashboardView()
                     } label: {
@@ -137,27 +158,46 @@ struct MembershipPaymentsHubView: View {
                     }
                     if let url = links.merchantFinancialDashboardURL {
                         Link("Open merchant / Connect dashboard", destination: url)
-                    } else {
-                        Text("Set ADMIN_MERCHANT_DASHBOARD_URL to your Stripe (or PSP) dashboard for settlement routing.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
                     }
-                } else {
-                    Text("Administrator role required to show payout and finance monitoring shortcuts.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
                 }
             }
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Membership & payouts")
+        .navigationTitle("Membership")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .task {
+            await storeKitManager.start()
             await loadPlans()
-            await storeKitManager.loadProducts()
+        }
+    }
+
+    @ViewBuilder
+    private var legacyPurchaseButtonsIfNeeded: some View {
+        if !storeKitManager.products.isEmpty {
+            ForEach(storeKitManager.products, id: \.id) { product in
+                Button {
+                    Task {
+                        Telemetry.event(.upgradeStarted, attributes: ["provider": "apple_iap", "product_id": product.id])
+                        await storeKitManager.purchase(product: product)
+                    }
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(product.displayName)
+                            Text(product.description)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(product.displayPrice)
+                    }
+                }
+                .disabled(storeKitManager.isPurchasing)
+                .accessibilityIdentifier("storeKitPurchaseButton_\(product.id)")
+            }
         }
     }
 

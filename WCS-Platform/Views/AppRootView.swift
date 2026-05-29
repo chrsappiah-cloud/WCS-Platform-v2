@@ -44,6 +44,7 @@ struct AppRootView: View {
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .environmentObject(appViewModel)
         .task {
+            await WCSStoreKitSubscriptionManager.shared.start()
             await appViewModel.bootstrapUser()
         }
     }

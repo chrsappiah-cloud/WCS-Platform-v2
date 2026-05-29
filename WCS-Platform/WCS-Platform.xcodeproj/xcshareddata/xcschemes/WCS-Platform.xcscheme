@@ -116,6 +116,9 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
       </CommandLineArguments>
+      <StoreKitConfigurationFileReference
+         identifier = "../../WCS-Platform.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

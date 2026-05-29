@@ -10,7 +10,13 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
     static let shared = NetworkClient()
 
     /// When `true`, catalog and mutations resolve locally without network I/O.
-    var useMocks: Bool = true
+    var useMocks: Bool = {
+        #if DEBUG
+        true
+        #else
+        false
+        #endif
+    }()
 
     private let session: URLSession
     private let jsonDecoder: JSONDecoder

@@ -33,7 +33,8 @@ struct User: Codable, Identifiable, Hashable {
     var enrollments: [Enrollment]
 
     nonisolated var isPremium: Bool {
-        subscriptions.contains { $0.status == .active }
+        if subscriptions.contains(where: { $0.status == .active }) { return true }
+        return UserDefaults.standard.bool(forKey: WCSStoreKitSubscriptionManager.premiumEntitlementUserDefaultsKey)
     }
 
     nonisolated var isAdmin: Bool {

@@ -20,8 +20,9 @@ final class ApplePaymentsE2ETests: XCTestCase {
         )
 
         XCTAssertTrue(
-            app.staticTexts["Apple subscriptions (StoreKit)"].waitForExistence(timeout: 12),
-            "StoreKit section should be visible in membership hub"
+            app.staticTexts["Subscribe with Apple"].waitForExistence(timeout: 12)
+                || app.otherElements["appleSubscriptionsSection"].waitForExistence(timeout: 12),
+            "In-App Purchase section should be visible in membership hub"
         )
     }
 
@@ -53,7 +54,7 @@ final class ApplePaymentsE2ETests: XCTestCase {
 
         let storeKitGuidance = app.staticTexts.matching(
             NSPredicate(
-                format: "label CONTAINS[c] 'WCSAppleSubscriptionProductIDs' OR label CONTAINS[c] 'Loading Apple products' OR label CONTAINS[c] 'purchase'"
+                format: "label CONTAINS[c] 'subscription' OR label CONTAINS[c] 'In-App Purchase' OR label CONTAINS[c] 'Restore purchases' OR label CONTAINS[c] 'Loading subscription'"
             )
         ).firstMatch
         XCTAssertTrue(

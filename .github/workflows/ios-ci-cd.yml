@@ -2,9 +2,9 @@ name: iOS CI/CD
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, test/ios-strict-quality-gates]
   push:
-    branches: [main]
+    branches: [main, test/ios-strict-quality-gates]
     tags:
       - "v*"
   workflow_dispatch:
@@ -76,7 +76,7 @@ jobs:
           -only-testing:WCS-PlatformUITests/Recovery
           test
 
-      - name: Run AI video and Apple payments E2E gates
+      - name: Run full UI E2E gates
         env:
           CI: "true"
         run: >
@@ -86,8 +86,7 @@ jobs:
           -destination "platform=iOS Simulator,name=iPhone 17"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
-          -only-testing:WCS-PlatformUITests/AIVideoGenerationE2ETests
-          -only-testing:WCS-PlatformUITests/ApplePaymentsE2ETests
+          -only-testing:WCS-PlatformUITests/E2E
           test
 
       - name: Verify privacy manifest exists

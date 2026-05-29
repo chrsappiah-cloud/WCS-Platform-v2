@@ -69,6 +69,7 @@ enum AppLaunchEnvironmentBootstrapper {
         guard let mode else { return }
         if mode.localizedCaseInsensitiveContains("productsFailure") {
             UserDefaults.standard.set("", forKey: "wcs.test.appleSubscriptionProductIDsOverride")
+            UserDefaults.standard.set(false, forKey: WCSStoreKitSubscriptionManager.premiumEntitlementUserDefaultsKey)
         }
     }
 
