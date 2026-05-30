@@ -13,10 +13,8 @@ struct Course: Codable, Identifiable, Hashable {
     let thumbnailURL: String
     let coverURL: String?
     let durationSeconds: Int
-    let price: Decimal?
     let isEnrolled: Bool
     let isOwned: Bool
-    let isUnlockedBySubscription: Bool
     let rating: Double?
     let reviewCount: Int
     /// Partner or school line (similar to “MITx”, “HarvardX” on open learning catalogs).
@@ -35,10 +33,8 @@ struct Course: Codable, Identifiable, Hashable {
         thumbnailURL: String,
         coverURL: String?,
         durationSeconds: Int,
-        price: Decimal?,
         isEnrolled: Bool,
         isOwned: Bool,
-        isUnlockedBySubscription: Bool,
         rating: Double?,
         reviewCount: Int,
         organizationName: String?,
@@ -55,10 +51,8 @@ struct Course: Codable, Identifiable, Hashable {
         self.thumbnailURL = thumbnailURL
         self.coverURL = coverURL
         self.durationSeconds = durationSeconds
-        self.price = price
         self.isEnrolled = isEnrolled
         self.isOwned = isOwned
-        self.isUnlockedBySubscription = isUnlockedBySubscription
         self.rating = rating
         self.reviewCount = reviewCount
         self.organizationName = organizationName
@@ -108,10 +102,8 @@ extension Course {
             thumbnailURL: thumbnailURL,
             coverURL: coverURL,
             durationSeconds: durationSeconds,
-            price: price,
             isEnrolled: isEnrolled ?? self.isEnrolled,
             isOwned: isOwned ?? self.isOwned,
-            isUnlockedBySubscription: isUnlockedBySubscription,
             rating: rating,
             reviewCount: reviewCount,
             organizationName: organizationName,

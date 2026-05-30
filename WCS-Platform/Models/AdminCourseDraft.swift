@@ -7,7 +7,6 @@ import Foundation
 
 enum AdminCourseAccessTier: String, Codable, Hashable, CaseIterable, Identifiable {
     case freePublic
-    case paidSubscription
 
     var id: String { rawValue }
 
@@ -15,8 +14,6 @@ enum AdminCourseAccessTier: String, Codable, Hashable, CaseIterable, Identifiabl
         switch self {
         case .freePublic:
             return "Free public"
-        case .paidSubscription:
-            return "Paid subscription"
         }
     }
 }

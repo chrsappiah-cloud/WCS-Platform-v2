@@ -20,7 +20,6 @@ struct UserModelTests {
             role: .learner,
             activeOrganizationId: nil,
             memberships: [],
-            subscriptions: [],
             enrollments: []
         )
         let right = User(
@@ -31,7 +30,6 @@ struct UserModelTests {
             role: .learner,
             activeOrganizationId: nil,
             memberships: [],
-            subscriptions: [],
             enrollments: []
         )
         #expect(left == right)
@@ -44,28 +42,7 @@ struct UserModelTests {
         let user = try JSONDecoder().decode(User.self, from: Data(json.utf8))
         #expect(user.role == .learner)
         #expect(user.memberships.isEmpty)
-        #expect(user.subscriptions.isEmpty)
         #expect(user.enrollments.isEmpty)
-    }
-
-    @Test func encodeRoundTrip_preservesIdentity() throws {
-        let original = TestFixtures.makeUser(
-            role: .orgAdmin,
-            subscriptions: [TestFixtures.makeSubscription()]
-        )
-        let data = try JSONEncoder().encode(original)
-        let decoded = try JSONDecoder().decode(User.self, from: data)
-        #expect(decoded == original)
-    }
-
-    @Test func isPremium_whenActiveSubscriptionExists() {
-        let user = TestFixtures.makeUser(subscriptions: [TestFixtures.makeSubscription(status: .active)])
-        #expect(user.isPremium)
-    }
-
-    @Test func isPremium_falseWhenNoActiveSubscription() {
-        let user = TestFixtures.makeUser(subscriptions: [TestFixtures.makeSubscription(status: .canceled)])
-        #expect(!user.isPremium)
     }
 
     @Test func isAdmin_forOrgAdminAndAdminRoles() {

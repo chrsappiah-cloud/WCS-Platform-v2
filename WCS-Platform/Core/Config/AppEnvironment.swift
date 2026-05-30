@@ -9,7 +9,6 @@ nonisolated enum AppEnvironment {
     private static let infoPlistKey = "WCSPlatformAPIBaseURL"
     private static let backendProviderInfoPlistKey = "WCSBackendProvider"
     private static let adminCodeInfoPlistKey = "WCSAdminAccessCode"
-    private static let appleSubscriptionProductIDsInfoPlistKey = "WCSAppleSubscriptionProductIDs"
     private static let debugSafeModeUserDefaultsKey = "wcs.debugSafeMode"
 
     enum BackendProvider: String {
@@ -61,25 +60,6 @@ nonisolated enum AppEnvironment {
     /// Delegates to `LessonVideoGenerationSettings.remoteTextToVideoBearerToken`.
     static var remoteLessonTextToVideoAPIKey: String? {
         LessonVideoGenerationSettings.remoteTextToVideoBearerToken
-    }
-
-    /// Comma-separated StoreKit product ids from Info.plist key `WCSAppleSubscriptionProductIDs`.
-    static var appleSubscriptionProductIDs: Set<String> {
-        if let override = UserDefaults.standard.string(forKey: "wcs.test.appleSubscriptionProductIDsOverride") {
-            let ids = override
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            return Set(ids)
-        }
-        if let raw = Bundle.main.object(forInfoDictionaryKey: appleSubscriptionProductIDsInfoPlistKey) as? String {
-            let ids = raw
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-            if !ids.isEmpty { return Set(ids) }
-        }
-        return []
     }
 
     /// Extra simulator-only stabilization for noisy keyboard/haptics sessions.

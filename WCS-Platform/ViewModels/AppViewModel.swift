@@ -33,13 +33,6 @@ final class AppViewModel: ObservableObject {
                 Task { await self.bootstrapUser() }
             }
             .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: .wcsStoreKitEntitlementsDidChange)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.mergeStoreKitEntitlementsIntoUser()
-            }
-            .store(in: &cancellables)
     }
 
     func navigate(to screen: String) {
@@ -54,24 +47,9 @@ final class AppViewModel: ObservableObject {
         do {
             user = try await identityRepository.currentUser()
             isAuthenticated = true
-            mergeStoreKitEntitlementsIntoUser()
         } catch {
             isAuthenticated = false
             user = nil
         }
-    }
-
-    /// Reflects active Apple IAP entitlements in profile subscription badges without replacing server records.
-    private func mergeStoreKitEntitlementsIntoUser() {
-        guard var current = user else { return }
-        let appleSubs = WCSStoreKitSubscriptionManager.shared.subscriptionsMatchingEntitlements()
-        guard !appleSubs.isEmpty else { return }
-
-        var merged = current.subscriptions.filter { sub in
-            !AppEnvironment.appleSubscriptionProductIDs.contains(sub.planId)
-        }
-        merged.append(contentsOf: appleSubs)
-        current.subscriptions = merged
-        user = current
     }
 }

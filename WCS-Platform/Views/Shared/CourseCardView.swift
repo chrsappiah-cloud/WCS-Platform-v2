@@ -106,10 +106,6 @@ struct CourseCardView: View {
                             .tint(DesignTokens.brandAccent)
                     }
                     .padding(.top, DesignTokens.Spacing.xs)
-                } else if let price = course.price {
-                    Text(price.formatted(.currency(code: Locale.current.currency?.identifier ?? "USD")))
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(DesignTokens.brandAccent)
                 } else {
                     Text("Free to audit")
                         .font(.caption.weight(.bold))

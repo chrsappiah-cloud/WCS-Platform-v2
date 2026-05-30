@@ -9,7 +9,6 @@ struct AppLaunchConfiguration {
     let isUITestMode: Bool
     let mockNetworkMode: String?
     let mockPermissionsMode: String?
-    let mockStoreKitMode: String?
     let seedEmptyDatabase: Bool
     let seedExpiredToken: Bool
     let seedMigratedState: Bool
@@ -22,7 +21,6 @@ struct AppLaunchConfiguration {
             isUITestMode: arguments.contains("-uiTestMode"),
             mockNetworkMode: value(after: "-mockNetwork", in: arguments),
             mockPermissionsMode: value(after: "-mockPermissions", in: arguments),
-            mockStoreKitMode: value(after: "-mockStoreKit", in: arguments),
             seedEmptyDatabase: arguments.contains("-seedEmptyDatabase"),
             seedExpiredToken: arguments.contains("-seedExpiredToken"),
             seedMigratedState: arguments.contains("-seedMigratedState")

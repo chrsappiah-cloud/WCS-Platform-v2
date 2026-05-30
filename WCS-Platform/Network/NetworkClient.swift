@@ -6,7 +6,7 @@
 import Foundation
 
 /// REST shell with a mock path for local UI development. Point `AppEnvironment.platformAPIBaseURL` at your WCS API when ready.
-nonisolated final class NetworkClient: IdentityService, CatalogService, LearningService, CommunityService, CommerceService, ContentOpsService {
+nonisolated final class NetworkClient: IdentityService, CatalogService, LearningService, CommunityService, ContentOpsService {
     static let shared = NetworkClient()
 
     /// When `true`, catalog and mutations resolve locally without network I/O.
@@ -208,7 +208,6 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                 role: user.role,
                 activeOrganizationId: user.activeOrganizationId,
                 memberships: user.memberships,
-                subscriptions: user.subscriptions,
                 enrollments: user.enrollments
             )
             return user
@@ -269,7 +268,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         if useMocks {
             try await Task.sleep(nanoseconds: 180_000_000)
             let user = await MockLearningStore.shared.currentUser()
-            let courses = await MockLearningStore.shared.snapshotCourses(forPremiumUser: user.isPremium)
+            let courses = await MockLearningStore.shared.snapshotCourses()
             return courses.map { WCSPlatformAccessPolicy.redactCourseForCatalogIfNeeded(snapshot: snapshot, course: $0) }
         }
         let response: CourseListResponse = try await request("courses/available", method: "GET")
@@ -296,8 +295,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
             let catalog = WCSDomainProjector.catalog(from: course, tags: tags, featuredPlacement: featuredPlacement)
             let enrollment = user.enrollments.first(where: { $0.courseId == course.id })
             let learning = WCSDomainProjector.learning(from: course, enrollment: enrollment)
-            let commerce = WCSDomainProjector.commerce(from: course, user: user)
-            return DiscoverProgramCard(id: course.id, course: course, catalog: catalog, learning: learning, commerce: commerce)
+            return DiscoverProgramCard(id: course.id, course: course, catalog: catalog, learning: learning)
         }
 
         let featured = cards.filter { $0.catalog.featuredPlacement != nil }
@@ -332,7 +330,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         let course = try await rawFetchCourse(courseId)
         try await WCSPlatformAccessPolicy.assertAllowed(
             snapshot: snapshot,
-            operation: .commerceEnroll(courseId: courseId),
+            operation: .catalogCourseDetail(courseId: courseId),
             courseProvider: { _ in course }
         )
 
@@ -588,98 +586,6 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
 
     func postDiscussion(topicID: String, body: String, authorName: String) async throws -> DiscussionPost {
         try await createDiscussionPost(topicID: topicID, body: body, authorName: authorName)
-    }
-
-    func canAccessProgram(_ course: Course, user: User) -> Bool {
-        if user.isAdmin { return true }
-        if course.isOwned || course.isEnrolled { return true }
-        if course.isUnlockedBySubscription { return user.isPremium }
-        if course.price == nil { return true }
-        return user.isPremium
-    }
-
-    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan] {
-        let snapshot = try await resolveIdentitySnapshot()
-        try await WCSPlatformAccessPolicy.assertAllowed(
-            snapshot: snapshot,
-            operation: .commercePlansRead,
-            courseProvider: { id in try await self.rawFetchCourse(id) }
-        )
-
-        if useMocks {
-            return [
-                WCSSubscriptionPlan(
-                    id: "free-audit",
-                    displayName: "Free Audit",
-                    segment: .individual,
-                    isFreeTier: true,
-                    monthlyPriceUSD: 0,
-                    description: "Audit selected lessons and community discussions.",
-                    appleProductID: nil
-                ),
-                WCSSubscriptionPlan(
-                    id: "individual-pro",
-                    displayName: "Individual Pro",
-                    segment: .individual,
-                    isFreeTier: false,
-                    monthlyPriceUSD: 29.99,
-                    description: "Full course access, assessments, and certificates.",
-                    appleProductID: AppEnvironment.appleSubscriptionProductIDs.first
-                ),
-                WCSSubscriptionPlan(
-                    id: "enterprise-seat",
-                    displayName: "Enterprise Seats",
-                    segment: .enterprise,
-                    isFreeTier: false,
-                    monthlyPriceUSD: 99,
-                    description: "Managed cohorts, seat packs, and admin reporting.",
-                    appleProductID: nil
-                ),
-                WCSSubscriptionPlan(
-                    id: "investor-insight",
-                    displayName: "Investor Insight Access",
-                    segment: .investor,
-                    isFreeTier: false,
-                    monthlyPriceUSD: 499,
-                    description: "Governance updates, KPI access, and diligence portal.",
-                    appleProductID: nil
-                ),
-            ]
-        }
-        return try await rawRequest("/commerce/plans", method: "GET")
-    }
-
-    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot {
-        let snapshot = try await resolveIdentitySnapshot()
-        try await WCSPlatformAccessPolicy.assertAllowed(
-            snapshot: snapshot,
-            operation: .commerceAdminFinanceRead,
-            courseProvider: { id in try await self.rawFetchCourse(id) }
-        )
-
-        if useMocks {
-            return WCSAdminFinanceSnapshot(
-                asOf: Date(),
-                grossRevenueUSD: 12840.55,
-                feesUSD: 413.22,
-                netRevenueUSD: 12427.33,
-                activeLearnerSubscriptions: 312,
-                activeEnterpriseContracts: 6,
-                activeInvestorCommitments: 3,
-                breakdown: WCSRevenueBreakdown(
-                    individualUSD: 8420.10,
-                    enterpriseUSD: 3160.45,
-                    investorUSD: 1260.00
-                ),
-                payout: WCSPayoutStatus(
-                    pendingUSD: 1750.40,
-                    paidOutUSD: 10676.93,
-                    bankAccountAlias: "WCS Operations Account •••• 2044",
-                    lastSettlementAt: Date().addingTimeInterval(-60 * 60 * 24)
-                )
-            )
-        }
-        return try await rawRequest("/commerce/admin/finance/snapshot", method: "GET")
     }
 
     func publishDraft(_ id: UUID) async throws {

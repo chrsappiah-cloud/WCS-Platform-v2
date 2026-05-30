@@ -29,13 +29,7 @@ struct User: Codable, Identifiable, Hashable {
     var role: UserRole
     var activeOrganizationId: UUID?
     var memberships: [OrganizationMembership]
-    var subscriptions: [Subscription]
     var enrollments: [Enrollment]
-
-    nonisolated var isPremium: Bool {
-        if subscriptions.contains(where: { $0.status == .active }) { return true }
-        return UserDefaults.standard.bool(forKey: WCSStoreKitSubscriptionManager.premiumEntitlementUserDefaultsKey)
-    }
 
     nonisolated var isAdmin: Bool {
         role == .admin || role == .orgAdmin
@@ -53,7 +47,6 @@ struct User: Codable, Identifiable, Hashable {
         case role
         case activeOrganizationId
         case memberships
-        case subscriptions
         case enrollments
     }
 
@@ -65,7 +58,6 @@ struct User: Codable, Identifiable, Hashable {
         role: UserRole = .learner,
         activeOrganizationId: UUID? = nil,
         memberships: [OrganizationMembership] = [],
-        subscriptions: [Subscription],
         enrollments: [Enrollment]
     ) {
         self.id = id
@@ -75,7 +67,6 @@ struct User: Codable, Identifiable, Hashable {
         self.role = role
         self.activeOrganizationId = activeOrganizationId
         self.memberships = memberships
-        self.subscriptions = subscriptions
         self.enrollments = enrollments
     }
 
@@ -88,7 +79,6 @@ struct User: Codable, Identifiable, Hashable {
         role = try c.decodeIfPresent(UserRole.self, forKey: .role) ?? .learner
         activeOrganizationId = try c.decodeIfPresent(UUID.self, forKey: .activeOrganizationId)
         memberships = try c.decodeIfPresent([OrganizationMembership].self, forKey: .memberships) ?? []
-        subscriptions = try c.decodeIfPresent([Subscription].self, forKey: .subscriptions) ?? []
         enrollments = try c.decodeIfPresent([Enrollment].self, forKey: .enrollments) ?? []
     }
 }

@@ -115,29 +115,6 @@ extension XCTestCase {
         )
     }
 
-    func openMembershipPaymentsHub(_ app: XCUIApplication) {
-        app.openTab("Profile")
-        tapMembershipSubscriptionsLink(in: app)
-        XCTAssertTrue(
-            app.navigationBars["Membership"].waitForExistence(timeout: 12)
-                || app.staticTexts["Subscribe with Apple"].waitForExistence(timeout: 8),
-            "Membership hub did not open"
-        )
-    }
-
-    func tapMembershipSubscriptionsLink(in app: XCUIApplication) {
-        let button = app.buttons["Membership & subscriptions"]
-        if button.waitForExistence(timeout: 4) {
-            scrollUntilExists(button, in: app)
-            button.tap()
-            return
-        }
-        let text = app.staticTexts["Membership & subscriptions"]
-        scrollUntilExists(text, in: app)
-        XCTAssertTrue(text.waitForExistence(timeout: 8), "Membership & subscriptions link not found")
-        text.tap()
-    }
-
     func dismissKeyboard(_ app: XCUIApplication) {
         if app.keyboards.buttons["Done"].exists {
             app.keyboards.buttons["Done"].tap()

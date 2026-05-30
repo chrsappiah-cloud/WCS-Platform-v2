@@ -178,7 +178,6 @@ struct HomeTabView: View {
                         CapabilityRow(icon: "play.rectangle.fill", title: "Structured programs", subtitle: "Modules, lessons, and pacing with completion state.")
                         CapabilityRow(icon: "chart.bar.doc.horizontal", title: "Assessments", subtitle: "Quizzes with scoring; assignments with submission and feedback.")
                         CapabilityRow(icon: "person.text.rectangle", title: "Identity-ready client", subtitle: "Bearer token from UserDefaults for live backends.")
-                        CapabilityRow(icon: "creditcard.fill", title: "Commerce-ready models", subtitle: "Price, enrollment, and subscription fields match your domain.")
                     }
                     .wcsInsetPanel()
                 }

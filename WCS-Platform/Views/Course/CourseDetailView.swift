@@ -75,8 +75,6 @@ struct CourseDetailView: View {
 
                     openScholarshipBlock(course)
 
-                    premiumUpsellBlock(course)
-
                     enrollmentBlock(course)
 
                     if course.isEnrolled {
@@ -247,32 +245,6 @@ struct CourseDetailView: View {
             }
         }
         .wcsInsetPanel()
-    }
-
-    @ViewBuilder
-    private func premiumUpsellBlock(_ course: Course) -> some View {
-        let needsPremium = course.isUnlockedBySubscription || course.price != nil
-        if needsPremium, appViewModel.user?.isPremium != true, !course.isEnrolled {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                Text("Premium content")
-                    .font(.headline.weight(.semibold))
-                Text("Subscribe with Apple In-App Purchase to unlock full lessons and assessments.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                NavigationLink {
-                    MembershipPaymentsHubView()
-                } label: {
-                    Text("View subscription options")
-                        .font(.headline.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(DesignTokens.brandAccent)
-                .accessibilityIdentifier("upgradeToPremiumLink")
-            }
-            .padding(DesignTokens.Spacing.lg)
-            .wcsElevatedSurface()
-        }
     }
 
     @ViewBuilder
@@ -484,10 +456,6 @@ struct CourseDetailView: View {
     }
 
     private func enrollButtonTitle(for course: Course) -> String {
-        if let price = course.price {
-            let money = price.formatted(.currency(code: Locale.current.currency?.identifier ?? "USD"))
-            return "Enroll · \(money)"
-        }
         return "Enroll for free"
     }
 

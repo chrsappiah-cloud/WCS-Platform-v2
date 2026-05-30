@@ -21,7 +21,6 @@ enum TestFixtures {
 
     static func makeUser(
         role: UserRole = .learner,
-        subscriptions: [Subscription] = [],
         enrollments: [Enrollment] = []
     ) -> User {
         User(
@@ -32,14 +31,12 @@ enum TestFixtures {
             role: role,
             activeOrganizationId: organizationId,
             memberships: [],
-            subscriptions: subscriptions,
             enrollments: enrollments
         )
     }
 
     static func makeCourse(
         title: String = "Test Course",
-        price: Decimal? = nil,
         modules: [Module] = []
     ) -> Course {
         Course(
@@ -50,10 +47,8 @@ enum TestFixtures {
             thumbnailURL: "https://example.com/t.jpg",
             coverURL: nil,
             durationSeconds: 1200,
-            price: price,
             isEnrolled: false,
             isOwned: false,
-            isUnlockedBySubscription: false,
             rating: 4.5,
             reviewCount: 10,
             organizationName: "World Class Scholars",

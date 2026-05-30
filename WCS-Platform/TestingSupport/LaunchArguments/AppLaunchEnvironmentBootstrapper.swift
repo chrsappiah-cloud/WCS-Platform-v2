@@ -12,7 +12,6 @@ enum AppLaunchEnvironmentBootstrapper {
         applyUITestMode(config.isUITestMode)
         applyNetworkMode(config.mockNetworkMode)
         applyPermissionMode(config.mockPermissionsMode)
-        applyStoreKitMode(config.mockStoreKitMode)
         applySeedModes(config)
     }
 
@@ -62,14 +61,6 @@ enum AppLaunchEnvironmentBootstrapper {
         if mode.localizedCaseInsensitiveContains("denied") {
             UserDefaults.standard.set(false, forKey: "wcs.mockPremiumMode")
             UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
-        }
-    }
-
-    private static func applyStoreKitMode(_ mode: String?) {
-        guard let mode else { return }
-        if mode.localizedCaseInsensitiveContains("productsFailure") {
-            UserDefaults.standard.set("", forKey: "wcs.test.appleSubscriptionProductIDsOverride")
-            UserDefaults.standard.set(false, forKey: WCSStoreKitSubscriptionManager.premiumEntitlementUserDefaultsKey)
         }
     }
 

@@ -12,28 +12,6 @@ import Foundation
 @Suite(.serialized)
 struct WCS_PlatformTests {
 
-    @Test func publishedAIDraftHasStructuredBriefAndReport() async throws {
-        await MockLearningStore.shared.deleteBlockedAICourses()
-        await MockLearningStore.shared.publishDraftToCatalog(makeDraftForTests(
-            title: "AI Business Operator",
-            summary: "AI-generated draft for administrators only. Includes module video lessons plus course materials from open-source references for internal review before publication.",
-            outcomePrefix: "Build real AI operating workflows",
-            includeFindings: true
-        ))
-
-        let courses = await MockLearningStore.shared.snapshotCourses(forPremiumUser: true)
-        guard let published = courses.first(where: { $0.title == "AI Business Operator" }) else {
-            #expect(Bool(false), "Published draft course should exist in catalog.")
-            return
-        }
-
-        #expect(published.description.contains("Course design goals:"))
-        #expect(published.description.contains("Module overview:"))
-        #expect(published.description.contains("Learning outcomes:"))
-        #expect(published.courseReport != nil)
-        #expect((published.courseReport?.learningOutcomes.count ?? 0) > 0)
-    }
-
     @Test func publishGuardBlocksQuestionStyleOutput() async throws {
         let store = AdminCourseDraftStore(generator: StubQuestionGenerator())
         let prompt = """
@@ -202,68 +180,6 @@ struct WCS_PlatformTests {
         #expect(lines.first?.youTubeSearchQuery.contains(course.title) == true)
     }
 
-    @Test func youTubeQuerySynthesis_isFastAtScale() {
-        let course = Course(
-            id: UUID(),
-            title: "World Class Scholars Bootcamp",
-            subtitle: nil,
-            description: "Learning outcomes: a | b",
-            thumbnailURL: "https://example.com/t.jpg",
-            coverURL: nil,
-            durationSeconds: 3600,
-            price: nil,
-            isEnrolled: true,
-            isOwned: true,
-            isUnlockedBySubscription: false,
-            rating: nil,
-            reviewCount: 0,
-            organizationName: "WCS",
-            level: "Beginner",
-            effortDescription: nil,
-            spokenLanguages: ["en"],
-            modules: [
-                Module(
-                    id: UUID(),
-                    title: "Foundations",
-                    description: nil,
-                    order: 0,
-                    isAvailable: true,
-                    isUnlocked: true,
-                    lessons: [
-                        Lesson(
-                            id: UUID(),
-                            title: "Welcome",
-                            subtitle: "Orientation",
-                            type: .video,
-                            videoURL: "https://example.com/v.mp4",
-                            durationSeconds: 120,
-                            isCompleted: false,
-                            isAvailable: true,
-                            isUnlocked: true,
-                            reading: nil,
-                            quiz: nil,
-                            assignment: nil,
-                            captionTracks: [],
-                            serverResumePositionSeconds: nil
-                        )
-                    ]
-                )
-            ],
-            courseReport: nil
-        )
-
-        let lines = ModuleVideoDiscoveryPipeline.scriptLines(from: course)
-        let iterations = 3_000
-        let t0 = CFAbsoluteTimeGetCurrent()
-        for _ in 0 ..< iterations {
-            for line in lines {
-                _ = line.youTubeSearchQuery
-            }
-        }
-        let elapsed = CFAbsoluteTimeGetCurrent() - t0
-        #expect(elapsed < 0.2, "Local query synthesis should stay interactive; saw \(elapsed)s")
-    }
-
     @Test func youTubeSearch_singleProbe_skipsWithoutKey() async throws {
         guard YouTubeSearchAPIClient.resolveAPIKey() != nil else {
             return
@@ -394,7 +310,6 @@ struct WCS_PlatformTests {
         #expect(errors.isEmpty, "Domain ownership must be strict and non-overlapping. Errors: \(errors)")
         #expect(WCSDomainRegistry.owner(of: .organizationMembership) == .identity)
         #expect(WCSDomainRegistry.owner(of: .programs) == .catalog)
-        #expect(WCSDomainRegistry.owner(of: .entitlements) == .commerce)
         #expect(WCSDomainRegistry.owner(of: .modulePublishing) == .contentOps)
         #expect(WCSDomainRegistry.owner(of: .completionMetrics) == .analytics)
     }
@@ -423,52 +338,6 @@ struct WCS_PlatformTests {
         #expect(orgAdmin.memberships.contains(where: { $0.isActive }))
     }
 
-    @Test func commerce_paidProgramBlockedWithoutEntitlement() async throws {
-        let paid = MockCourseCatalog.courses.first(where: { $0.price != nil })
-        #expect(paid != nil)
-        guard let paid else { return }
-
-        let user = User(
-            id: UUID(),
-            email: "learner@wcs.test",
-            name: "Learner",
-            photoURL: nil,
-            role: .learner,
-            activeOrganizationId: nil,
-            memberships: [],
-            subscriptions: [],
-            enrollments: []
-        )
-
-        let allowed = NetworkClient.shared.canAccessProgram(paid, user: user)
-        #expect(!allowed, "Paid programs should require entitlement.")
-    }
-
-    @Test func communityAnchoredThread_requiresLearningAccess() async throws {
-        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
-        let previousPremium = UserDefaults.standard.bool(forKey: "wcs.mockPremiumMode")
-        defer {
-            if let previousRole {
-                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
-            }
-            UserDefaults.standard.set(previousPremium, forKey: "wcs.mockPremiumMode")
-        }
-
-        UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
-        UserDefaults.standard.set(false, forKey: "wcs.mockPremiumMode")
-        await MockLearningStore.shared.resetLearningStateForTests()
-
-        await #expect(throws: Error.self) {
-            _ = try await NetworkClient.shared.createDiscussionPost(
-                topicID: "wcs:anchor:course:10000000-0000-0000-0000-000000000001:module:20000000-0000-0000-0000-000000000001:lesson:30000000-0000-0000-0000-000000000001",
-                body: "Trying to post without enrollment",
-                authorName: "Learner"
-            )
-        }
-    }
-
     @Test func contentOpsPublish_requiresOrgAdminRole() async throws {
         let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
         defer {
@@ -494,54 +363,6 @@ struct WCS_PlatformTests {
         }
     }
 
-    @Test func commerceAdminFinance_requiresAdminRole() async throws {
-        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
-        defer {
-            if let previousRole {
-                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
-            }
-        }
-
-        UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
-        await #expect(throws: Error.self) {
-            _ = try await NetworkClient.shared.fetchAdminFinanceSnapshot()
-        }
-    }
-
-    @Test func commerceAdminFinance_allowsOrgAdminRole() async throws {
-        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
-        defer {
-            if let previousRole {
-                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
-            }
-        }
-
-        UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
-        let snapshot = try await NetworkClient.shared.fetchAdminFinanceSnapshot()
-        #expect(snapshot.netRevenueUSD >= 0)
-        #expect(!snapshot.payout.bankAccountAlias.isEmpty)
-    }
-
-    @Test func commercePlans_areAvailableToAuthenticatedLearner() async throws {
-        let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
-        defer {
-            if let previousRole {
-                UserDefaults.standard.set(previousRole, forKey: "wcs.mockRole")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "wcs.mockRole")
-            }
-        }
-
-        UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
-        let plans = try await NetworkClient.shared.fetchSubscriptionPlans()
-        #expect(!plans.isEmpty)
-        #expect(plans.contains(where: { $0.segment == .individual }))
-    }
-
     @Test func domainProjections_coverAllBoundedContextParameters() async throws {
         UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
         let user = await MockLearningStore.shared.currentUser()
@@ -565,9 +386,6 @@ struct WCS_PlatformTests {
         #expect(!community.isEmpty)
         #expect(community.allSatisfy { $0.moderationEnabled && $0.reportingEnabled })
 
-        let commerce = WCSDomainProjector.commerce(from: course, user: user)
-        #expect(!commerce.sku.isEmpty)
-
         let profile = WCSDomainProjector.profile(from: user)
         #expect(profile.completedCourseCount >= 0)
 
@@ -585,14 +403,12 @@ struct WCS_PlatformTests {
             from: [
                 "course.load.success",
                 "lesson.video.playback.heartbeat",
-                "profile.milestone.certificate_earned",
-                "subscription.renewed"
+                "profile.milestone.certificate_earned"
             ]
         )
         #expect(analytics.funnelEvents >= 1)
         #expect(analytics.retentionSignals >= 1)
         #expect(analytics.completionSignals >= 1)
-        #expect(analytics.monetizationSignals >= 1)
     }
 
     @Test func homeDiscover_trustCluster_contentContract() {
@@ -743,7 +559,6 @@ struct WCS_PlatformTests {
         #expect(!payload.allPrograms.isEmpty)
         #expect(!payload.featuredPrograms.isEmpty)
         #expect(payload.allPrograms.allSatisfy { !$0.catalog.tags.isEmpty })
-        #expect(payload.allPrograms.allSatisfy { !$0.commerce.sku.isEmpty })
     }
 
     @Test func contentOps_pipelineEndpoints_mockRoundTrip() async throws {

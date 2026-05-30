@@ -24,7 +24,7 @@ final class AIVideoGenerationE2ETests: XCTestCase {
     @MainActor
     func testAdminStudioVideoPipelineControls() throws {
         #if !targetEnvironment(simulator)
-        throw XCTSkip("Admin studio pipeline stress test is run on simulator CI; physical device runs focus on learner and IAP paths.")
+        throw XCTSkip("Admin studio pipeline stress test is run on simulator CI.")
         #endif
         let app = XCUIApplication()
         app.launchForE2E()

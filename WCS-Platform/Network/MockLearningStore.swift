@@ -59,15 +59,10 @@ actor MockLearningStore {
         }
     }
 
-    func snapshotCourses(forPremiumUser isPremium: Bool) -> [Course] {
+    func snapshotCourses() -> [Course] {
         purgeBlockedAICourses()
         let allCourses = MockCourseCatalog.courses + publishedCourses
-        return allCourses
-            .filter { course in
-                // Paid subscription programs should only be visible to premium users.
-                !(course.price != nil && !isPremium)
-            }
-            .map { hydrate($0) }
+        return allCourses.map { hydrate($0) }
     }
 
     func snapshotCourse(_ id: UUID) -> Course? {
@@ -245,7 +240,6 @@ actor MockLearningStore {
 
     func currentUser() -> User {
         let enrollments = enrolledCourseIds.sorted(by: { $0.uuidString < $1.uuidString }).map { makeEnrollment(courseId: $0) }
-        let mockPremium = UserDefaults.standard.bool(forKey: "wcs.mockPremiumMode")
         let mockRoleRaw = UserDefaults.standard.string(forKey: "wcs.mockRole") ?? ""
         let fallbackAdmin = UserDefaults.standard.bool(forKey: "wcs.mockAdminMode")
         let role = UserRole(rawValue: mockRoleRaw) ?? (fallbackAdmin ? .orgAdmin : .learner)
@@ -260,17 +254,6 @@ actor MockLearningStore {
                 isActive: true
             )
         ]
-        let subscriptions: [Subscription] = mockPremium ? [
-            Subscription(
-                id: UUID(),
-                planId: "premium-monthly",
-                planName: "Premium Membership",
-                status: .active,
-                startDate: Date(),
-                endDate: nil,
-                price: 29.99
-            )
-        ] : []
         return User(
             id: userId,
             email: "learner@worldclassscholars.org",
@@ -279,7 +262,6 @@ actor MockLearningStore {
             role: role,
             activeOrganizationId: orgId,
             memberships: memberships,
-            subscriptions: subscriptions,
             enrollments: enrollments
         )
     }
@@ -406,10 +388,8 @@ actor MockLearningStore {
             thumbnailURL: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
             coverURL: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1600&q=80",
             durationSeconds: max(1, draft.durationWeeks) * 3600,
-            price: draft.accessTier == .paidSubscription ? 59.99 : nil,
             isEnrolled: false,
             isOwned: false,
-            isUnlockedBySubscription: draft.accessTier == .paidSubscription,
             rating: 4.7,
             reviewCount: 0,
             organizationName: "World Class Scholars",

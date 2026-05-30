@@ -46,7 +46,6 @@ struct ProfileView: View {
                     }
                     .padding(.vertical, DesignTokens.Spacing.xs)
 
-                    LabeledContent("Premium", value: user.isPremium ? "Active" : "Not active")
                 } else {
                     Text("Sign-in will connect to your identity provider and populate this profile.")
                         .font(.footnote)
@@ -92,29 +91,6 @@ struct ProfileView: View {
             }
 
             Section {
-                SubscriptionBadgeView(subscriptions: appViewModel.user?.subscriptions ?? [])
-                if appViewModel.user?.isPremium != true {
-                    NavigationLink {
-                        MembershipPaymentsHubView()
-                    } label: {
-                        Label("Get Premium with In-App Purchase", systemImage: "star.fill")
-                    }
-                    .accessibilityIdentifier("profileUpgradeToPremiumLink")
-                }
-                NavigationLink {
-                    MembershipPaymentsHubView()
-                } label: {
-                    Label("Membership & subscriptions", systemImage: "creditcard")
-                }
-            } header: {
-                Text("Subscriptions")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-            }
-
-            Section {
                 if BrandOutboundLinks.current.socialPairs.isEmpty {
                     Text(
                         "Configure SOCIAL_INSTAGRAM_URL, SOCIAL_TIKTOK_URL, SOCIAL_FACEBOOK_URL, SOCIAL_X_URL, SOCIAL_YOUTUBE_CHANNEL_URL, or SOCIAL_LINKEDIN_URL for learners, faculty, and staff."
@@ -147,16 +123,6 @@ struct ProfileView: View {
                     }
                 ))
                 if NetworkClient.shared.useMocks {
-                    Toggle("Mock premium mode", isOn: Binding(
-                        get: { UserDefaults.standard.bool(forKey: "wcs.mockPremiumMode") },
-                        set: { newValue in
-                            UserDefaults.standard.set(newValue, forKey: "wcs.mockPremiumMode")
-                            Task { @MainActor in
-                                NotificationCenter.default.post(name: .wcsLearningStateDidChange, object: nil)
-                                await appViewModel.bootstrapUser()
-                            }
-                        }
-                    ))
                     Picker("Mock role", selection: Binding(
                         get: { UserDefaults.standard.string(forKey: "wcs.mockRole") ?? UserRole.learner.rawValue },
                         set: { newValue in
