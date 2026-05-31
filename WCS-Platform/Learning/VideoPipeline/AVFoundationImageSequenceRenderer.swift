@@ -234,9 +234,10 @@ struct AVFoundationImageSequenceRenderer {
         ctx.setFillColor(UIColor.systemIndigo.cgColor)
         ctx.fill(rect)
 
-        // Subtle deterministic pan-like shift for motion.
+        // Subtle deterministic pan-like shift for motion (driven by `MotionPlan` when present).
         let progress = CGFloat(frameIndex) / CGFloat(max(1, frameCount))
-        let xOffset = progress * CGFloat(40 * settings.animationIntensity)
+        let motionIntensity = scene.imageSequenceMotionMultiplier(baseIntensity: settings.animationIntensity)
+        let xOffset = progress * CGFloat(40 * motionIntensity)
         let panel = CGRect(x: 80 + xOffset, y: 120, width: size.width - 160, height: size.height - 240)
 
         if let referenceImage {
@@ -257,10 +258,13 @@ struct AVFoundationImageSequenceRenderer {
             drawDiagramOverlay(in: panel, context: ctx, progress: progress, style: settings.diagramStyle)
         }
 
+        let headline = scene.onScreenText
+            ?? scene.content?.entities.first
+            ?? scene.learningObjective
+            ?? "Lesson Scene"
         let text = [
-            scene.learningObjective ?? "Lesson Scene",
-            scene.narrationText,
-            scene.onScreenText ?? ""
+            headline,
+            scene.narrationText
         ]
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: "\n\n")

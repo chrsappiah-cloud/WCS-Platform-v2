@@ -9,10 +9,19 @@ enum AppLaunchEnvironmentBootstrapper {
     static func apply() {
         let config = AppLaunchConfiguration.fromCurrentProcess()
         applyLaunchEnvironmentOverrides()
+        applyBackendStackActivation()
         applyUITestMode(config.isUITestMode)
         applyNetworkMode(config.mockNetworkMode)
         applyPermissionMode(config.mockPermissionsMode)
         applySeedModes(config)
+    }
+
+    private static func applyBackendStackActivation() {
+        guard WCSBackendStackSettings.shouldActivateLiveBackendStack else { return }
+        NetworkClient.shared.liveSupabaseBackendStackEnabled = true
+        Task {
+            _ = await WCSBackendStackCoordinator.refresh(force: true)
+        }
     }
 
     private static func applyLaunchEnvironmentOverrides() {

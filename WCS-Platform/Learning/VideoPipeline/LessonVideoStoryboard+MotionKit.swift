@@ -25,14 +25,15 @@ extension LessonVideoStoryboard {
         let scenes: [LessonVideoScenePlan] = beats.enumerated().map { index, beat in
             let beatTrimmed = beat.trimmingCharacters(in: .whitespacesAndNewlines)
             let onScreen = String(beatTrimmed.prefix(120))
-            return LessonVideoScenePlan(
+            let visual = """
+                \(motionKit.visualStyle) \(motionKit.shotPrompt)
+                Scene \(index + 1) focus: \(beatTrimmed)
+                """
+            var scene = LessonVideoScenePlan(
                 sceneId: "scene-\(index + 1)",
                 learningObjective: nil,
                 narrationText: beatTrimmed,
-                visualPrompt: """
-                \(motionKit.visualStyle) \(motionKit.shotPrompt)
-                Scene \(index + 1) focus: \(beatTrimmed)
-                """,
+                visualPrompt: visual,
                 shotType: "educational_explain",
                 durationSeconds: perScene,
                 onScreenText: onScreen.isEmpty ? nil : onScreen,
@@ -41,8 +42,26 @@ extension LessonVideoStoryboard {
                     || beatTrimmed.localizedCaseInsensitiveContains("chart"),
                 assessmentCheckpoint: index == beats.count - 1
                     ? "Learner recalls one takeaway from \(lessonTitle)."
-                    : nil
+                    : nil,
+                conditioning: SceneConditioning(
+                    textPrompt: visual,
+                    negativePrompt: nil,
+                    referenceImageURL: nil,
+                    referenceVideoURL: nil,
+                    cameraMotion: .slowZoomIn,
+                    stylePreset: motionKit.visualStyle
+                ),
+                motion: MotionPlan(type: .slowZoomIn, speed: 0.55, pathControlPoints: nil),
+                content: ContentPlan.inferred(
+                    narration: beatTrimmed,
+                    visualPrompt: visual,
+                    onScreenText: onScreen.isEmpty ? nil : onScreen
+                ),
+                backendModel: .videoDiffusion,
+                postProcessing: nil
             )
+            scene.syncLegacyFieldsFromStructuredPlans()
+            return scene
         }
 
         return LessonVideoStoryboard(

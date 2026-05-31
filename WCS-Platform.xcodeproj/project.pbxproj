@@ -33,6 +33,7 @@
 		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E65E88F2FCB7F030094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E65EDF62FCB876E0094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5E65F6F02FCB9BF70094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
@@ -166,6 +167,13 @@
 			sourceTree = "<group>";
 		};
 		5E65EDF72FCB876E0094152D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		5E65F6F12FCB9BF70094152D /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -354,6 +362,10 @@
 					ProjectRef = 5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */;
 				},
 				{
+					ProductGroup = 5E65F6F12FCB9BF70094152D /* Products */;
+					ProjectRef = 5E65F6F02FCB9BF70094152D /* WCS-Platform.xcodeproj */;
+				},
+				{
 					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
 					ProjectRef = 5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */;
 				},
@@ -458,7 +470,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
@@ -480,7 +491,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1.0;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -489,7 +499,6 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
 				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
@@ -502,7 +511,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
@@ -524,7 +532,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.1.0;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -533,7 +540,6 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
 				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
@@ -546,7 +552,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -599,13 +604,11 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SYMROOT = "$(BUILD_DIR)/Products";
 			};
 			name = Debug;
 		};
@@ -614,7 +617,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -661,11 +663,9 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

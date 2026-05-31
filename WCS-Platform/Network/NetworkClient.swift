@@ -18,6 +18,9 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         #endif
     }()
 
+    /// When true, pipeline health and storage probes hit live Supabase + backup tiers.
+    var liveSupabaseBackendStackEnabled: Bool = WCSBackendStackSettings.shouldActivateLiveBackendStack
+
     private let session: URLSession
     private let jsonDecoder: JSONDecoder
     private let jsonEncoder: JSONEncoder
@@ -594,7 +597,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
 
     func planLessonVideo(_ requestPayload: LessonVideoPlanRequest) async throws -> LessonVideoPlanResponse {
         if useMocks {
-            let storyboard = LessonVideoStoryboard(
+            var storyboard = LessonVideoStoryboard(
                 storyboardId: "sb-\(requestPayload.lessonId)",
                 pipelineVersion: LessonVideoClientPipelineMode.sceneOrchestrationV1.rawValue,
                 moduleId: requestPayload.moduleId,
@@ -612,11 +615,17 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                         onScreenText: requestPayload.learningObjectives.first,
                         referenceImageURL: nil,
                         needsDiagram: true,
-                        assessmentCheckpoint: requestPayload.assessmentPrompts.first
+                        assessmentCheckpoint: requestPayload.assessmentPrompts.first,
+                        conditioning: nil,
+                        motion: nil,
+                        content: nil,
+                        backendModel: .imageSequence,
+                        postProcessing: nil
                     )
                 ],
                 masterVisualPrompt: "Scene-first educational storyboard for \(requestPayload.lessonTitle ?? requestPayload.lessonId)"
             )
+            storyboard.ensureStructuredPlansForAllScenes(stylePreset: requestPayload.targetAgeBand ?? "educational")
             return LessonVideoPlanResponse(
                 lessonId: requestPayload.lessonId,
                 storyboard: storyboard,
@@ -694,8 +703,12 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
             courseProvider: { id in try await self.rawFetchCourse(id) }
         )
 
-        if useMocks {
+        if useMocks && !liveSupabaseBackendStackEnabled {
             return await MockDiscussionStore.shared.pipelineStatus()
+        }
+        if liveSupabaseBackendStackEnabled || AppEnvironment.backendProvider == .supabase {
+            let report = await WCSBackendStackCoordinator.refresh()
+            return WCSBackendStackCoordinator.pipelineHealthStatus(from: report)
         }
         return try await request("system/pipeline-health", method: "GET")
     }
@@ -709,8 +722,12 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
             courseProvider: { id in try await self.rawFetchCourse(id) }
         )
 
-        if useMocks {
+        if useMocks && !liveSupabaseBackendStackEnabled {
             return StorageArchitectureMockFactory.makeStatus()
+        }
+        if liveSupabaseBackendStackEnabled || AppEnvironment.backendProvider == .supabase {
+            let report = await WCSBackendStackCoordinator.refresh()
+            return WCSBackendStackCoordinator.storageBackendsStatus(from: report)
         }
         return try await request("system/storage-backends", method: "GET")
     }
@@ -769,6 +786,32 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
             )
         }
 
+        checks.append(
+            GenerationCapabilityCheck(
+                system: "Platform support contacts",
+                state: WCSSupportContacts.isActivated ? .configured : .offline,
+                detail: WCSSupportContacts.isActivated
+                    ? "Activated: \(WCSSupportContacts.displaySummary)"
+                    : "Configure WCSSupportPrimaryEmail and WCSSupportSecondaryEmail in Info.plist."
+            )
+        )
+
+        if liveSupabaseBackendStackEnabled {
+            let stack = await WCSBackendStackCoordinator.refresh()
+            for tier in stack.tiers {
+                let state: GenerationCapabilityCheck.State = tier.isReachable
+                    ? .online
+                    : (tier.isActive ? .offline : .missingConfig)
+                checks.append(
+                    GenerationCapabilityCheck(
+                        system: tier.displayName,
+                        state: state,
+                        detail: tier.detail
+                    )
+                )
+            }
+        }
+
         let openLibrary = await probeReachability("https://openlibrary.org/search.json?q=education&limit=1")
         checks.append(
             GenerationCapabilityCheck(
@@ -783,7 +826,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                 GenerationCapabilityCheck(
                     system: "Hybrid mode expectation",
                     state: .configured,
-                    detail: "Cloud render + native AVFoundation composition enabled."
+                    detail: "Apple on-device planning + OpenAI Sora BFF render + native AVFoundation composition."
                 )
             )
         case .imageSequenceAnimation:
@@ -795,11 +838,77 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                 )
             )
         case .onDeviceExperimental:
+            let apple = AppleFoundationLessonVideoService.availabilitySnapshot()
             checks.append(
                 GenerationCapabilityCheck(
-                    system: "On-device CoreML video generation",
-                    state: .offline,
-                    detail: "Experimental mode selected. Production text-to-video model path is not available in this build."
+                    system: "Apple Foundation Models (storyboard planning)",
+                    state: apple.foundationModelState,
+                    detail: apple.foundationModelDetail
+                )
+            )
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Apple Image Playground (scene frames)",
+                    state: apple.imagePlaygroundState,
+                    detail: apple.imagePlaygroundDetail
+                )
+            )
+        }
+
+        let appleAvailability = AppleFoundationLessonVideoService.availabilitySnapshot()
+        if LessonVideoGenerationSettings.generationApproach != .onDeviceExperimental {
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Apple Foundation Models (storyboard planning)",
+                    state: appleAvailability.foundationModelState,
+                    detail: appleAvailability.foundationModelDetail
+                )
+            )
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "Apple Image Playground (scene frames)",
+                    state: appleAvailability.imagePlaygroundState,
+                    detail: appleAvailability.imagePlaygroundDetail
+                )
+            )
+        }
+
+        if let endpoint = LessonVideoGenerationSettings.remoteTextToVideoEndpointURL {
+            let reachable = await probeRemoteTextToVideoEndpoint(endpoint)
+            let provider = LessonVideoGenerationSettings.effectiveProviderBackendHint ?? "mock"
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "OpenAI Sora text-to-video BFF",
+                    state: reachable ? .online : .offline,
+                    detail: reachable
+                        ? "POST \(endpoint.lastPathComponent) reachable (provider hint: \(provider))."
+                        : "Configured endpoint unreachable: \(endpoint.absoluteString)"
+                )
+            )
+            let remoteDiag = await RemoteLessonVideoDiagnostics.shared.snapshot()
+            if let failure = remoteDiag.failure {
+                checks.append(
+                    GenerationCapabilityCheck(
+                        system: "OpenAI Sora last invocation",
+                        state: .offline,
+                        detail: failure
+                    )
+                )
+            } else if let success = remoteDiag.successURL {
+                checks.append(
+                    GenerationCapabilityCheck(
+                        system: "OpenAI Sora last invocation",
+                        state: .online,
+                        detail: "playbackURL: \(success)"
+                    )
+                )
+            }
+        } else {
+            checks.append(
+                GenerationCapabilityCheck(
+                    system: "OpenAI Sora text-to-video BFF",
+                    state: .missingConfig,
+                    detail: "Set WCSLessonTextToVideoEndpoint to enable OpenAI Sora via Supabase Edge."
                 )
             )
         }
@@ -1054,6 +1163,23 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
         var request = URLRequest(url: url)
         request.timeoutInterval = 8
         request.httpMethod = "GET"
+        do {
+            let (_, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return false }
+            return (200 ..< 500).contains(http.statusCode)
+        } catch {
+            return false
+        }
+    }
+
+    private func probeRemoteTextToVideoEndpoint(_ endpoint: URL) async -> Bool {
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "OPTIONS"
+        request.timeoutInterval = 10
+        if let supabaseAnonKey = LessonVideoGenerationSettings.remoteTextToVideoSupabaseAnonKey, !supabaseAnonKey.isEmpty {
+            request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+            request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
+        }
         do {
             let (_, response) = try await session.data(for: request)
             guard let http = response as? HTTPURLResponse else { return false }

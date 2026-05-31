@@ -33,15 +33,43 @@ jobs:
       - name: Generate Xcode project
         run: cd WCS-Platform && xcodegen generate
 
+      - name: Validate activated support contacts
+        run: bash scripts/validate-support-contacts.sh
+
       - name: Validate external link allowlist config
         run: bash scripts/validate-external-links-config.sh
+
+      - name: Resolve iOS Simulator destination
+        id: sim
+        run: |
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          data=json.load(sys.stdin)
+          prefs=['iPhone 17 Pro Max','iPhone 17 Pro','iPhone 17','iPhone 16 Pro']
+          for name in prefs:
+            for runtime,devs in data.get('devices',{}).items():
+              if 'iOS' not in runtime and 'iphone' not in runtime.lower():
+                continue
+              for d in devs:
+                if d.get('name')==name and d.get('isAvailable'):
+                  print(name); raise SystemExit
+          for runtime,devs in data.get('devices',{}).items():
+            if 'iOS' not in runtime:
+              continue
+            for d in devs:
+              if d.get('name','').startswith('iPhone') and d.get('isAvailable'):
+                print(d['name']); raise SystemExit
+          raise SystemExit('No iPhone simulator found')
+          ")
+          echo "device=$DEVICE" >> "$GITHUB_OUTPUT"
+          echo "Using simulator: $DEVICE"
 
       - name: Build for simulator
         run: >
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           build
@@ -54,7 +82,7 @@ jobs:
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -enableCodeCoverage YES
           -parallel-testing-enabled NO
@@ -68,7 +96,7 @@ jobs:
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           -only-testing:WCS-PlatformUITests/Smoke
@@ -83,7 +111,7 @@ jobs:
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           -only-testing:WCS-PlatformUITests/E2E

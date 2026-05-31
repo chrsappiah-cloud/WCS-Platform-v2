@@ -416,6 +416,9 @@ struct WCS_PlatformTests {
         #expect(HomeTrustClusterContent.learnerTestimonialPages.allSatisfy { !$0.quote.isEmpty && !$0.name.isEmpty && !$0.role.isEmpty })
         #expect(HomeTrustClusterContent.courseTeamMailURL != nil)
         #expect(HomeTrustClusterContent.supportEmail.contains("@"))
+        #expect(WCSSupportContacts.isActivated)
+        #expect(WCSSupportContacts.primaryEmail.contains("myworldclass.org"))
+        #expect(WCSSupportContacts.secondaryEmail == "chrsappiah@gmail.com")
         #expect(HomeTrustClusterContent.designerName.contains("Christopher"))
         let first = HomeTrustClusterContent.learnerTestimonialPages[0]
         #expect(first.quote.localizedCaseInsensitiveContains("creative arts"))

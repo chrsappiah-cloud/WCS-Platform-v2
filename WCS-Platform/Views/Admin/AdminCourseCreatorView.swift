@@ -207,6 +207,7 @@ struct AdminCourseCreatorView: View {
                     TextField("Product name", text: $viewModel.productName)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled(AppEnvironment.simulatorStabilityMode)
+                        .accessibilityIdentifier("adminProductNameField")
                     TextField("Ideal learner avatar", text: $viewModel.idealLearner)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled(AppEnvironment.simulatorStabilityMode)
@@ -399,6 +400,9 @@ struct AdminCourseCreatorView: View {
                             onRenderScene: {
                                 Task { await viewModel.renderFirstPlannedScene(for: draft.id) }
                             },
+                            onRenderInstructionalFromText: {
+                                Task { await viewModel.renderInstructionalVideoFromLessonText(for: draft.id) }
+                            },
                             onPreviewScene: {
                                 Task { await viewModel.previewFirstPlannedScene(for: draft.id) }
                             },
@@ -576,12 +580,19 @@ private struct DraftCard: View {
     let onRegenerateVideos: (_ clearCache: Bool) -> Void
     let onPlanStoryboard: () -> Void
     let onRenderScene: () -> Void
+    let onRenderInstructionalFromText: () -> Void
     let onPreviewScene: () -> Void
     let onComposeLesson: () -> Void
     let onUpdateImageSequenceSettings: (ImageSequenceRenderSettings) -> Void
     let onSaveManualLessonVideo: (_ moduleId: UUID, _ lessonId: UUID, _ url: String, _ source: ExternalLessonVideoSource) -> Void
     @State private var showingRegenerateConfirmation = false
     @State private var localImageSettings: ImageSequenceRenderSettings = .default
+
+    private var hasVideoLessons: Bool {
+        draft.modules.contains { module in
+            module.lessons.contains { $0.kind == .video || $0.kind == .live }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
@@ -649,7 +660,9 @@ private struct DraftCard: View {
                 Text("Debug assets: \(generatedAssets.count)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+            }
 
+            if hasVideoLessons {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Scene pipeline controls")
                         .font(.caption.weight(.semibold))
@@ -657,6 +670,7 @@ private struct DraftCard: View {
                         Text(pipelineStatusText)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("adminVideoPipelineStatusLabel")
                     }
                     HStack {
                         Button("Plan storyboard") {
@@ -674,6 +688,14 @@ private struct DraftCard: View {
                         .font(.caption2)
                         .disabled(isPipelineBusy || !hasPlannedStoryboard)
                         .accessibilityIdentifier("adminRenderFirstSceneButton")
+
+                        Button("Render lesson text") {
+                            onRenderInstructionalFromText()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminRenderInstructionalVideoButton")
 
                         Button("Preview frame") {
                             onPreviewScene()
@@ -744,10 +766,12 @@ private struct DraftCard: View {
                     if let localComposedVideoURL {
                         Link("Open local composed video", destination: localComposedVideoURL)
                             .font(.caption2)
+                            .accessibilityIdentifier("adminLocalComposedVideoLink")
                     }
                     if let localImageSequenceClipURL {
                         Link("Open local image-sequence clip", destination: localImageSequenceClipURL)
                             .font(.caption2)
+                            .accessibilityIdentifier("adminLocalImageSequenceClipLink")
                     }
                     if let localImageSequencePreviewURL {
                         Link("Open preview frame", destination: localImageSequencePreviewURL)

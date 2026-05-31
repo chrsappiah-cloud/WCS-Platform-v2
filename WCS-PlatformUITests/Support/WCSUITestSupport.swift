@@ -11,7 +11,9 @@ extension XCUIApplication {
     func launchForE2E(extraArguments: [String] = [], extraEnvironment: [String: String] = [:]) {
         launchArguments += [WCSUITestLaunch.uiTestMode]
         launchEnvironment[WCSUITestLaunch.adminAccessCodeKey] = launchEnvironment[WCSUITestLaunch.adminAccessCodeKey] ?? "wcs-admin-2026"
-        launchEnvironment["WCS_MOCK_ROLE"] = launchEnvironment["WCS_MOCK_ROLE"] ?? "orgAdmin"
+        launchEnvironment["WCS_UI_TEST_LOCAL_VIDEO_ONLY"] = launchEnvironment["WCS_UI_TEST_LOCAL_VIDEO_ONLY"] ?? "1"
+        launchEnvironment["WCS_UI_TEST_VIDEO_APPROACH"] = launchEnvironment["WCS_UI_TEST_VIDEO_APPROACH"] ?? "image_sequence_animation"
+        launchEnvironment["WCS_E2E_ACTIVATE_BACKEND"] = launchEnvironment["WCS_E2E_ACTIVATE_BACKEND"] ?? "1"
         launchArguments.append(contentsOf: extraArguments)
         for (key, value) in extraEnvironment {
             launchEnvironment[key] = value
@@ -137,11 +139,13 @@ extension XCTestCase {
         element.press(forDuration: 1.0)
         if app.menuItems["Select All"].waitForExistence(timeout: 1) {
             app.menuItems["Select All"].tap()
-            if app.keys["delete"].exists {
-                app.keys["delete"].tap()
-            } else if app.keys["Delete"].exists {
-                app.keys["Delete"].tap()
-            }
+            // Next typeText replaces the selection; avoid tapping the delete key (often off-screen in UI tests).
+            return
+        }
+        let existing = (element.value as? String) ?? ""
+        guard !existing.isEmpty else { return }
+        for _ in 0 ..< min(existing.count + 4, 120) {
+            element.typeText(XCUIKeyboardKey.delete.rawValue)
         }
     }
 

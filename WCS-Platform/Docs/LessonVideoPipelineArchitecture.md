@@ -42,6 +42,13 @@ Future responses may add `jobId`, per-scene statuses, or preview URLs; clients s
 | `referenceImageURL` | Optional first-frame / character consistency. |
 | `needsDiagram` | Hint for diagram/stock B-roll branch. |
 | `assessmentCheckpoint` | Optional inline check. |
+| `conditioning` | Ch. 6 diffusion conditioning: text, negative prompt, references, style, camera. |
+| `motion` | Ch. 9 MoCoGAN-style motion plan (`CameraMotion`, speed, optional path). |
+| `content` | Ch. 9 content plan: entities, actions, environment. |
+| `backendModel` | `video_diffusion`, `video_transformer`, or `image_sequence`. |
+| `postProcessing` | Optional FPS interpolation / upscale hints for the BFF. |
+
+Legacy flat fields remain for backward compatibility; `ensureStructuredPlans()` and `generationVisualPrompt()` sync structured and flat shapes before render.
 
 ## Database (single-region Supabase)
 

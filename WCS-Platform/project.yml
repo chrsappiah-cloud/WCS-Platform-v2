@@ -5,7 +5,7 @@ settings:
   base:
     SWIFT_VERSION: 5.10
     SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
-    IPHONEOS_DEPLOYMENT_TARGET: 18.0
+    IPHONEOS_DEPLOYMENT_TARGET: 26.0
     PRODUCT_BUNDLE_IDENTIFIER: wcs.WCS-Platform
     CURRENT_PROJECT_VERSION: 11
     MARKETING_VERSION: 1.0
@@ -38,6 +38,9 @@ targets:
         YOUTUBE_DATA_API_KEY: ""
         # Matches Info.plist $(WCS_PERPLEXITY_API_KEY); set in CI via repository secret if needed.
         WCS_PERPLEXITY_API_KEY: ""
+        WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT: https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video
+        WCS_SUPABASE_PUBLISHABLE_KEY: ""
+        WCS_LESSON_VIDEO_JOB_LIST_SECRET: ""
 
   WCS-PlatformTests:
     type: bundle.unit-test
