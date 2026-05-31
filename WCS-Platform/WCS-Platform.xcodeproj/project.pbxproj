@@ -93,6 +93,7 @@
 		AEDEBB6327164934636A8E71 /* WCSBackendStackSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3B52FA71EB4558BD658752 /* WCSBackendStackSettings.swift */; };
 		AFB595449D26A22C4F38D681 /* ManualExternalLessonVideoModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2C820F8434ED2FF0E2F6EAF /* ManualExternalLessonVideoModels.swift */; };
 		B20ED49DA9B8324D645D1CD0 /* ExternalServiceResilience.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46881A7BEC20B25A0F0FB60 /* ExternalServiceResilience.swift */; };
+		B25ACB6B13A792081D8695A9 /* AppleFoundationLessonVideoService+OnDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B312F7D0B445FF918E0D1C2 /* AppleFoundationLessonVideoService+OnDevice.swift */; };
 		B291CB5669601DF2A0CF983E /* DiscussionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C182B49B76C26A14BE58E754 /* DiscussionViewModel.swift */; };
 		B4946310C5DD287CD2C9FCC9 /* AdminInlineAVVideoPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC388D551BCF3BD750FE590 /* AdminInlineAVVideoPreview.swift */; };
 		B73019AF4379C87924B2359B /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C4CF88BA458D1DA1805B1F /* Quiz.swift */; };
@@ -193,6 +194,7 @@
 		39C4CF88BA458D1DA1805B1F /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
 		3A807EC499147EE13F32FCE3 /* TestDataFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDataFactory.swift; sourceTree = "<group>"; };
 		3A9851D632CA9C8185D24B69 /* QuizViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizViewModel.swift; sourceTree = "<group>"; };
+		3B312F7D0B445FF918E0D1C2 /* AppleFoundationLessonVideoService+OnDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppleFoundationLessonVideoService+OnDevice.swift"; sourceTree = "<group>"; };
 		3BD2E7C0E43801AEECE31098 /* WCS_PlatformUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCS_PlatformUITests.swift; sourceTree = "<group>"; };
 		3C23278843FBDAFD3503A6D3 /* AppLaunchProductionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchProductionTests.swift; sourceTree = "<group>"; };
 		3DF031A29C4F07AEABE60252 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
@@ -575,6 +577,7 @@
 			isa = PBXGroup;
 			children = (
 				BF63C890AD23301A97087C91 /* AppleFoundationLessonVideoService.swift */,
+				3B312F7D0B445FF918E0D1C2 /* AppleFoundationLessonVideoService+OnDevice.swift */,
 				E94C4DCA521DDCD9860A9747 /* AVFoundationImageSequenceRenderer.swift */,
 				BF4D0F3018DB77E4990E3B93 /* AVFoundationLessonComposer.swift */,
 				DE878DC45D36EBC4841A939E /* HybridLessonVideoOrchestrator.swift */,
@@ -929,6 +932,7 @@
 				38C7A963FBD36003CD2E0CE6 /* AppLaunchEnvironmentBootstrapper.swift in Sources */,
 				0AF8BC5335CF169449017324 /* AppRootView.swift in Sources */,
 				C3D615464982B36D34F0B07A /* AppViewModel.swift in Sources */,
+				B25ACB6B13A792081D8695A9 /* AppleFoundationLessonVideoService+OnDevice.swift in Sources */,
 				75204D3801640DCE1923ADCF /* AppleFoundationLessonVideoService.swift in Sources */,
 				6C38459DCCD4BC84904E48E9 /* Assignment.swift in Sources */,
 				BB18445FC4FC191938A6AE39 /* AudioPresentationReadiness.swift in Sources */,
@@ -1109,7 +1113,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -1236,7 +1240,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
