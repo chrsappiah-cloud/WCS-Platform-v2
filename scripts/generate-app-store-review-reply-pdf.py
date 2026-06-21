@@ -13,9 +13,10 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import ListFlowable, ListItem, Paragraph, SimpleDocTemplate, Spacer
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OUT_REPO = REPO_ROOT / "production" / "apple" / "WCS_App_Store_Review_Reply_v1_0_10.pdf"
-OUT_DESKTOP = Path.home() / "Desktop" / "WCS_App_Store_Review_Reply_v1_0_10.pdf"
-OUT_DESKTOP_COPY = Path.home() / "Desktop" / "WCS_App_Store_Distribution_Form_v1_0_10.pdf"
+BUILD = "11"
+OUT_REPO = REPO_ROOT / "production" / "apple" / f"WCS_App_Store_Review_Reply_v1_0_{BUILD}.pdf"
+OUT_DESKTOP = Path.home() / "Desktop" / f"WCS_App_Store_Review_Reply_v1_0_{BUILD}.pdf"
+OUT_DESKTOP_NOTES = Path.home() / "Desktop" / f"WCS_App_Store_Notes_for_Review_v1_0_{BUILD}.pdf"
 
 
 def _styles():
@@ -72,32 +73,25 @@ def build_story(styles) -> list:
     return [
         Paragraph("WCS Platform — App Store Review Reply", styles["TitleDoc"]),
         Paragraph(
-            "Resolution Center response · Submission ID bfa381c2-5902-4590-a217-e8d85a1fed22<br/>"
-            f"Resubmission build 1.0 (10) · Prepared {today}",
+            "Resolution Center response · Guideline 3.1.1 (commerce)<br/>"
+            f"Resubmission build 1.0 ({BUILD}) · Prepared {today}",
             styles["SubTitle"],
         ),
         Paragraph("Hello App Review Team,", styles["Body"]),
         Paragraph(
-            "Thank you for your review on May 29, 2026. We submitted updated build "
-            "<b>1.0 (10)</b> to resolve <b>Guideline 3.1.1 – In-App Purchase</b> and retain "
-            "iPad launch stability fixes from our prior response.",
+            "Thank you for your prior guidance on <b>Guideline 3.1.1</b>. In build "
+            f"<b>1.0 ({BUILD})</b>, we have <b>removed Apple commerce entirely</b> from the app.",
             styles["Body"],
         ),
-        Paragraph("Guideline 3.1.1 – In-App Purchase", styles["Head"]),
-        Paragraph(
-            "<b>Issue reported:</b> Premium digital content was accessible without In-App Purchase.",
-            styles["Body"],
-        ),
-        Paragraph("<b>Resolution in build 1.0 (10):</b>", styles["Body"]),
+        Paragraph("Summary of changes", styles["Head"]),
         _bullets(
             styles,
             [
-                "<b>Individual Pro</b> (Premium course access) is purchased exclusively with "
-                "<b>Apple In-App Purchase</b> using StoreKit 2 (<i>SubscriptionStoreView</i>).",
-                "<b>Restore purchases</b> is on the same screen: Profile → Membership &amp; subscriptions → Subscribe with Apple.",
-                "Premium unlock uses StoreKit entitlements (<i>Transaction.currentEntitlements</i>) and shows as <b>Premium: Active</b> on Profile after purchase or restore.",
-                "Consumer-facing hosted Stripe membership checkout was <b>removed from Release builds</b>. External links remain only for organization/investor B2B procurement and are labeled as not replacing Individual Pro IAP.",
-                "Developer/mock premium toggles are <b>Debug-only</b> and are not in App Store Release builds.",
+                "<b>WCScommerce frameworkAccessManager</b> deleted — no commerce framework 2 product loading, commerce action, restore, or entitlement sync.",
+                "<b>Access &amp; account</b> no longer shows AccessStoreView, Restore Commerces, or commerce badges.",
+                "Screen now shows Plan overview, optional hosted external link (external, labeled), and organization/investor B2B links only.",
+                "Profile removed “Get Assigned with commerce” upsell; assigned follows server-side records.",
+                "All commerce framework imports, product IDs, and commerce telemetry removed from Release builds.",
             ],
         ),
         Spacer(1, 6),
@@ -105,41 +99,37 @@ def build_story(styles) -> list:
         _bullets(
             styles,
             [
-                "Open the <b>Profile</b> tab.",
-                "Tap <b>Membership &amp; subscriptions</b>.",
-                "Under <b>Subscribe with Apple</b>, subscribe to <b>Individual Pro</b> "
-                "(product ID: <font face='Courier'>wcs.individual.pro.monthly</font>) or tap <b>Restore purchases</b>.",
-                "Return to <b>Programs</b>, open a subscription-gated course, and confirm full lesson access when Premium is active.",
+                "Launch app → open <b>Profile</b> tab.",
+                "Tap <b>Access &amp; account</b>.",
+                "View <b>Plan overview</b> (Free Audit and Pro descriptions).",
+                "If configured: <b>Continue now</b> under Enroll to Assigned opens external hosted external link (external provider).",
+                "Organization &amp; investor procurement links appear only when env-configured (B2B, labeled).",
+                "Return to <b>Programs</b> — access follows free-tier or server entitlement gating.",
             ],
         ),
         Spacer(1, 6),
-        Paragraph("Guideline 2.1(a) – Launch stability", styles["Head"]),
-        Paragraph(
-            "We retained launch-path hardening for iPad-class devices (including iPad Air 11-inch M3) "
-            "and validated on iPhone hardware and simulator CI.",
-            styles["Body"],
-        ),
-        Paragraph("Business model (Guideline 2.1(b))", styles["Head"]),
+        Paragraph("Compliance", styles["Head"]),
         _bullets(
             styles,
             [
-                "<b>Individual learners:</b> Apple In-App Purchase only for Premium digital content.",
-                "<b>Organizations:</b> B2B seat/contract access outside the consumer app; does not bypass Individual Pro IAP.",
+                "No consumer digital content sold through commerce; commerce framework is not used.",
+                "External links are user-initiated and labeled for B2B procurement only.",
+                "No in-app card capture for consumers.",
+                "Admin AI Course Studio is optional (admin-only; not required for review).",
             ],
         ),
         Paragraph(
-            "Product ID: <font face='Courier'>wcs.individual.pro.monthly</font> · Bundle ID: "
-            "<font face='Courier'>wcs.WCS-Platform</font> · Team ID: TM2WG7HH96",
+            "Bundle ID: <font face='Courier'>wcs.WCS-Platform</font> · Team ID: TM2WG7HH96 · "
+            "Support: christopher.appiahthompson@myworldclass.org",
             styles["Body"],
         ),
         Paragraph(
-            "Please contact us if you need a sandbox tester account or additional metadata. Thank you.",
+            "Please contact us if you need additional information. Thank you.",
             styles["Body"],
         ),
         Spacer(1, 12),
         Paragraph(
-            "<i>Distribution form summary: Individual Premium = IAP only; enterprise/investor = B2B external; "
-            "no consumer digital unlock outside IAP.</i>",
+            "<i>Notes for Review (paste in App Store Connect): see WCS_App_Store_Notes_for_Review_v1_0_11 on Desktop.</i>",
             styles["Body"],
         ),
     ]
@@ -162,10 +152,11 @@ def write_pdf(path: Path) -> None:
 def main() -> None:
     write_pdf(OUT_REPO)
     shutil.copy2(OUT_REPO, OUT_DESKTOP)
-    shutil.copy2(OUT_REPO, OUT_DESKTOP_COPY)
+    # Same PDF serves as attachment for notes reference
+    shutil.copy2(OUT_REPO, OUT_DESKTOP_NOTES)
     print(f"Wrote: {OUT_REPO}")
     print(f"Wrote: {OUT_DESKTOP}")
-    print(f"Wrote: {OUT_DESKTOP_COPY}")
+    print(f"Wrote: {OUT_DESKTOP_NOTES}")
 
 
 if __name__ == "__main__":

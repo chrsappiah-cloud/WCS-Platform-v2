@@ -32,6 +32,22 @@ struct WCS_PlatformTests {
         }
     }
 
+    @Test func draftCleanup_removesMangledPhysicalDeviceE2ETestArtifact() async throws {
+        let duplicateTitle = "YSICAL DEVICE VIDEO RENDER physical device video render e2e e2e"
+        let store = AdminCourseDraftStore(generator: StubTitledPublishableGenerator(title: duplicateTitle))
+
+        await #expect(throws: Error.self) {
+            _ = try await store.generate(
+                prompt: "Build physical device video render E2E draft",
+                createdBy: "admin@wcs",
+                accessTier: .freePublic
+            )
+        }
+
+        let drafts = await store.allDrafts()
+        #expect(!drafts.contains { $0.title == duplicateTitle })
+    }
+
     @Test func publishGuard_allowsHowToStyleAITitlesWhenStructured() async throws {
         let previousRole = UserDefaults.standard.string(forKey: "wcs.mockRole")
         defer {
@@ -92,7 +108,7 @@ struct WCS_PlatformTests {
         #expect(published?.title.contains("How to") == true)
     }
 
-    @Test func publishedDraftVideoLessonsResolvePlaybackURLs() async throws {
+    @Test func publishedDraftVideoLessonsNeverUseSampleFallbackWhenRemoteIsConfigured() async throws {
         await MockLearningStore.shared.deleteBlockedAICourses()
         let draft = makeDraftForTests(
             title: "AI Video Rendering Validation",
@@ -126,7 +142,14 @@ struct WCS_PlatformTests {
 
         let videoLessons = course.modules.flatMap(\.lessons).filter { $0.type == .video }
         #expect(!videoLessons.isEmpty, "Expected at least one video lesson in generated module structure.")
-        #expect(videoLessons.allSatisfy { ($0.videoURL ?? "").hasPrefix("http") })
+        if LessonVideoGenerationSettings.isRemoteTextToVideoEnabled {
+            let videoURLs = videoLessons.compactMap(\.videoURL)
+            #expect(videoURLs.allSatisfy { !$0.contains("storage.googleapis.com/gtv-videos-bucket/sample/") })
+            #expect(videoURLs.allSatisfy { !$0.contains("youtube.com/watch") })
+            #expect(videoURLs.allSatisfy { !$0.contains("devstreaming-cdn.apple.com/videos/streaming/examples/") })
+        } else {
+            #expect(videoLessons.allSatisfy { ($0.videoURL ?? "").hasPrefix("http") })
+        }
         #expect(videoLessons.allSatisfy { ($0.subtitle ?? "").isEmpty == false })
     }
 
@@ -308,7 +331,7 @@ struct WCS_PlatformTests {
     @Test func domainContracts_haveStrictSingleOwnership() {
         let errors = WCSDomainRegistry.validateStrictOwnership()
         #expect(errors.isEmpty, "Domain ownership must be strict and non-overlapping. Errors: \(errors)")
-        #expect(WCSDomainRegistry.owner(of: .organizationMembership) == .identity)
+        #expect(WCSDomainRegistry.owner(of: .organizationAccess) == .identity)
         #expect(WCSDomainRegistry.owner(of: .programs) == .catalog)
         #expect(WCSDomainRegistry.owner(of: .modulePublishing) == .contentOps)
         #expect(WCSDomainRegistry.owner(of: .completionMetrics) == .analytics)
@@ -328,14 +351,14 @@ struct WCS_PlatformTests {
         let instructor = await MockLearningStore.shared.currentUser()
         #expect(instructor.role == .instructor)
         #expect(instructor.isInstructor)
-        #expect(!instructor.memberships.isEmpty)
+        #expect(!instructor.accessRecords.isEmpty)
         #expect(instructor.activeOrganizationId != nil)
 
         UserDefaults.standard.set(UserRole.orgAdmin.rawValue, forKey: "wcs.mockRole")
         let orgAdmin = await MockLearningStore.shared.currentUser()
         #expect(orgAdmin.role == .orgAdmin)
         #expect(orgAdmin.isAdmin)
-        #expect(orgAdmin.memberships.contains(where: { $0.isActive }))
+        #expect(orgAdmin.accessRecords.contains(where: { $0.isActive }))
     }
 
     @Test func contentOpsPublish_requiresOrgAdminRole() async throws {
@@ -370,7 +393,7 @@ struct WCS_PlatformTests {
         let identity = WCSDomainProjector.identity(from: user)
         #expect(identity.role == .orgAdmin)
         #expect(identity.activeOrganizationId != nil)
-        #expect(!identity.memberships.isEmpty)
+        #expect(!identity.accessRecords.isEmpty)
 
         let catalog = WCSDomainProjector.catalog(from: course, tags: ["featured", "career"], featuredPlacement: 1)
         #expect(catalog.tags.contains("featured"))
@@ -618,6 +641,7 @@ struct WCS_PlatformTests {
             url: "https://cdn.example.com/lesson.mp4"
         )
         #expect(merged.contains("wcs.manualVideoURL:"))
+        #expect(LessonManualVideoBackup.extractPlaybackURL(from: merged) == "https://cdn.example.com/lesson.mp4")
         #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == "https://cdn.example.com/lesson.mp4")
         let stripped = LessonManualVideoBackup.stripMachineLines(from: merged)
         #expect(stripped == "Instructor notes here.")
@@ -626,14 +650,29 @@ struct WCS_PlatformTests {
     @Test func lessonManualVideoBackup_externalSourceRoundTrip() {
         let merged = LessonManualVideoBackup.mergeManualVideoMachineLines(
             into: "Notes body.",
-            httpsURL: "https://cdn.example.com/mootion-export.mp4",
+            playbackURL: "https://cdn.example.com/mootion-export.mp4",
             externalSource: .mootion
         )
         #expect(merged.contains("wcs.manualVideoURL:"))
         #expect(merged.contains("wcs.externalVideoSource:"))
+        #expect(LessonManualVideoBackup.extractPlaybackURL(from: merged) == "https://cdn.example.com/mootion-export.mp4")
         #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == "https://cdn.example.com/mootion-export.mp4")
         #expect(LessonManualVideoBackup.extractExternalSource(from: merged) == .mootion)
         #expect(LessonManualVideoBackup.stripMachineLines(from: merged) == "Notes body.")
+    }
+
+    @Test func lessonManualVideoBackup_localFileRoundTripAndSafetyPolicy() {
+        let url = URL(fileURLWithPath: "/tmp/wcs-local-manual-upload.mp4")
+        let merged = LessonManualVideoBackup.mergeManualVideoMachineLines(
+            into: "Local export notes.",
+            playbackURL: url.absoluteString,
+            externalSource: .manual
+        )
+        #expect(merged.contains("wcs.manualVideoURL:"))
+        #expect(LessonManualVideoBackup.extractPlaybackURL(from: merged) == url.absoluteString)
+        #expect(LessonManualVideoBackup.extractHTTPSURL(from: merged) == nil)
+        #expect(LessonVideoSafetyPolicy.validatePlaybackURLString(url.absoluteString) == nil)
+        #expect(LessonManualVideoBackup.stripMachineLines(from: merged) == "Local export notes.")
     }
 
     @Test @MainActor

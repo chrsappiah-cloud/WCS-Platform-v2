@@ -127,6 +127,7 @@ struct CourseCardView: View {
                 .strokeBorder(DesignTokens.subtleBorder, lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.06), radius: 12, x: 0, y: 5)
+        .accessibilityIdentifier("programCard-\(course.title)")
     }
 }
 

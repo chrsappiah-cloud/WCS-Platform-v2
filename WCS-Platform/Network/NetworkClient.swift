@@ -210,7 +210,7 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
                 photoURL: user.photoURL,
                 role: user.role,
                 activeOrganizationId: user.activeOrganizationId,
-                memberships: user.memberships,
+                accessRecords: user.accessRecords,
                 enrollments: user.enrollments
             )
             return user
@@ -270,7 +270,6 @@ nonisolated final class NetworkClient: IdentityService, CatalogService, Learning
 
         if useMocks {
             try await Task.sleep(nanoseconds: 180_000_000)
-            let user = await MockLearningStore.shared.currentUser()
             let courses = await MockLearningStore.shared.snapshotCourses()
             return courses.map { WCSPlatformAccessPolicy.redactCourseForCatalogIfNeeded(snapshot: snapshot, course: $0) }
         }

@@ -28,7 +28,7 @@ Run this checklist before every App Store resubmission after a launch-crash reje
 
 - [ ] `WCS-PlatformTests` pass in CI (strict mode enabled).
 - [ ] `WCS-PlatformUITests` smoke/recovery pass.
-- [ ] Targeted AI video + Apple payments E2E pass.
+- [ ] Targeted AI video + access flow E2E pass.
 - [ ] Infrastructure health tests pass.
 
 ## 5) Review payload

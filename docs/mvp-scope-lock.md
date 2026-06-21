@@ -13,8 +13,8 @@ Any feature not directly improving acquisition, completion, conversion, or repor
 - Basic assessments:
   - quiz submission
   - completion state
-- Upgrade flow:
-  - paywall/upgrade CTA
+- Enroll flow:
+  - access gate/enroll CTA
   - entitlement unlock
 - Certificate/Profile:
   - completion certificate record
@@ -49,7 +49,7 @@ Any feature not directly improving acquisition, completion, conversion, or repor
 
 ## Exit Criteria for MVP
 - End-to-end learner flow functional:
-  Discover -> Audit -> Progress -> Upgrade -> Certificate/Profile
+  Discover -> Audit -> Progress -> Enroll -> Certificate/Profile
 - CI/CD green on main branch.
 - Production crash and analytics instrumentation active.
 - First cohort metrics available for retention and conversion.

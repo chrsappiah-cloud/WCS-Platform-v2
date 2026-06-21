@@ -18,7 +18,7 @@ enum TestDataFactory {
             photoURL: nil,
             role: role,
             activeOrganizationId: orgId,
-            memberships: [],
+            accessRecords: [],
             enrollments: []
         )
     }

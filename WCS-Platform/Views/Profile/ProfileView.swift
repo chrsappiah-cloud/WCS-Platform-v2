@@ -153,6 +153,7 @@ struct ProfileView: View {
                 } label: {
                     Label("WCS AI Course Generation", systemImage: "lock.shield")
                 }
+                .accessibilityIdentifier("profileAICourseGenerationLink")
                 Button {
                     Task { await checkPipeline() }
                 } label: {

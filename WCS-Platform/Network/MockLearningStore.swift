@@ -126,7 +126,7 @@ actor MockLearningStore {
     private func seedManualVideoBackupsFromDraftNotes(_ draft: AdminCourseDraft) {
         for module in draft.modules {
             for lesson in module.lessons where lesson.kind == .video || lesson.kind == .live {
-                if let url = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) {
+                if let url = LessonManualVideoBackup.extractPlaybackURL(from: lesson.notes) {
                     manualLessonVideoPlaybackURLByLessonId[lesson.id] = url
                 } else {
                     manualLessonVideoPlaybackURLByLessonId.removeValue(forKey: lesson.id)
@@ -244,8 +244,8 @@ actor MockLearningStore {
         let fallbackAdmin = UserDefaults.standard.bool(forKey: "wcs.mockAdminMode")
         let role = UserRole(rawValue: mockRoleRaw) ?? (fallbackAdmin ? .orgAdmin : .learner)
         let orgId = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
-        let memberships = [
-            OrganizationMembership(
+        let accessRecords = [
+            OrganizationAccess(
                 id: UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!,
                 organizationId: orgId,
                 organizationName: "World Class Scholars",
@@ -261,7 +261,7 @@ actor MockLearningStore {
             photoURL: nil,
             role: role,
             activeOrganizationId: orgId,
-            memberships: memberships,
+            accessRecords: accessRecords,
             enrollments: enrollments
         )
     }
@@ -344,7 +344,9 @@ actor MockLearningStore {
                     let generationSubtitle = subtitle.isEmpty && lesson.kind == .video && isVideoGenerationInFlight
                         ? "Generating AI lesson video in real time. This recording will be archived for reuse."
                         : subtitle
-                    let fallbackVideoURL = fallbackPlaybackURL(for: lesson.id)
+                    let fallbackVideoURL = LessonVideoGenerationSettings.isRemoteTextToVideoEnabled
+                        ? nil
+                        : fallbackPlaybackURL(for: lesson.id)
                     let manualBackupVideoURL = resolvedManualBackupVideoURL(for: lesson)
                     let resolvedVideoURL: String? = {
                         guard lesson.kind == .video || lesson.kind == .live else { return nil }
@@ -548,7 +550,7 @@ actor MockLearningStore {
         if let pinned = manualLessonVideoPlaybackURLByLessonId[lesson.id] {
             return pinned
         }
-        return LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes)
+        return LessonManualVideoBackup.extractPlaybackURL(from: lesson.notes)
     }
 
     private func isBlockedAICourseTitle(_ title: String) -> Bool {

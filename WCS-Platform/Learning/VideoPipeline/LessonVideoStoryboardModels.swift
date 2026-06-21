@@ -35,7 +35,7 @@ enum LessonVideoClientPipelineMode: String, Codable, Sendable {
     case sceneOrchestrationV1 = "scene_orchestration_v1"
 }
 
-/// Async clip / module render tracking (BFF ↔ worker); client may poll or subscribe later.
+/// Async clip / module render tracking (BFF ↔ worker); client may poll or continue later.
 enum LessonVideoRenderJobStatus: String, Codable, Sendable {
     case queued
     case planning

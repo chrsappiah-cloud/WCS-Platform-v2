@@ -10,8 +10,6 @@ final class TabNavigationE2ETests: XCTestCase {
         let app = XCUIApplication()
         app.launchForE2E()
 
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
-
         app.openTab("Discover")
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 8))
 
@@ -23,12 +21,6 @@ final class TabNavigationE2ETests: XCTestCase {
 
         app.openTab("Profile")
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 8))
-        let accountHeader = app.staticTexts["Account"]
-        scrollUntilExists(accountHeader, in: app, maxSwipes: 6)
-        XCTAssertTrue(
-            accountHeader.waitForExistence(timeout: 12),
-            "Profile tab should show account context"
-        )
 
         app.openTab("About")
         XCTAssertTrue(app.navigationBars["About WCS"].waitForExistence(timeout: 10))

@@ -64,7 +64,7 @@ struct AdminCourseCreatorView: View {
                 .simulatorStableTextSelection()
                 .padding(.horizontal, 24)
 
-            Button("Unlock Studio") {
+            Button("Verify Admin Access") {
                 viewModel.unlock()
             }
             .buttonStyle(.borderedProminent)
@@ -457,6 +457,7 @@ private struct ManualLessonVideoBackupRow: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
                 .font(.caption)
+                .accessibilityIdentifier("manualLessonVideoBackupURLField")
             Picker("Prepared with", selection: $externalSource) {
                 ForEach(ExternalLessonVideoSource.allCases) { src in
                     Text(src.displayLabel).tag(src)
@@ -465,11 +466,12 @@ private struct ManualLessonVideoBackupRow: View {
             .pickerStyle(.menu)
             .font(.caption2)
 
-            Button("Probe local export (validation only)") {
+            Button("Import local video backup") {
                 showFileImporter = true
             }
             .buttonStyle(.bordered)
             .font(.caption2)
+            .accessibilityIdentifier("manualLessonVideoProbeLocalButton")
 
             if let probe = lastProbe {
                 Text(
@@ -484,7 +486,7 @@ private struct ManualLessonVideoBackupRow: View {
                     .foregroundStyle(lastProbe == nil ? Color.red : Color.secondary)
             }
 
-            Text("Learners stream from the HTTPS URL. Host the exported file on your CDN or storage, then paste the public or signed link here.")
+            Text("Learners use the active manual backup first. Paste an HTTPS URL or import a local export into app storage.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
 
@@ -495,6 +497,7 @@ private struct ManualLessonVideoBackupRow: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
                 .font(.caption2)
+                .accessibilityIdentifier("manualLessonVideoSaveBackupButton")
                 Button("Clear backup") {
                     urlText = ""
                     lastProbe = nil
@@ -503,6 +506,7 @@ private struct ManualLessonVideoBackupRow: View {
                 }
                 .buttonStyle(.bordered)
                 .font(.caption2)
+                .accessibilityIdentifier("manualLessonVideoClearBackupButton")
             }
         }
         .padding(8)
@@ -516,7 +520,7 @@ private struct ManualLessonVideoBackupRow: View {
             handleFileImport(result)
         }
         .task(id: "\(lesson.id.uuidString)|\(lesson.notes)") {
-            urlText = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) ?? ""
+            urlText = LessonManualVideoBackup.extractPlaybackURL(from: lesson.notes) ?? ""
             externalSource = LessonManualVideoBackup.extractExternalSource(from: lesson.notes) ?? .manual
         }
     }
@@ -550,10 +554,16 @@ private struct ManualLessonVideoBackupRow: View {
                     return
                 }
                 do {
-                    let probe = try await ManualVideoFileValidator.probe(fileURL: url)
+                    let imported = try await ManualVideoFileValidator.importToLocalBackupStorage(
+                        fileURL: url,
+                        lessonId: lesson.id
+                    )
                     await MainActor.run {
-                        lastProbe = probe
-                        probeMessage = "Ready for upload — copy to your host and paste the HTTPS URL above."
+                        lastProbe = imported.probe
+                        urlText = imported.url.absoluteString
+                        externalSource = .manual
+                        probeMessage = "Local video imported and activated as this lesson backup."
+                        onSave(moduleId, lesson.id, imported.url.absoluteString, .manual)
                     }
                 } catch {
                     await MainActor.run {
@@ -783,7 +793,7 @@ private struct DraftCard: View {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                     Text(
-                        "Paste an HTTPS playback URL per video or live lesson (exports from Mootion, Invideo AI, or any host). This overrides AI-generated URLs for learners when a backup is set. Use “Probe local export” to validate a file before you upload it to your CDN or Supabase Storage."
+                        "Paste an HTTPS playback URL per video or live lesson, or import a local MP4/MOV/M4V/WebM export. Manual backups override AI-generated URLs for learners when set."
                     )
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -828,7 +838,7 @@ private struct DraftCard: View {
                                             .frame(width: 220, height: 124)
                                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                     } else if let playback = URL(string: asset.playbackURL),
-                                              LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(playback) {
+                                              LessonVideoPlaybackPolicy.isNativeAVPlayerURL(playback) {
                                         AdminInlineAVVideoPreview(
                                             url: playback,
                                             courseId: draft.id,

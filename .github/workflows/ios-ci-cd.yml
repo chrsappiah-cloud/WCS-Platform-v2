@@ -39,6 +39,12 @@ jobs:
       - name: Validate external link allowlist config
         run: bash scripts/validate-external-links-config.sh
 
+      - name: Verify no IAP or subscription references
+        run: |
+          ! rg -n -i "\\b(iap|in-app purchase|in app purchase|purchase|purchases|subscription|subscriptions|membership|paywall|storekit|skpayment|revenuecat)\\b" \
+            WCS-Platform WCS-PlatformTests WCS-PlatformUITests \
+            -g '*.swift' -g '*.plist' -g '*.json' -g '*.strings'
+
       - name: Resolve iOS Simulator destination
         id: sim
         run: |
@@ -115,6 +121,19 @@ jobs:
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           -only-testing:WCS-PlatformUITests/E2E
+          test
+
+      - name: Run manual video backup E2E gate
+        env:
+          CI: "true"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
+          -sdk iphonesimulator
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformUITests/ManualBackupAuthoringE2ETests/testManualBackupExternalURLAndLocalImportBackupCreatePublishPlaybackFlow
           test
 
       - name: Verify privacy manifest exists

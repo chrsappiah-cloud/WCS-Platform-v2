@@ -3,7 +3,7 @@
 //  WCS-Platform
 //
 //  Client-side policy enforcement for WCS domains. This is not a substitute for server authorization,
-//  but it keeps the iOS client aligned with multi-tenant + commerce + learning coupling assumptions.
+//  but it keeps the iOS client aligned with multi-tenant, organization-assigned learning access.
 //
 
 import Foundation
@@ -261,8 +261,8 @@ enum WCSPlatformAccessPolicy: Sendable {
         guard !snapshot.user.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 401, body: nil)
         }
-        let hasActiveMembership = snapshot.user.memberships.isEmpty || snapshot.user.memberships.contains(where: { $0.isActive })
-        guard hasActiveMembership else {
+        let hasActiveAccess = snapshot.user.accessRecords.isEmpty || snapshot.user.accessRecords.contains(where: { $0.isActive })
+        guard hasActiveAccess else {
             throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 403, body: nil)
         }
     }
@@ -352,7 +352,7 @@ enum WCSPlatformAccessPolicy: Sendable {
             isCompleted: false,
             isAvailable: lesson.isAvailable,
             isUnlocked: false,
-            reading: ReadingContent(markdown: "_Preview mode: enroll or upgrade to unlock this lesson._"),
+            reading: ReadingContent(markdown: "_Preview mode: this lesson becomes available when assigned by your organization._"),
             quiz: nil,
             assignment: nil,
             captionTracks: [],

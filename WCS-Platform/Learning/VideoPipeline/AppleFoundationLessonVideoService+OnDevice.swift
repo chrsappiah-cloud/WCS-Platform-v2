@@ -75,11 +75,14 @@ extension AppleFoundationLessonVideoService {
         }
 
         let objectives = request.learningObjectives.joined(separator: "; ")
+        let moduleTitle = request.moduleTitle ?? "Untitled module"
+        let lessonTitle = request.lessonTitle ?? "Untitled lesson"
+        let targetAgeBand = request.targetAgeBand ?? "General learners"
         let prompt = """
         Plan a concise educational lesson video storyboard.
-        Module: \(request.moduleTitle)
-        Lesson: \(request.lessonTitle)
-        Audience level: \(request.targetAgeBand)
+        Module: \(moduleTitle)
+        Lesson: \(lessonTitle)
+        Audience level: \(targetAgeBand)
         Learning objectives: \(objectives.isEmpty ? "Practical mastery" : objectives)
         Source script:
         \(request.sourceScript.prefix(4000))
@@ -103,7 +106,10 @@ extension AppleFoundationLessonVideoService {
     }
 
     func enrichStoryboardWithReferenceImagesOnDevice(_ storyboard: LessonVideoStoryboard) async throws -> LessonVideoStoryboard {
-        guard ImagePlaygroundViewController.isAvailable else {
+        let imagePlaygroundAvailable = await MainActor.run {
+            ImagePlaygroundViewController.isAvailable
+        }
+        guard imagePlaygroundAvailable else {
             return storyboard
         }
 
@@ -149,6 +155,7 @@ extension AppleFoundationLessonVideoService {
         _ generated: FMGeneratedStoryboard,
         request: LessonVideoPlanRequest
     ) -> LessonVideoStoryboard {
+        let lessonTitle = request.lessonTitle ?? "this lesson"
         var storyboard = LessonVideoStoryboard(
             storyboardId: "apple-fm-\(request.lessonId)",
             pipelineVersion: LessonVideoClientPipelineMode.sceneOrchestrationV1.rawValue,
@@ -169,7 +176,7 @@ extension AppleFoundationLessonVideoService {
                     needsDiagram: scene.visualPrompt.localizedCaseInsensitiveContains("diagram")
                         || scene.visualPrompt.localizedCaseInsensitiveContains("chart"),
                     assessmentCheckpoint: index == generated.scenes.count - 1
-                        ? "Learner recalls one takeaway from \(request.lessonTitle)."
+                        ? "Learner recalls one takeaway from \(lessonTitle)."
                         : nil,
                     conditioning: nil,
                     motion: nil,

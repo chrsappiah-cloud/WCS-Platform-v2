@@ -2,12 +2,12 @@
 
 This folder supports **App Store Connect** submission for the native iOS app built from **XcodeGen** (`WCS-Platform/project.yml`).
 
-## Current release (upgrade)
+## Current release (enroll)
 
 - **Marketing version:** `1.1.0` (`MARKETING_VERSION` in `WCS-Platform/project.yml`)
 - **Build:** `2` (`CURRENT_PROJECT_VERSION`)
 - **Bundle ID:** `org.worldclassscholars.platform`
-- **Team ID:** `TM2WG7HH96` (override locally if your membership differs)
+- **Team ID:** `TM2WG7HH96` (override locally if your access differs)
 
 ## 1) Source-of-truth locations
 
@@ -30,7 +30,7 @@ This folder supports **App Store Connect** submission for the native iOS app bui
 | Copy-ready responses / common rejection fixes | `docs/AppStoreSubmissionResponsePack.md` |
 | Metadata templates | `docs/AppStoreMetadataTemplate.md` |
 | Pre-flight checklist (store + compliance) | `docs/AppStoreProductionChecklist.md` (this repo’s master checklist) |
-| Launch / privacy / payments hardening | `docs/Launch_Compliance_Hardening_Checklist.md` |
+| Launch / privacy / access hardening | `docs/Launch_Compliance_Hardening_Checklist.md` |
 | Final sign-off artifact (if maintained) | `docs/AppStore_Final_Checklist_Completed.md` |
 
 ## 3) Deployment pipeline
@@ -68,7 +68,7 @@ cd WCS-Platform && xcodegen generate && xcodebuild \
 **Name:** WCS Platform  
 **Subtitle:** Learn with clarity and structure  
 **Promotional text:** Structured programs, progress you can trust, and companion media—built for serious learners and teams.  
-**Keywords:** learning,courses,education,professional development,modules,progress,subscription,WCS  
+**Keywords:** learning,courses,education,professional development,modules,progress,access,WCS  
 
 **What’s New (1.1.0)**  
 - Pipeline and stability improvements for discovery, media, and offline-tolerant networking.  
@@ -81,7 +81,7 @@ cd WCS-Platform && xcodegen generate && xcodebuild \
 - [ ] `bash scripts/validate-external-links-config.sh`
 - [ ] Review `docs/Launch_Compliance_Hardening_Checklist.md` and `docs/AppStore_Review_Compliance_Packet.md`
 - [ ] Confirm **1024** app icons are **opaque** if App Store flags transparency
-- [ ] Age rating, export compliance, and subscription / external purchase disclosures completed in App Store Connect
+- [ ] Age rating, export compliance, and access / external commerce action disclosures completed in App Store Connect
 - [ ] Physical device smoke test (tabs, video lesson, admin studio if applicable)
 
 ## 7) Screenshot / marketing assets

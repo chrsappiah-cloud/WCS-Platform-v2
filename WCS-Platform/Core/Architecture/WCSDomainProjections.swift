@@ -17,7 +17,7 @@ struct IdentityProjection: Sendable {
     let userId: UUID
     let role: UserRole
     let activeOrganizationId: UUID?
-    let memberships: [OrganizationMembership]
+    let accessRecords: [OrganizationAccess]
 }
 
 struct CatalogProjection: Sendable {
@@ -69,7 +69,7 @@ enum WCSDomainProjector {
             userId: user.id,
             role: user.role,
             activeOrganizationId: user.activeOrganizationId,
-            memberships: user.memberships
+            accessRecords: user.accessRecords
         )
     }
 

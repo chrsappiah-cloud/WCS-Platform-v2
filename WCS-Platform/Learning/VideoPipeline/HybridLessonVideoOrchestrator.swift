@@ -148,6 +148,7 @@ enum RemoteLessonVideoClient {
             lessonId: lesson.id.uuidString,
             lessonTitle: lesson.title,
             lessonNotes: lesson.notes,
+            sourceScript: cleanLessonScript(lesson: lesson, module: module, draft: draft),
             targetAudience: draft.targetAudience,
             level: draft.level,
             textToVideoPrompt: resolvedStoryboard.masterVisualPrompt ?? motionKit.shotPrompt,
@@ -155,7 +156,8 @@ enum RemoteLessonVideoClient {
             providerBackendHint: LessonVideoGenerationSettings.effectiveProviderBackendHint,
             clientAppVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0",
             storyboard: resolvedStoryboard,
-            pipelineMode: .sceneOrchestrationV1
+            pipelineMode: .sceneOrchestrationV1,
+            sceneBreakdownProvider: "openai_gpt41"
         )
 
         var request = URLRequest(url: endpoint)
@@ -183,13 +185,26 @@ enum RemoteLessonVideoClient {
             }
             guard (200...299).contains(http.statusCode) else {
                 let bodyText = String(data: data, encoding: .utf8) ?? "HTTP \(http.statusCode)"
-                await RemoteLessonVideoDiagnostics.shared.recordFailure(bodyText)
+                await RemoteLessonVideoDiagnostics.shared.recordFailure("HTTP \(http.statusCode): \(bodyText)")
                 return nil
             }
-            let decoded = try JSONDecoder().decode(RemoteLessonTextToVideoResponse.self, from: data)
+            let decoded: RemoteLessonTextToVideoResponse
+            do {
+                decoded = try JSONDecoder().decode(RemoteLessonTextToVideoResponse.self, from: data)
+            } catch {
+                let bodyText = String(data: data, encoding: .utf8) ?? "<non-UTF8 body>"
+                await RemoteLessonVideoDiagnostics.shared.recordFailure(
+                    "Decode failed: \(error.localizedDescription). Body: \(bodyText)"
+                )
+                return nil
+            }
             let trimmed = decoded.playbackURL.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty, let url = URL(string: trimmed) else {
                 await RemoteLessonVideoDiagnostics.shared.recordFailure("BFF returned empty playbackURL.")
+                return nil
+            }
+            if let rejection = LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(url) {
+                await RemoteLessonVideoDiagnostics.shared.recordFailure("BFF returned rejected playbackURL: \(rejection)")
                 return nil
             }
             await RemoteLessonVideoDiagnostics.shared.recordSuccess(url.absoluteString, message: decoded.message)
@@ -198,6 +213,23 @@ enum RemoteLessonVideoClient {
             await RemoteLessonVideoDiagnostics.shared.recordFailure(error.localizedDescription)
             return nil
         }
+    }
+
+    private static func cleanLessonScript(
+        lesson: AdminLessonDraft,
+        module: AdminModuleDraft,
+        draft: AdminCourseDraft
+    ) -> String {
+        let cleaned = LessonManualVideoBackup.stripMachineLines(from: lesson.notes)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cleaned.isEmpty {
+            return cleaned
+        }
+        return """
+        \(lesson.title). Module: \(module.title). Course: \(draft.title).
+        Learning outcomes: \(draft.outcomes.joined(separator: "; ")).
+        Explain core concepts with clear examples suitable for \(draft.targetAudience).
+        """
     }
 }
 
@@ -223,5 +255,15 @@ actor RemoteLessonVideoDiagnostics {
 
     func snapshot() -> (successURL: String?, message: String?, failure: String?, checkedAt: Date?) {
         (lastSuccessURL, lastMessage, lastFailure, lastCheckedAt)
+    }
+
+    func conciseStatus() -> String {
+        if let lastSuccessURL {
+            return "last success \(lastSuccessURL)"
+        }
+        if let lastFailure {
+            return String(lastFailure.prefix(280))
+        }
+        return "no remote attempt recorded"
     }
 }

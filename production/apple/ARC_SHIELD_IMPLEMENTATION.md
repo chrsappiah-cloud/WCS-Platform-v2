@@ -27,7 +27,7 @@ This repository implements ARC Shield using the current app architecture and syn
 - `-uiTestMode`
 - `-mockNetwork offline|online`
 - `-mockPermissions deniedCamera`
-- `-mockStoreKit productsFailure`
+- `-mockAccessRecordsUnavailable`
 - `-seedEmptyDatabase`
 - `-seedExpiredToken`
 - `-seedMigratedState`

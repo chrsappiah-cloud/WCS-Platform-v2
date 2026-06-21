@@ -86,6 +86,7 @@ final class AdminCourseCreatorViewModel: ObservableObject {
     init() {
         loadSavedConfiguration()
         applyUITestUnlockIfNeeded()
+        applyUITestManualBackupPrefillIfNeeded()
     }
 
     /// Deterministic admin unlock for UI-test and device E2E runs.
@@ -98,6 +99,23 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         if !isUnlocked {
             unlock()
         }
+    }
+
+    func applyUITestManualBackupPrefillIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestMode") else { return }
+        let env = ProcessInfo.processInfo.environment
+        guard env["WCS_UI_TEST_PREFILL_MANUAL_BACKUP"] == "1" else { return }
+        manualCourseTitle = env["WCS_UI_TEST_MANUAL_COURSE_TITLE"] ?? manualCourseTitle
+        manualSummary = env["WCS_UI_TEST_MANUAL_SUMMARY"] ?? "Manual backup summary."
+        manualModuleTitle = env["WCS_UI_TEST_MANUAL_MODULE_TITLE"] ?? "Continuity module"
+        manualVideoTitle = env["WCS_UI_TEST_MANUAL_VIDEO_TITLE"] ?? "Manual lesson video"
+        manualVideoURL = env["WCS_UI_TEST_MANUAL_VIDEO_URL"] ?? manualVideoURL
+        manualReadingTitle = env["WCS_UI_TEST_MANUAL_READING_TITLE"] ?? "Manual reading"
+        manualReadingMaterial = env["WCS_UI_TEST_MANUAL_READING_BODY"] ?? "Manual reading body."
+        manualQuizTitle = env["WCS_UI_TEST_MANUAL_QUIZ_TITLE"] ?? "Manual quiz"
+        manualQuizPrompt = env["WCS_UI_TEST_MANUAL_QUIZ_PROMPT"] ?? "Q1?"
+        manualAssignmentTitle = env["WCS_UI_TEST_MANUAL_ASSIGNMENT_TITLE"] ?? "Manual assignment"
+        manualAssignmentBrief = env["WCS_UI_TEST_MANUAL_ASSIGNMENT_BRIEF"] ?? "Submit reflection."
     }
 
     func unlock() {
@@ -296,7 +314,7 @@ final class AdminCourseCreatorViewModel: ObservableObject {
             await loadLessonVideoRenderJobs()
         } catch {
             errorMessage = error.localizedDescription
-            pipelineStatusByDraftID[draftID] = "Instructional render failed"
+            pipelineStatusByDraftID[draftID] = error.localizedDescription
         }
     }
 
@@ -705,7 +723,7 @@ enum KajabiBlueprintTemplate: String, CaseIterable, Identifiable {
     }
 
     var defaultLaunch: String {
-        "premium yet accessible positioning, strong social proof, and conversion-first webinar funnel"
+        "assigned yet accessible positioning, strong social proof, and conversion-first webinar funnel"
     }
 
     var defaultProductionNotes: String {

@@ -57,7 +57,7 @@ enum AppLaunchEnvironmentBootstrapper {
         switch mode.lowercased() {
         case "offline":
             NetworkClient.shared.useMocks = true
-            UserDefaults.standard.set(false, forKey: "wcs.mockPremiumMode")
+            UserDefaults.standard.set(false, forKey: "wcs.mockAssignedMode")
         case "online":
             NetworkClient.shared.useMocks = false
         default:
@@ -68,7 +68,7 @@ enum AppLaunchEnvironmentBootstrapper {
     private static func applyPermissionMode(_ mode: String?) {
         guard let mode else { return }
         if mode.localizedCaseInsensitiveContains("denied") {
-            UserDefaults.standard.set(false, forKey: "wcs.mockPremiumMode")
+            UserDefaults.standard.set(false, forKey: "wcs.mockAssignedMode")
             UserDefaults.standard.set(UserRole.learner.rawValue, forKey: "wcs.mockRole")
         }
     }

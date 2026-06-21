@@ -22,9 +22,41 @@ extension XCUIApplication {
     }
 
     func openTab(_ title: String, timeout: TimeInterval = 8) {
-        let tab = tabBars.buttons[title]
-        XCTAssertTrue(tab.waitForExistence(timeout: timeout), "Missing tab \(title)")
-        tab.tap()
+        let deadline = Date().addingTimeInterval(timeout)
+
+        func candidate() -> XCUIElement? {
+            let tabBarButton = tabBars.buttons[title].firstMatch
+            if tabBarButton.exists { return tabBarButton }
+
+            let directButton = buttons[title].firstMatch
+            if directButton.exists { return directButton }
+
+            let selectedPredicate = NSPredicate(format: "label == %@ OR identifier == %@", title, title)
+            let anyMatch = descendants(matching: .any).matching(selectedPredicate).firstMatch
+            if anyMatch.exists { return anyMatch }
+
+            return nil
+        }
+
+        while Date() < deadline {
+            if let tab = candidate() {
+                tab.tap()
+                return
+            }
+
+            let more = tabBars.buttons["More"]
+            if more.exists {
+                more.tap()
+                if let tab = candidate() {
+                    tab.tap()
+                    return
+                }
+            }
+
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+
+        XCTFail("Missing tab \(title)")
     }
 }
 
@@ -93,9 +125,18 @@ extension XCTestCase {
 
     func unlockAdminStudio(_ app: XCUIApplication, code: String = "wcs-admin-2026") {
         app.openTab("Profile")
-        let studio = app.buttons["WCS AI Course Generation"]
+        var studio = app.descendants(matching: .any).matching(identifier: "profileAICourseGenerationLink").firstMatch
         scrollUntilExists(studio, in: app)
-        studio.tap()
+        studio = app.descendants(matching: .any).matching(identifier: "profileAICourseGenerationLink").firstMatch
+        if !studio.exists {
+            studio = app.buttons["WCS AI Course Generation"]
+            scrollUntilExists(studio, in: app)
+        }
+        if studio.exists {
+            studio.tap()
+        } else {
+            XCTFail("Unable to find WCS AI Course Generation profile link.")
+        }
 
         scrollUntilExists(app.staticTexts["adminStudioConsoleTitle"], in: app, maxSwipes: 16)
         if app.staticTexts["adminStudioConsoleTitle"].waitForExistence(timeout: 3)
@@ -106,7 +147,12 @@ extension XCTestCase {
         let accessField = app.secureTextFields["Admin access code"]
         if accessField.waitForExistence(timeout: 6) {
             replaceText(code, in: accessField, app: app)
-            app.buttons["Unlock Studio"].tap()
+            let verifyButton = app.buttons["Verify Admin Access"]
+            if verifyButton.waitForExistence(timeout: 2) {
+                verifyButton.tap()
+            } else {
+                app.buttons["Unlock Studio"].tap()
+            }
         }
 
         scrollUntilExists(app.staticTexts["adminStudioConsoleTitle"], in: app, maxSwipes: 16)

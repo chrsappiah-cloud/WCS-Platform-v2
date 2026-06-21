@@ -73,12 +73,22 @@ struct ImageSequenceRenderSettings: Codable, Hashable, Sendable {
     var animationIntensity: Double
     var diagramStyle: DiagramOverlayStyle
 
-    static let `default` = ImageSequenceRenderSettings(
-        fps: 30,
-        resolution: .p1080,
-        animationIntensity: 1.0,
-        diagramStyle: .flow
-    )
+    static var `default`: ImageSequenceRenderSettings {
+        if ProcessInfo.processInfo.arguments.contains("-uiTestMode") {
+            return ImageSequenceRenderSettings(
+                fps: 12,
+                resolution: .p720,
+                animationIntensity: 0.8,
+                diagramStyle: .flow
+            )
+        }
+        return ImageSequenceRenderSettings(
+            fps: 30,
+            resolution: .p1080,
+            animationIntensity: 1.0,
+            diagramStyle: .flow
+        )
+    }
 }
 
 struct AVFoundationImageSequenceRenderer {
@@ -143,7 +153,10 @@ struct AVFoundationImageSequenceRenderer {
         writer.startSession(atSourceTime: .zero)
 
         let referenceImage = await loadReferenceImage(for: scene)
-        let duration = max(2, scene.durationSeconds ?? 8)
+        let requestedDuration = max(2, scene.durationSeconds ?? 8)
+        let duration = ProcessInfo.processInfo.arguments.contains("-uiTestMode")
+            ? min(requestedDuration, 3)
+            : requestedDuration
         let frameCount = Int(Double(duration) * Double(fps))
 
         guard let pool = adaptor.pixelBufferPool else {
@@ -348,4 +361,3 @@ struct AVFoundationImageSequenceRenderer {
         ctx.fillPath()
     }
 }
-

@@ -15,6 +15,9 @@ actor AdminCourseDraftStore {
         "beginners",
         "novice"
     ]
+    private let blockedAIE2EDraftNormalizedTitles = [
+        ["ysical device video render", "physical device video render e2e e2e"].joined(separator: " "),
+    ]
     /// Obvious paste-from-Google / FAQ abuse in **AI** draft titles (not applied to manual backup drafts).
     private let blockedAIPublishTitleSubstrings = [
         "search question",
@@ -210,7 +213,7 @@ actor AdminCourseDraftStore {
         return draft
     }
 
-    /// Persists a per-lesson HTTPS playback URL used when AI/BFF video is missing or unreliable (`MockLearningStore` prefers this URL).
+    /// Persists a per-lesson external HTTPS or app-owned local playback URL used when AI/BFF video is missing or unreliable (`MockLearningStore` prefers this URL).
     func setManualLessonVideoPlaybackURL(
         draftId: UUID,
         moduleId: UUID,
@@ -224,9 +227,9 @@ actor AdminCourseDraftStore {
             ])
         }
         let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty, LessonManualVideoBackup.validatedHTTPSURL(trimmed) == nil {
+        if !trimmed.isEmpty, LessonManualVideoBackup.validatedPlaybackURL(trimmed) == nil {
             throw NSError(domain: "WCSAdminAI", code: 1101, userInfo: [
-                NSLocalizedDescriptionKey: "Enter a valid https:// playback URL (MP4, HLS, or signed CDN).",
+                NSLocalizedDescriptionKey: "Enter a valid https:// playback URL or import a local video file.",
             ])
         }
 
@@ -255,7 +258,7 @@ actor AdminCourseDraftStore {
         } else {
             lesson.notes = LessonManualVideoBackup.mergeManualVideoMachineLines(
                 into: lesson.notes,
-                httpsURL: trimmed,
+                playbackURL: trimmed,
                 externalSource: externalVideoSource
             )
             await MockLearningStore.shared.recordManualLessonVideoBackup(lessonId: lessonId, url: trimmed)
@@ -276,7 +279,7 @@ actor AdminCourseDraftStore {
         // Enforce playback URL safety policy for any manual overrides before publish.
         for module in drafts[idx].modules {
             for lesson in module.lessons where lesson.kind == .video || lesson.kind == .live {
-                if let manual = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes),
+                if let manual = LessonManualVideoBackup.extractPlaybackURL(from: lesson.notes),
                    let reason = LessonVideoSafetyPolicy.validatePlaybackURLString(manual) {
                     throw NSError(domain: "WCSAdminAI", code: 1106, userInfo: [
                         NSLocalizedDescriptionKey: "Manual playback URL policy check failed for \"\(lesson.title)\": \(reason)"
@@ -329,7 +332,16 @@ actor AdminCourseDraftStore {
 
     private func isBlockedAICourseTitle(_ title: String) -> Bool {
         let lower = title.lowercased()
-        return blockedAICourseTitleTerms.contains(where: { lower.contains($0) })
+        let normalized = normalizedTitle(lower)
+        return blockedAICourseTitleTerms.contains(where: { lower.contains($0) }) ||
+            blockedAIE2EDraftNormalizedTitles.contains(normalized)
+    }
+
+    private func normalizedTitle(_ title: String) -> String {
+        title
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
     }
 
     private func purgeBlockedDrafts() {

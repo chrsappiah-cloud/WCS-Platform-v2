@@ -20,7 +20,7 @@ enum WCSDomain: String, CaseIterable, Sendable {
 enum WCSDomainEntity: String, CaseIterable, Sendable {
     case signupLogin
     case roles
-    case organizationMembership
+    case organizationAccess
     case programs
     case tags
     case featuredPlacement
@@ -52,7 +52,7 @@ enum WCSDomainRegistry {
     static let contracts: [WCSDomainContract] = [
         WCSDomainContract(
             domain: .identity,
-            owns: [.signupLogin, .roles, .organizationMembership]
+            owns: [.signupLogin, .roles, .organizationAccess]
         ),
         WCSDomainContract(
             domain: .catalog,

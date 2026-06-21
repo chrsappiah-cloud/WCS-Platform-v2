@@ -5,8 +5,8 @@ Ship one capital-efficient wedge product and prove retention plus monetization w
 
 ## Wedge Definition
 - Vertical: Decision Science for early-career professionals.
-- Primary journey: Discover -> Audit -> Progress -> Upgrade -> Certificate/Profile.
-- Success target: reliable learner completion and first paid conversions in a controlled beta.
+- Primary journey: Discover -> Audit -> Progress -> Enroll -> Certificate/Profile.
+- Success target: reliable learner completion and first restricted conversions in a controlled beta.
 
 ## Scope Guardrails
 - One backend foundation only: Supabase.
@@ -22,7 +22,7 @@ Ship one capital-efficient wedge product and prove retention plus monetization w
   - learning progress
   - assessments
   - profile
-  - upgrade entitlements
+  - enroll entitlements
   - certificate records
 - Implement Supabase foundations:
   - Auth
@@ -40,10 +40,10 @@ Ship one capital-efficient wedge product and prove retention plus monetization w
   - Progress tracking
   - Basic quiz submission
   - Profile view
-- Upgrade path:
-  - paywall surface
+- Enroll path:
+  - access gate surface
   - entitlement checks
-  - post-upgrade unlock behavior
+  - post-enroll unlock behavior
 - Certificate path:
   - completion trigger
   - certificate issuance record
@@ -58,7 +58,7 @@ Ship one capital-efficient wedge product and prove retention plus monetization w
 - Run weekly funnel review:
   - discover -> audit conversion
   - lesson completion drop-off
-  - upgrade conversion
+  - enroll conversion
   - certificate/profile engagement
 - Prioritize fixes only for measurable bottlenecks.
 - Cut non-performing features from near-term backlog.
@@ -71,7 +71,7 @@ Ship one capital-efficient wedge product and prove retention plus monetization w
 - Audit start rate: >= 30%
 - Lesson completion rate: >= 50%
 - D7 retention: >= 20%
-- Upgrade conversion from active learners: >= 5%
+- Enroll conversion from active learners: >= 5%
 - Certificate view/share after completion: >= 40%
 
 ## Operating Rhythm

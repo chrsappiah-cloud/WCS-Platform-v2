@@ -1,11 +1,11 @@
 //
-//  SubscriptionBadgeView.swift
+//  AccessStatusBadgeView.swift
 //  WCS-Platform
 //
 
 import SwiftUI
 
-struct SubscriptionBadgeView: View {
+struct AccessStatusBadgeView: View {
     var body: some View {
         EmptyView()
     }

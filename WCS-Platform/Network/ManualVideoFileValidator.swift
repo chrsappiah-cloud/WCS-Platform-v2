@@ -68,4 +68,32 @@ enum ManualVideoFileValidator {
             throw ManualVideoFileValidationError.avFoundationFailed(error.localizedDescription)
         }
     }
+
+    static func importToLocalBackupStorage(fileURL: URL, lessonId: UUID) async throws -> (url: URL, probe: ManualVideoFileProbe) {
+        let probe = try await probe(fileURL: fileURL)
+        let directory = try localBackupDirectory()
+        let safeBaseName = fileURL.deletingPathExtension().lastPathComponent
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: "-")
+        let fileName = "\(lessonId.uuidString)-\(safeBaseName.isEmpty ? "lesson-video" : safeBaseName).\(probe.pathExtension)"
+        let destination = directory.appendingPathComponent(fileName)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            try FileManager.default.removeItem(at: destination)
+        }
+        try FileManager.default.copyItem(at: fileURL, to: destination)
+        return (destination, probe)
+    }
+
+    static func localBackupDirectory() throws -> URL {
+        let base = try FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let directory = base.appendingPathComponent("ManualLessonVideoBackups", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
 }

@@ -8,6 +8,49 @@ struct RemoteVideoGenerationStrictTests {
     }
 
     @Test
+    func remoteLessonTextToVideoPayloadIncludesCleanSourceScript() throws {
+        let request = RemoteLessonTextToVideoRequest(
+            courseId: "course-1",
+            courseTitle: "Plant Science",
+            moduleId: "module-1",
+            moduleTitle: "Energy",
+            lessonId: "lesson-1",
+            lessonTitle: "Photosynthesis",
+            lessonNotes: "machine:ignored\nPlants convert sunlight into glucose.",
+            sourceScript: "Plants convert sunlight into glucose.",
+            targetAudience: "Students",
+            level: "High school",
+            textToVideoPrompt: "Render a clear instructional scene.",
+            sourceReferences: ["curriculum"],
+            providerBackendHint: "sora",
+            clientAppVersion: "1.0",
+            storyboard: nil,
+            pipelineMode: .sceneOrchestrationV1,
+            sceneBreakdownProvider: nil
+        )
+
+        let data = try JSONEncoder().encode(request)
+        let json = try #require(String(data: data, encoding: .utf8))
+        #expect(json.contains("\"sourceScript\":\"Plants convert sunlight into glucose.\""))
+        #expect(json.contains("\"providerBackendHint\":\"sora\""))
+    }
+
+    @Test
+    func generatedLessonVideoPolicyRejectsSampleAndCompanionURLs() throws {
+        let sample = try #require(URL(string: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"))
+        let appleSample = try #require(URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8"))
+        let youtube = try #require(URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+        let signed = try #require(URL(string: "https://cdn.example.com/rendered/lesson.mp4?token=abc"))
+        let local = URL(fileURLWithPath: "/tmp/rendered-lesson.mp4")
+
+        #expect(LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(sample) != nil)
+        #expect(LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(appleSample) != nil)
+        #expect(LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(youtube) != nil)
+        #expect(LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(signed) == nil)
+        #expect(LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(local) == nil)
+    }
+
+    @Test
     func remoteTextToVideoConfiguration_isPresentWhenStrictModeEnabled() {
         guard strictModeEnabled else { return }
         #expect(
@@ -60,4 +103,3 @@ struct RemoteVideoGenerationStrictTests {
         #expect(videoURLs.allSatisfy { !$0.contains("youtube.com/watch") })
     }
 }
-

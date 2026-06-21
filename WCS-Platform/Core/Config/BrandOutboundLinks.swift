@@ -2,7 +2,7 @@
 //  BrandOutboundLinks.swift
 //  WCS-Platform
 //
-//  Social, hosted checkout, and merchant dashboard URLs via environment variables (scheme / CI).
+//  Social URLs via environment variables (scheme / CI).
 //
 
 import Foundation

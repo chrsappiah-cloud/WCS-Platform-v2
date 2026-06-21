@@ -24,32 +24,23 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5E1D81772FCA14A7000F62E6 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E4287412F9C54E100FC1A03 /* WCS-Platform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E4287522F9C54E300FC1A03 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42875C2F9C54E300FC1A03 /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E65E88F2FCB7F030094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E65EDF62FCB876E0094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E65F6F02FCB9BF70094152D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5ED072E02FC39DC5001A6493 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5EE910D12FE80F6700458E2D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5EE914762FE810A800458E2D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		5E4287642F9C54E300FC1A03 /* Exceptions for "WCS-Platform" folder in "WCS-Platform" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Core/Config/VideoGeneration-InfoPlistKeys.txt",
+				Docs/LessonVideoPipelineArchitecture.md,
 				Info.plist,
 				Logs,
 				LogStoreManifest.plist,
+				project.yml,
 			);
 			target = 5E4287402F9C54E100FC1A03 /* WCS-Platform */;
 		};
@@ -111,20 +102,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5E1D81782FCA14A7000F62E6 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E20D58C2F9E3D7E00813B49 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		5E4287382F9C54E100FC1A03 = {
 			isa = PBXGroup;
 			children = (
@@ -145,84 +122,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5E42882D2F9CB71C00FC1A03 /* Products */ = {
+		5EE910D22FE80F6700458E2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5E42C4E82F9D320400FC1A03 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E65E8902FCB7F030094152D /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E65EDF72FCB876E0094152D /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E65F6F12FCB9BF70094152D /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E6D49DC2F9E1A7300365907 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E752DD72FC7E2D600EB2C26 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E7D526F2FA0672200671A56 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5EA83AAC2F9DED2F009C6BBE /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5EAC84032FA010FD00CCCDC3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5ED072E12FC39DC5001A6493 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5ED10C8B2FA0336D00886E59 /* Products */ = {
+		5EE914772FE810A800458E2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -338,60 +245,12 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 5E7D526F2FA0672200671A56 /* Products */;
-					ProjectRef = 5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */;
+					ProductGroup = 5EE910D22FE80F6700458E2D /* Products */;
+					ProjectRef = 5EE910D12FE80F6700458E2D /* WCS-Platform.xcodeproj */;
 				},
 				{
-					ProductGroup = 5EA83AAC2F9DED2F009C6BBE /* Products */;
-					ProjectRef = 5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E6D49DC2F9E1A7300365907 /* Products */;
-					ProjectRef = 5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5EAC84032FA010FD00CCCDC3 /* Products */;
-					ProjectRef = 5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E42C4E82F9D320400FC1A03 /* Products */;
-					ProjectRef = 5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E752DD72FC7E2D600EB2C26 /* Products */;
-					ProjectRef = 5E752DD62FC7E2D600EB2C26 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E65F6F12FCB9BF70094152D /* Products */;
-					ProjectRef = 5E65F6F02FCB9BF70094152D /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
-					ProjectRef = 5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E20D58C2F9E3D7E00813B49 /* Products */;
-					ProjectRef = 5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E65EDF72FCB876E0094152D /* Products */;
-					ProjectRef = 5E65EDF62FCB876E0094152D /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5ED072E12FC39DC5001A6493 /* Products */;
-					ProjectRef = 5ED072E02FC39DC5001A6493 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E1D81782FCA14A7000F62E6 /* Products */;
-					ProjectRef = 5E1D81772FCA14A7000F62E6 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E65E8902FCB7F030094152D /* Products */;
-					ProjectRef = 5E65E88F2FCB7F030094152D /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;
-					ProjectRef = 5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */;
+					ProductGroup = 5EE914772FE810A800458E2D /* Products */;
+					ProjectRef = 5EE914762FE810A800458E2D /* WCS-Platform.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -477,6 +336,17 @@
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					.DS_Store,
+					.git,
+					.hg,
+					.svn,
+					CVS,
+					.idea,
+					build,
+					output,
+					"WCS-Platform.xcodeproj",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "wcs-platform";
@@ -518,6 +388,17 @@
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					.DS_Store,
+					.git,
+					.hg,
+					.svn,
+					CVS,
+					.idea,
+					build,
+					output,
+					"WCS-Platform.xcodeproj",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "wcs-platform";

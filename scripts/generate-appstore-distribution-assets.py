@@ -26,7 +26,7 @@ CAPTIONS = {
     "discover": ("Discover programs", "Structured learning paths with clear progress."),
     "programs": ("Browse programs", "Modules, lessons, quizzes, and assignments in one place."),
     "discussion": ("Learn together", "Course discussions and peer collaboration."),
-    "profile": ("Your learning hub", "Membership, progress, and account settings."),
+    "profile": ("Your learning hub", "Access, progress, and account settings."),
 }
 
 
@@ -175,7 +175,7 @@ def process_device(prefix: str, out_dir: Path, canvas_size: tuple[int, int]) -> 
                 [
                     "Curated programs and sequenced modules",
                     "Lesson video with companion resources",
-                    "Membership-aware enrollment and progress",
+                    "Access-aware enrollment and progress",
                 ],
             )
         device_label = "iPhone" if prefix == "iphone" else "iPad"

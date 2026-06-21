@@ -19,7 +19,7 @@ struct UserModelTests {
             photoURL: nil,
             role: .learner,
             activeOrganizationId: nil,
-            memberships: [],
+            accessRecords: [],
             enrollments: []
         )
         let right = User(
@@ -29,7 +29,7 @@ struct UserModelTests {
             photoURL: nil,
             role: .learner,
             activeOrganizationId: nil,
-            memberships: [],
+            accessRecords: [],
             enrollments: []
         )
         #expect(left == right)
@@ -41,7 +41,7 @@ struct UserModelTests {
         """
         let user = try JSONDecoder().decode(User.self, from: Data(json.utf8))
         #expect(user.role == .learner)
-        #expect(user.memberships.isEmpty)
+        #expect(user.accessRecords.isEmpty)
         #expect(user.enrollments.isEmpty)
     }
 

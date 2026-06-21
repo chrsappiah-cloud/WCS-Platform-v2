@@ -128,6 +128,16 @@ struct InstructionalLessonVideoPipeline {
             ), remote.isFileURL || remote.scheme?.lowercased() == "https" {
                 return (remote, "OpenAI via Supabase Edge (instructional text → video)")
             }
+            if LessonVideoGenerationSettings.requiresLiveBackendVideoRender {
+                let detail = await RemoteLessonVideoDiagnostics.shared.conciseStatus()
+                throw InstructionalLessonVideoError.renderFailed(
+                    "Live Supabase/OpenAI backend did not return a valid generated lesson video URL: \(detail)"
+                )
+            }
+        } else if LessonVideoGenerationSettings.requiresLiveBackendVideoRender {
+            throw InstructionalLessonVideoError.renderFailed(
+                "Live Supabase/OpenAI backend is not active for this run. Check endpoint, activation, and local-only flags."
+            )
         }
 
         if LessonVideoGenerationSettings.generationApproach == .onDeviceExperimental

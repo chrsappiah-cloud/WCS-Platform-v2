@@ -4,7 +4,7 @@
 //
 //  Domain-level repository interfaces + live adapters.
 //
-//  Build membership: this file sits under the `WCS-Platform` synchronized root in Xcode, so it is
+//  Build access: this file sits under the `WCS-Platform` synchronized root in Xcode, so it is
 //  part of the WCS-Platform app target without a manual PBXFileReference. Use `WCSAppContainer`
 //  from SwiftUI/view models to reach the live `NetworkClient`-backed repositories.
 //

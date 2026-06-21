@@ -10,10 +10,9 @@ final class SmokeReviewFlowTests: XCTestCase {
         let app = XCUIApplication()
         app.launchForE2E(extraArguments: ["-mockNetwork", "offline"])
 
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 8))
-        XCTAssertTrue(app.tabBars.buttons["Discover"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Programs"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Discussion"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Profile"].exists)
+        app.openTab("Discover")
+        app.openTab("Programs")
+        app.openTab("Discussion")
+        app.openTab("Profile")
     }
 }

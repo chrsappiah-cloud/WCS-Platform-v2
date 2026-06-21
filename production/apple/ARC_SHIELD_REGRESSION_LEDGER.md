@@ -13,7 +13,7 @@ Track every App Review rejection as a durable confirmation + regression artifact
 | Account state | |
 | Network condition | |
 | Reproduction steps | |
-| Root cause tag (`launch`, `permission`, `auth`, `network`, `purchase`, `stateRestoration`, `migration`, `uiFreeze`, `crash`) | |
+| Root cause tag (`launch`, `permission`, `auth`, `network`, `commerce action`, `stateRestoration`, `migration`, `uiFreeze`, `crash`) | |
 | Confirmation test added | |
 | Adjacent regression tests added | |
 | Fix PR | |

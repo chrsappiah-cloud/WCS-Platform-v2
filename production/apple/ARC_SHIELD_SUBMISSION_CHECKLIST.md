@@ -15,7 +15,7 @@ Use this checklist before each App Store submission.
 - [ ] Discover, Programs, Discussion, and Profile tabs are reachable.
 - [ ] Login/session edge behavior is stable with `-seedExpiredToken`.
 - [ ] Permission-denied journey remains navigable (`-mockPermissions deniedCamera`).
-- [ ] Subscription loading failure mode does not crash (`-mockStoreKit productsFailure`).
+- [ ] Access loading failure mode does not crash (`-mockAccessRecordsUnavailable`).
 
 ## Stability and Regression
 

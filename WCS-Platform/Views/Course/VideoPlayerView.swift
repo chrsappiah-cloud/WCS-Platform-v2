@@ -279,6 +279,7 @@ struct VideoPlayerView: View {
             .padding(DesignTokens.Spacing.lg)
         }
         .wcsGroupedScreen()
+        .accessibilityIdentifier("lessonVideoPlayerScreen")
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)

@@ -1,15 +1,15 @@
 //
-//  MembershipPaymentsHubView.swift
+//  AccessInfoView.swift
 //  WCS-Platform
 //
 
 import SwiftUI
 
-struct MembershipPaymentsHubView: View {
+struct AccessInfoView: View {
     var body: some View {
         List {
             Section {
-                Text("Membership information is managed through your organization.")
+                Text("Your learning access is assigned by your organization.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -17,7 +17,7 @@ struct MembershipPaymentsHubView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Membership")
+        .navigationTitle("Access")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
     }
@@ -25,6 +25,6 @@ struct MembershipPaymentsHubView: View {
 
 #Preview {
     NavigationStack {
-        MembershipPaymentsHubView()
+        AccessInfoView()
     }
 }

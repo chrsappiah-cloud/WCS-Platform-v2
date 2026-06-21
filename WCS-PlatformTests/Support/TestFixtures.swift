@@ -4,21 +4,6 @@ import Foundation
 enum TestFixtures {
     static let organizationId = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
 
-    static func makeSubscription(
-        status: SubscriptionStatus = .active,
-        planId: String = "premium-monthly"
-    ) -> Subscription {
-        Subscription(
-            id: UUID(),
-            planId: planId,
-            planName: "Premium Membership",
-            status: status,
-            startDate: Date(),
-            endDate: nil,
-            price: 29.99
-        )
-    }
-
     static func makeUser(
         role: UserRole = .learner,
         enrollments: [Enrollment] = []
@@ -30,7 +15,7 @@ enum TestFixtures {
             photoURL: nil,
             role: role,
             activeOrganizationId: organizationId,
-            memberships: [],
+            accessRecords: [],
             enrollments: enrollments
         )
     }

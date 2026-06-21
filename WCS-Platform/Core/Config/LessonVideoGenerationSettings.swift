@@ -103,6 +103,11 @@ nonisolated enum LessonVideoGenerationSettings {
         remoteTextToVideoEndpointURL != nil
     }
 
+    /// UI/E2E guard: when enabled, lesson video rendering must prove the live BFF/OpenAI path instead of falling back.
+    static var requiresLiveBackendVideoRender: Bool {
+        ProcessInfo.processInfo.environment["WCS_E2E_REQUIRE_LIVE_VIDEO_BACKEND"] == "1"
+    }
+
     /// Shared secret for `GET …/wcs-lesson-video-jobs` (must match Edge secret `WCS_JOB_LIST_SECRET`).
     static var lessonVideoJobListSecret: String? {
         nonEmptyString(forInfoPlistKey: lessonVideoJobListSecretKey)

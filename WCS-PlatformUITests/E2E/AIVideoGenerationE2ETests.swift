@@ -92,6 +92,19 @@ final class AIVideoGenerationE2ETests: XCTestCase {
         )
     }
 
+    @MainActor
+    func testSimulatorLiveBackendRendersInstructionalLessonVideo() throws {
+        let app = XCUIApplication()
+        app.launchForE2E(extraEnvironment: liveBackendVideoEnvironment())
+        unlockAdminStudio(app)
+        createGeneratedDraft(app, productName: "Simulator Live Backend Video Render E2E")
+
+        XCTAssertTrue(
+            exerciseLiveBackendInstructionalVideoFromLessonText(app, renderDeadlineSeconds: 180),
+            "Simulator E2E must call the live Supabase/OpenAI backend and return a generated lesson video URL."
+        )
+    }
+
     /// End-to-end proof that plan → render → compose produces a local MP4 on Simulator (no Apple Intelligence required).
     @MainActor
     func testSimulatorDemonstratesLocalVideoRenderPipeline() throws {
@@ -165,8 +178,7 @@ final class AIVideoGenerationE2ETests: XCTestCase {
     func testPhysicalDeviceDemonstratesLocalVideoRenderPipeline() throws {
         #if targetEnvironment(simulator)
         throw XCTSkip("Physical-device local video E2E runs on connected iPhone hardware only.")
-        #endif
-
+        #else
         let app = XCUIApplication()
         app.launchForE2E()
         unlockAdminStudio(app)
@@ -180,14 +192,14 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             ),
             "Physical iPhone should plan, render, and compose a local MP4 via AVFoundation image-sequence."
         )
+        #endif
     }
 
     @MainActor
     func testTextLessonRendersVideoOnPhysicalDevice() throws {
         #if targetEnvironment(simulator)
         throw XCTSkip("Text-lesson video render E2E requires a physical iPhone with Apple Intelligence.")
-        #endif
-
+        #else
         let app = XCUIApplication()
         app.launchForE2E(extraEnvironment: ["WCS_UI_TEST_VIDEO_APPROACH": "on_device_experimental"])
         unlockAdminStudio(app)
@@ -201,16 +213,16 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             ),
             "Physical device should render video from text lesson content via on-device pipeline."
         )
+        #endif
     }
 
     @MainActor
     func testPhysicalDeviceAppleAndOpenAIVideoPipeline() throws {
         #if targetEnvironment(simulator)
         throw XCTSkip("Physical-device Apple Intelligence + OpenAI pipeline test runs on iPhone hardware only.")
-        #endif
-
+        #else
         let app = XCUIApplication()
-        app.launchForE2E(extraEnvironment: ["WCS_UI_TEST_LOCAL_VIDEO_ONLY": "0"])
+        app.launchForE2E(extraEnvironment: liveBackendVideoEnvironment())
         app.openTab("Profile")
 
         let checkButton = app.buttons["profileCheckGenerationAPIsButton"]
@@ -228,25 +240,12 @@ final class AIVideoGenerationE2ETests: XCTestCase {
         XCTAssertTrue(openAIBFF.waitForExistence(timeout: 10))
 
         unlockAdminStudio(app)
-
-        let generate = app.buttons["adminGenerateDraftButton"]
-        scrollUntilExists(generate, in: app, maxSwipes: 16)
-        if generate.isEnabled {
-            generate.tap()
-            _ = app.staticTexts.matching(
-                NSPredicate(format: "label CONTAINS[c] %@", "Publish to learner catalog")
-            ).firstMatch.waitForExistence(timeout: 90)
-        }
-
-        exerciseScenePipelineIfAvailable(app)
-
-        let pipelineStatus = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Planned' OR label CONTAINS[c] 'Render complete' OR label CONTAINS[c] 'On-device' OR label CONTAINS[c] 'composed'")
-        ).firstMatch
+        createGeneratedDraft(app, productName: "Physical Device Live Backend Video Render E2E")
         XCTAssertTrue(
-            pipelineStatus.waitForExistence(timeout: 180),
-            "Expected Apple/OpenAI video pipeline status on physical device."
+            exerciseLiveBackendInstructionalVideoFromLessonText(app, renderDeadlineSeconds: 240),
+            "Physical device E2E must call the live Supabase/OpenAI backend and return a generated lesson video URL."
         )
+        #endif
     }
 
     // MARK: - Pipeline helpers
@@ -259,7 +258,7 @@ final class AIVideoGenerationE2ETests: XCTestCase {
     ) -> Bool {
         dismissSystemAlertsIfPresent(app)
 
-        let renderText = app.buttons["adminRenderInstructionalVideoButton"]
+        let renderText = app.buttons.matching(identifier: "adminRenderInstructionalVideoButton").firstMatch
         scrollUntilExists(renderText, in: app, maxSwipes: 20)
         guard renderText.waitForExistence(timeout: 12) else { return false }
         let enableDeadline = Date().addingTimeInterval(30)
@@ -287,6 +286,50 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             sleep(3)
         }
         return localVideoArtifactExists(in: app)
+    }
+
+    @MainActor
+    @discardableResult
+    private func exerciseLiveBackendInstructionalVideoFromLessonText(
+        _ app: XCUIApplication,
+        renderDeadlineSeconds: TimeInterval = 180
+    ) -> Bool {
+        dismissSystemAlertsIfPresent(app)
+
+        let renderText = app.buttons.matching(identifier: "adminRenderInstructionalVideoButton").firstMatch
+        scrollUntilExists(renderText, in: app, maxSwipes: 20)
+        guard renderText.waitForExistence(timeout: 12) else { return false }
+        let enableDeadline = Date().addingTimeInterval(30)
+        while !renderText.isEnabled, Date() < enableDeadline {
+            sleep(1)
+        }
+        if renderText.isEnabled {
+            renderText.tap()
+        }
+
+        let deadline = Date().addingTimeInterval(renderDeadlineSeconds)
+        var lastStatus = ""
+        while Date() < deadline {
+            dismissSystemAlertsIfPresent(app)
+            let status = app.staticTexts["adminVideoPipelineStatusLabel"].firstMatch
+            if status.exists {
+                lastStatus = status.label
+                if pipelineStatusIndicatesLiveBackendRender(status.label),
+                   !pipelineStatusIndicatesFallbackRender(status.label),
+                   !pipelineStatusIndicatesBackendFailure(status.label) {
+                    return true
+                }
+                if pipelineStatusIndicatesBackendFailure(status.label) {
+                    XCTFail("Live backend video render failed: \(status.label)")
+                    return false
+                }
+            }
+            sleep(3)
+        }
+        if !lastStatus.isEmpty {
+            XCTFail("Live backend video render timed out. Last status: \(lastStatus)")
+        }
+        return false
     }
 
     /// Plans storyboard, renders first scene, composes lesson; returns true when pipeline status or artifact links confirm MP4 output.
@@ -334,16 +377,23 @@ final class AIVideoGenerationE2ETests: XCTestCase {
 
         let plan = app.buttons["adminPlanStoryboardButton"]
         scrollUntilExists(plan, in: app, maxSwipes: 20)
-        guard plan.waitForExistence(timeout: 15) else { return false }
+        guard plan.waitForExistence(timeout: 15) else {
+            XCTFail("Missing storyboard plan button after draft setup.")
+            return false
+        }
 
         if plan.isEnabled {
             plan.tap()
         }
 
         let plannedStatus = app.staticTexts["adminVideoPipelineStatusLabel"].firstMatch
-        guard plannedStatus.waitForExistence(timeout: 120) else { return false }
+        guard plannedStatus.waitForExistence(timeout: 120) else {
+            XCTFail("Storyboard status label did not appear after tapping plan.")
+            return false
+        }
         let plannedLabel = plannedStatus.label
         guard (plannedLabel as NSString).range(of: "Planned", options: .caseInsensitive).location != NSNotFound else {
+            XCTFail("Storyboard plan did not complete. Last status: \(plannedLabel)")
             return false
         }
 
@@ -351,7 +401,10 @@ final class AIVideoGenerationE2ETests: XCTestCase {
 
         let render = app.buttons["adminRenderFirstSceneButton"]
         scrollUntilExists(render, in: app, maxSwipes: 12)
-        guard render.waitForExistence(timeout: 10) else { return false }
+        guard render.waitForExistence(timeout: 10) else {
+            XCTFail("Missing render-first-scene button after storyboard planning. Last status: \(plannedLabel)")
+            return false
+        }
 
         let renderEnableDeadline = Date().addingTimeInterval(45)
         while !render.isEnabled, Date() < renderEnableDeadline {
@@ -380,8 +433,11 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             }
             sleep(3)
         }
-        guard renderComplete else { return false }
-        _ = lastStatusLabel
+        guard renderComplete else {
+            let localLinks = localVideoArtifactExists(in: app)
+            XCTFail("Local scene render did not complete before timeout. Last status: \(lastStatusLabel). Local artifact visible: \(localLinks).")
+            return false
+        }
 
         dismissSystemAlertsIfPresent(app)
 
@@ -401,6 +457,7 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             return true
         }
 
+        XCTFail("Local lesson compose did not expose a composed MP4 artifact. Last status: \(composedStatus.exists ? composedStatus.label : lastStatusLabel)")
         return false
     }
 
@@ -419,6 +476,39 @@ final class AIVideoGenerationE2ETests: XCTestCase {
         let normalized = label.lowercased()
         return normalized.contains("composed")
             || normalized.contains(".mp4")
+    }
+
+    @MainActor
+    private func pipelineStatusIndicatesLiveBackendRender(_ label: String) -> Bool {
+        let normalized = label.lowercased()
+        return normalized.contains("openai")
+            || normalized.contains("sora")
+            || normalized.contains("supabase edge")
+            || normalized.contains("bff")
+    }
+
+    @MainActor
+    private func pipelineStatusIndicatesFallbackRender(_ label: String) -> Bool {
+        let normalized = label.lowercased()
+        if normalized.contains("planned via apple foundation models")
+            || normalized.contains("planned via network") {
+            return false
+        }
+        return normalized.contains("avfoundation")
+            || normalized.contains("image-sequence")
+            || normalized.contains("on-device")
+            || normalized.contains("apple image playground")
+    }
+
+    @MainActor
+    private func pipelineStatusIndicatesBackendFailure(_ label: String) -> Bool {
+        let normalized = label.lowercased()
+        return normalized.contains("failed")
+            || normalized.contains("did not return")
+            || normalized.contains("http 401")
+            || normalized.contains("http 403")
+            || normalized.contains("decode failed")
+            || normalized.contains("rejected playbackurl")
     }
 
     @MainActor
@@ -442,6 +532,43 @@ final class AIVideoGenerationE2ETests: XCTestCase {
             skipDraftSetup: true,
             renderDeadlineSeconds: 120
         )
+    }
+
+    @MainActor
+    private func createGeneratedDraft(_ app: XCUIApplication, productName: String) {
+        let template = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] %@", "Professional")
+        ).firstMatch
+        if template.waitForExistence(timeout: 4) {
+            template.tap()
+        }
+
+        var productField = app.textFields["adminProductNameField"]
+        if !productField.waitForExistence(timeout: 4) {
+            scrollUntilExists(app.textFields["Product name"], in: app, maxSwipes: 8)
+            productField = app.textFields["Product name"]
+        }
+        if productField.waitForExistence(timeout: 6) {
+            replaceText(productName, in: productField, app: app)
+        }
+
+        let generate = app.buttons["adminGenerateDraftButton"]
+        scrollUntilExists(generate, in: app, maxSwipes: 16)
+        if generate.isEnabled {
+            generate.tap()
+            _ = app.staticTexts.matching(
+                NSPredicate(format: "label CONTAINS[c] %@", "Publish to learner catalog")
+            ).firstMatch.waitForExistence(timeout: 120)
+        }
+    }
+
+    private func liveBackendVideoEnvironment() -> [String: String] {
+        [
+            "WCS_UI_TEST_LOCAL_VIDEO_ONLY": "0",
+            "WCS_UI_TEST_VIDEO_APPROACH": "hybrid_cloud_native_composition",
+            "WCS_E2E_REQUIRE_LIVE_VIDEO_BACKEND": "1",
+            "WCS_E2E_ACTIVATE_BACKEND": "1"
+        ]
     }
 
     @MainActor

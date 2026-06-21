@@ -19,12 +19,12 @@ Companion intensive standard (book-themed): [WCS_iOS_Intensive_Testing_Kit.md](.
 
 - [x] App launch smoke — `AppLaunchProductionTests`
 - [x] Authentication/session — `AuthenticationSessionUITests` + `AuthTokenPersistenceTests`
-- [x] Core model tests — `UserModelTests`, `CourseModelTests`, `SubscriptionModelTests`
+- [x] Core model tests — `UserModelTests`, `CourseModelTests`, `AccessRecordModelTests`
 - [x] Form validation — `AdminCourseCreatorViewModelTests`
 - [x] Save/publish flow — `ContentPublishIntegrationTests`
 - [x] Offline/error paths — `NetworkClientOfflineTests`, `NetworkChaosHarnessTests`
 - [x] Token persistence — `AuthTokenPersistenceTests`
-- [x] UI smoke + E2E tabs, AI video, Apple payments — `WCS-PlatformUITests/E2E/`
+- [x] UI smoke + E2E tabs, AI video, access flow — `WCS-PlatformUITests/E2E/`
 
 ## TDD workflow (per feature)
 

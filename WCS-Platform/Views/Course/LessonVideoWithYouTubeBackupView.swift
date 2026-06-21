@@ -36,7 +36,7 @@ struct LessonVideoWithYouTubeBackupView: View {
     private var hasPrimaryStream: Bool {
         guard let url = primaryVideoURL else { return false }
         return LessonVideoPlaybackPolicy.youTubeVideoID(from: url) != nil
-            || LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(url)
+            || LessonVideoPlaybackPolicy.isNativeAVPlayerURL(url)
     }
 
     private var showSegmentedTabs: Bool {

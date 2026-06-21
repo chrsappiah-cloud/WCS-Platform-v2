@@ -25,7 +25,7 @@ struct WCS_PlatformApp: App {
                     Telemetry.event(.appLaunched)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-                    logger.warning("Memory warning received in app process")
+                    logger.warning("Memory warning received by running process")
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     switch newPhase {
