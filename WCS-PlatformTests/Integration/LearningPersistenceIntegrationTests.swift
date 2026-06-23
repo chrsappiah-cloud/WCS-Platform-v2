@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import WCS_Platform
 
+@Suite(.serialized)
 struct LearningPersistenceIntegrationTests {
     @Test func enrollThenSaveWatchProgress_survivesCourseSnapshot() async {
         await MockLearningStore.shared.resetLearningStateForTests()

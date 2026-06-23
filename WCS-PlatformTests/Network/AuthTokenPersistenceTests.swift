@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import WCS_Platform
 
+@Suite(.serialized)
 struct AuthTokenPersistenceTests {
     private let tokenKey = "wcs.authToken"
 

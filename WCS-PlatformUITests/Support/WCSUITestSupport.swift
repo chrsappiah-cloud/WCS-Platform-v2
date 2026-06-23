@@ -11,6 +11,7 @@ extension XCUIApplication {
     func launchForE2E(extraArguments: [String] = [], extraEnvironment: [String: String] = [:]) {
         launchArguments += [WCSUITestLaunch.uiTestMode]
         launchEnvironment[WCSUITestLaunch.adminAccessCodeKey] = launchEnvironment[WCSUITestLaunch.adminAccessCodeKey] ?? "wcs-admin-2026"
+        launchEnvironment[WCSUITestLaunch.mockRoleKey] = launchEnvironment[WCSUITestLaunch.mockRoleKey] ?? "orgAdmin"
         launchEnvironment["WCS_UI_TEST_LOCAL_VIDEO_ONLY"] = launchEnvironment["WCS_UI_TEST_LOCAL_VIDEO_ONLY"] ?? "1"
         launchEnvironment["WCS_UI_TEST_VIDEO_APPROACH"] = launchEnvironment["WCS_UI_TEST_VIDEO_APPROACH"] ?? "image_sequence_animation"
         launchEnvironment["WCS_E2E_ACTIVATE_BACKEND"] = launchEnvironment["WCS_E2E_ACTIVATE_BACKEND"] ?? "1"

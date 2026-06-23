@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import WCS_Platform
 
+@Suite(.serialized)
 struct InfrastructureHealthTests {
     @Test
     func storageBackendsStatus_includesCloudflareAndiCloudCapabilities() async throws {
@@ -52,4 +53,3 @@ struct InfrastructureHealthTests {
         #expect(systems.contains(where: { $0.localizedCaseInsensitiveContains("Cloud AI Companion") }))
     }
 }
-
