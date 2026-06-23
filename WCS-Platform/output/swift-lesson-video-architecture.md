@@ -94,7 +94,7 @@ This means your Swift app can handle all post-generation work natively without c
 | Provider | API | Strengths | Swift Integration |
 |---|---|---|---|
 | OpenAI Videos API | REST | High quality, reference-guided, batch support | URLSession with async/await |
-| Replicate | REST | Multiple models (CogVideoX, LTX, Wan), per-second billing | URLSession |
+| Replicate | REST | Multiple models (CogVideoX, LTX, Wan), per-second account | URLSession |
 | Modal | REST | Self-hosted OSS models, custom infrastructure | URLSession |
 | Hugging Face Inference API | REST | Wide model selection, free tier | URLSession |
 | Runway Gen-3 | REST | Production-quality generative video | URLSession |

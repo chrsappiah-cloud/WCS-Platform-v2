@@ -26,9 +26,10 @@ The iOS app may send **`pipelineMode`: `"scene_orchestration_v1"`** and a **`sto
 ### One-shot bootstrap (your machine)
 
 ```bash
-cd /Applications/WCS-Platform
+cd /Applications/WCS-Platform-v2
 cp scripts/env.supabase.local.example .env.supabase.local
-# Edit .env.supabase.local: SUPABASE_ACCESS_TOKEN, keys, optional WCS_JOB_LIST_SECRET
+# Edit .env.supabase.local: SUPABASE_ACCESS_TOKEN, keys, optional WCS_JOB_LIST_SECRET,
+# and OPENAI_API_KEY for live OpenAI/Sora video rendering.
 bash scripts/supabase-bootstrap-lesson-video.sh
 ```
 
@@ -56,7 +57,7 @@ supabase secrets set --project-ref YOUR_PROJECT_REF \
   LTX_API_KEY=... \
   LTX_API_BASE_URL=https://api.ltx.video/v1 \
   SVD_WORKER_URL=https://your-gpu-worker.example/generate \
-  VIDEO_PROVIDER=mock \
+  VIDEO_PROVIDER=sora \
   WCS_JOB_LIST_SECRET="your-long-random-secret"
 ```
 
@@ -72,7 +73,7 @@ supabase secrets set --project-ref YOUR_PROJECT_REF \
 From the repo root (requires `supabase login` first):
 
 ```bash
-cd /Applications/WCS-Platform
+cd /Applications/WCS-Platform-v2
 chmod +x scripts/supabase-deploy-wcs-lesson-video.sh   # once
 ./scripts/supabase-deploy-wcs-lesson-video.sh YOUR_PROJECT_REF
 ```
@@ -82,8 +83,8 @@ Or manually:
 ```bash
 supabase link --project-ref YOUR_PROJECT_REF
 supabase db push --project-ref YOUR_PROJECT_REF
-supabase functions deploy wcs-lesson-text-to-video --project-ref YOUR_PROJECT_REF
-supabase functions deploy wcs-lesson-video-jobs --project-ref YOUR_PROJECT_REF
+supabase functions deploy wcs-lesson-text-to-video --project-ref YOUR_PROJECT_REF --no-verify-jwt
+supabase functions deploy wcs-lesson-video-jobs --project-ref YOUR_PROJECT_REF --no-verify-jwt
 ```
 
 ### Job audit list (`wcs-lesson-video-jobs`)

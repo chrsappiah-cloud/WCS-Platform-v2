@@ -28,7 +28,7 @@ struct HomeCourseDesignerContactCard: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: DesignTokens.Spacing.md) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 if let mailURL = HomeTrustClusterContent.courseTeamMailURL {
                     Link(destination: mailURL) {
                         Label(HomeTrustClusterContent.emailCourseTeamLabel, systemImage: "envelope.fill")
@@ -36,6 +36,15 @@ struct HomeCourseDesignerContactCard: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(DesignTokens.brandAccent)
+                    .accessibilityIdentifier("homeSupportPrimaryMailLink")
+                }
+                if let secondaryURL = HomeTrustClusterContent.secondarySupportMailURL {
+                    Link(destination: secondaryURL) {
+                        Label(WCSSupportContacts.secondaryEmail, systemImage: "envelope")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("homeSupportSecondaryMailLink")
                 }
             }
         }

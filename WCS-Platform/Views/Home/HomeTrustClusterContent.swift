@@ -9,7 +9,8 @@
 import Foundation
 
 enum HomeTrustClusterContent: Sendable {
-    static let supportEmail = "support@wcs.education"
+    static var supportEmail: String { WCSSupportContacts.primaryEmail }
+    static var secondarySupportEmail: String { WCSSupportContacts.secondaryEmail }
 
     static let designerSectionEyebrow = "Course designer"
     static let designerName = "Dr Christopher Appiah-Thompson"
@@ -51,6 +52,10 @@ enum HomeTrustClusterContent: Sendable {
     ]
 
     static var courseTeamMailURL: URL? {
-        URL(string: "mailto:\(supportEmail)")
+        WCSSupportContacts.combinedSupportMailURL ?? WCSSupportContacts.primaryMailURL
+    }
+
+    static var secondarySupportMailURL: URL? {
+        WCSSupportContacts.secondaryMailURL
     }
 }

@@ -2,9 +2,9 @@ name: iOS CI/CD
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, test/ios-strict-quality-gates]
   push:
-    branches: [main]
+    branches: [main, test/ios-strict-quality-gates]
     tags:
       - "v*"
   workflow_dispatch:
@@ -33,30 +33,107 @@ jobs:
       - name: Generate Xcode project
         run: cd WCS-Platform && xcodegen generate
 
+      - name: Validate activated support contacts
+        run: bash scripts/validate-support-contacts.sh
+
       - name: Validate external link allowlist config
         run: bash scripts/validate-external-links-config.sh
+
+      - name: Verify no IAP or subscription references
+        run: |
+          ! rg -n -i "\\b(iap|in-app purchase|in app purchase|purchase|purchases|subscription|subscriptions|membership|paywall|storekit|skpayment|revenuecat)\\b" \
+            WCS-Platform WCS-PlatformTests WCS-PlatformUITests \
+            -g '*.swift' -g '*.plist' -g '*.json' -g '*.strings'
+
+      - name: Resolve iOS Simulator destination
+        id: sim
+        run: |
+          DEVICE=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          data=json.load(sys.stdin)
+          prefs=['iPhone 17 Pro Max','iPhone 17 Pro','iPhone 17','iPhone 16 Pro']
+          for name in prefs:
+            for runtime,devs in data.get('devices',{}).items():
+              if 'iOS' not in runtime and 'iphone' not in runtime.lower():
+                continue
+              for d in devs:
+                if d.get('name')==name and d.get('isAvailable'):
+                  print(name); raise SystemExit
+          for runtime,devs in data.get('devices',{}).items():
+            if 'iOS' not in runtime:
+              continue
+            for d in devs:
+              if d.get('name','').startswith('iPhone') and d.get('isAvailable'):
+                print(d['name']); raise SystemExit
+          raise SystemExit('No iPhone simulator found')
+          ")
+          echo "device=$DEVICE" >> "$GITHUB_OUTPUT"
+          echo "Using simulator: $DEVICE"
 
       - name: Build for simulator
         run: >
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
           build
 
-      - name: Run tests
+      - name: Run production unit and integration tests
+        env:
+          CI: "true"
+          WCS_STRICT_REMOTE_VIDEO_TESTS: "1"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
+          -sdk iphonesimulator
+          -enableCodeCoverage YES
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformTests
+          test
+
+      - name: Run UI smoke tests
         env:
           CI: "true"
         run: >
           xcodebuild
           -project "WCS-Platform/WCS-Platform.xcodeproj"
           -scheme "WCS-Platform"
-          -destination "platform=iOS Simulator,name=iPhone 17"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
           -sdk iphonesimulator
           -parallel-testing-enabled NO
-          -skip-testing:WCS-PlatformUITests
+          -only-testing:WCS-PlatformUITests/Smoke
+          -only-testing:WCS-PlatformUITests/ReviewFlows
+          -only-testing:WCS-PlatformUITests/Recovery
+          test
+
+      - name: Run full UI E2E gates
+        env:
+          CI: "true"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
+          -sdk iphonesimulator
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformUITests/E2E
+          test
+
+      - name: Run manual video backup E2E gate
+        env:
+          CI: "true"
+        run: >
+          xcodebuild
+          -project "WCS-Platform/WCS-Platform.xcodeproj"
+          -scheme "WCS-Platform"
+          -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}"
+          -sdk iphonesimulator
+          -parallel-testing-enabled NO
+          -only-testing:WCS-PlatformUITests/ManualBackupAuthoringE2ETests/testManualBackupExternalURLAndLocalImportBackupCreatePublishPlaybackFlow
           test
 
       - name: Verify privacy manifest exists

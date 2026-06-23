@@ -13,7 +13,7 @@ Every event should include:
 - `course_id` (when relevant)
 - `module_id` (when relevant)
 - `lesson_id` (when relevant)
-- `plan_tier` (`audit`, `free`, `paid`)
+- `plan_tier` (`audit`, `free`, `restricted`)
 - `platform` (`ios`)
 - `app_version`
 - `build_number`
@@ -27,9 +27,9 @@ Every event should include:
 - `quiz_started`
 - `quiz_submitted`
 - `course_completed`
-- `upgrade_viewed`
-- `upgrade_started`
-- `upgrade_completed`
+- `enroll_viewed`
+- `enroll_started`
+- `enroll_completed`
 - `certificate_viewed`
 - `profile_viewed`
 - `profile_shared`
@@ -47,8 +47,8 @@ Every event should include:
   - lessons with `lesson_completed` / lessons with `lesson_started`
 - D7 Retention:
   - users active on day 7 / new users cohort
-- Upgrade Conversion:
-  - users with `upgrade_completed` / users with `upgrade_viewed`
+- Enroll Conversion:
+  - users with `enroll_completed` / users with `enroll_viewed`
 - Completion-to-Certificate Engagement:
   - users with `certificate_viewed` / users with `course_completed`
 

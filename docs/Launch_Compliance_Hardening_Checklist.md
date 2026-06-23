@@ -4,9 +4,9 @@ Use this checklist before each beta/prod release candidate.
 
 ## P0 (Must pass)
 
-- [ ] Payment routing decision documented per entitlement:
+- [ ] Access routing decision documented per entitlement:
   - `informational`
-  - `external_checkout`
+  - `external_external link`
   - `app_native_iap`
 - [ ] No raw PAN/CVV handling in app code or logs.
 - [ ] Outbound URLs validated by host allowlist and HTTPS policy (`scripts/validate-external-links-config.sh`).

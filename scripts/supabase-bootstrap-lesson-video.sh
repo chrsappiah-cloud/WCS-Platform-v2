@@ -4,6 +4,7 @@
 # Prerequisites:
 #   cp scripts/env.supabase.local.example .env.supabase.local
 #   # Fill SUPABASE_ACCESS_TOKEN, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_OR_PUBLISHABLE_KEY
+#   # Fill OPENAI_API_KEY for live OpenAI/Sora lesson video rendering.
 #   # Set WCS_JOB_LIST_SECRET (or leave empty to auto-generate)
 #
 set -euo pipefail
@@ -47,16 +48,30 @@ supabase link --project-ref "$REF"
 echo "→ supabase db push --project-ref $REF"
 supabase db push --project-ref "$REF"
 
-echo "→ supabase secrets set (WCS_JOB_LIST_SECRET + VIDEO_PROVIDER=mock)"
-supabase secrets set --project-ref "$REF" \
-  WCS_JOB_LIST_SECRET="$WCS_JOB_LIST_SECRET" \
-  VIDEO_PROVIDER=mock
+VIDEO_PROVIDER="${VIDEO_PROVIDER:-sora}"
+if [[ -z "${OPENAI_API_KEY:-}" && "$VIDEO_PROVIDER" == "sora" ]]; then
+  echo "Error: OPENAI_API_KEY is required when VIDEO_PROVIDER=sora." >&2
+  echo "Set OPENAI_API_KEY in .env.supabase.local, or set VIDEO_PROVIDER=mock for smoke tests only." >&2
+  exit 1
+fi
 
-echo "→ supabase functions deploy wcs-lesson-text-to-video"
-supabase functions deploy wcs-lesson-text-to-video --project-ref "$REF"
+echo "→ supabase secrets set (WCS_JOB_LIST_SECRET + VIDEO_PROVIDER=$VIDEO_PROVIDER)"
+if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+  supabase secrets set --project-ref "$REF" \
+    WCS_JOB_LIST_SECRET="$WCS_JOB_LIST_SECRET" \
+    VIDEO_PROVIDER="$VIDEO_PROVIDER" \
+    OPENAI_API_KEY="$OPENAI_API_KEY"
+else
+  supabase secrets set --project-ref "$REF" \
+    WCS_JOB_LIST_SECRET="$WCS_JOB_LIST_SECRET" \
+    VIDEO_PROVIDER="$VIDEO_PROVIDER"
+fi
 
-echo "→ supabase functions deploy wcs-lesson-video-jobs"
-supabase functions deploy wcs-lesson-video-jobs --project-ref "$REF"
+echo "→ supabase functions deploy wcs-lesson-text-to-video --no-verify-jwt"
+supabase functions deploy wcs-lesson-text-to-video --project-ref "$REF" --no-verify-jwt
+
+echo "→ supabase functions deploy wcs-lesson-video-jobs --no-verify-jwt"
+supabase functions deploy wcs-lesson-video-jobs --project-ref "$REF" --no-verify-jwt
 
 echo ""
 echo "=== Smoke test: PostgREST job rows (service role) ==="

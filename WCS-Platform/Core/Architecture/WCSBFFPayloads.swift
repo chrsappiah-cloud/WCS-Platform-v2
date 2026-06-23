@@ -12,7 +12,6 @@ struct DiscoverProgramCard: Identifiable, Sendable {
     let course: Course
     let catalog: CatalogProjection
     let learning: LearningProjection
-    let commerce: CommerceProjection
 }
 
 struct DiscoverPayload: Sendable {

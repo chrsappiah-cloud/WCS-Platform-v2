@@ -24,6 +24,12 @@ enum LessonVideoPlaybackPolicy: Sendable {
         return path.contains("master.m3u8") || path.contains("playlist.m3u8") || path.hasSuffix(".m3u8")
     }
 
+    /// True for URLs that should load in **AVPlayer** (local imports, progressive MP4, HLS, Supabase signed URLs, etc.), excluding YouTube (embed path).
+    static func isNativeAVPlayerURL(_ url: URL) -> Bool {
+        if url.isFileURL { return true }
+        return isNativeAVPlayerHTTPSURL(url)
+    }
+
     /// True for `https` URLs that should load in **AVPlayer** (progressive MP4, HLS, Supabase signed URLs, etc.), excluding YouTube (embed path).
     static func isNativeAVPlayerHTTPSURL(_ url: URL) -> Bool {
         guard url.scheme?.lowercased() == "https" else { return false }

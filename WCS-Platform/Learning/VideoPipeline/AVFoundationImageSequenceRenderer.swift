@@ -73,12 +73,22 @@ struct ImageSequenceRenderSettings: Codable, Hashable, Sendable {
     var animationIntensity: Double
     var diagramStyle: DiagramOverlayStyle
 
-    static let `default` = ImageSequenceRenderSettings(
-        fps: 30,
-        resolution: .p1080,
-        animationIntensity: 1.0,
-        diagramStyle: .flow
-    )
+    static var `default`: ImageSequenceRenderSettings {
+        if ProcessInfo.processInfo.arguments.contains("-uiTestMode") {
+            return ImageSequenceRenderSettings(
+                fps: 12,
+                resolution: .p720,
+                animationIntensity: 0.8,
+                diagramStyle: .flow
+            )
+        }
+        return ImageSequenceRenderSettings(
+            fps: 30,
+            resolution: .p1080,
+            animationIntensity: 1.0,
+            diagramStyle: .flow
+        )
+    }
 }
 
 struct AVFoundationImageSequenceRenderer {
@@ -143,7 +153,10 @@ struct AVFoundationImageSequenceRenderer {
         writer.startSession(atSourceTime: .zero)
 
         let referenceImage = await loadReferenceImage(for: scene)
-        let duration = max(2, scene.durationSeconds ?? 8)
+        let requestedDuration = max(2, scene.durationSeconds ?? 8)
+        let duration = ProcessInfo.processInfo.arguments.contains("-uiTestMode")
+            ? min(requestedDuration, 3)
+            : requestedDuration
         let frameCount = Int(Double(duration) * Double(fps))
 
         guard let pool = adaptor.pixelBufferPool else {
@@ -234,9 +247,10 @@ struct AVFoundationImageSequenceRenderer {
         ctx.setFillColor(UIColor.systemIndigo.cgColor)
         ctx.fill(rect)
 
-        // Subtle deterministic pan-like shift for motion.
+        // Subtle deterministic pan-like shift for motion (driven by `MotionPlan` when present).
         let progress = CGFloat(frameIndex) / CGFloat(max(1, frameCount))
-        let xOffset = progress * CGFloat(40 * settings.animationIntensity)
+        let motionIntensity = scene.imageSequenceMotionMultiplier(baseIntensity: settings.animationIntensity)
+        let xOffset = progress * CGFloat(40 * motionIntensity)
         let panel = CGRect(x: 80 + xOffset, y: 120, width: size.width - 160, height: size.height - 240)
 
         if let referenceImage {
@@ -257,10 +271,13 @@ struct AVFoundationImageSequenceRenderer {
             drawDiagramOverlay(in: panel, context: ctx, progress: progress, style: settings.diagramStyle)
         }
 
+        let headline = scene.onScreenText
+            ?? scene.content?.entities.first
+            ?? scene.learningObjective
+            ?? "Lesson Scene"
         let text = [
-            scene.learningObjective ?? "Lesson Scene",
-            scene.narrationText,
-            scene.onScreenText ?? ""
+            headline,
+            scene.narrationText
         ]
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: "\n\n")
@@ -344,4 +361,3 @@ struct AVFoundationImageSequenceRenderer {
         ctx.fillPath()
     }
 }
-

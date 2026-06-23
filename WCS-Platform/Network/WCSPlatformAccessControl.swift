@@ -3,7 +3,7 @@
 //  WCS-Platform
 //
 //  Client-side policy enforcement for WCS domains. This is not a substitute for server authorization,
-//  but it keeps the iOS client aligned with multi-tenant + commerce + learning coupling assumptions.
+//  but it keeps the iOS client aligned with multi-tenant, organization-assigned learning access.
 //
 
 import Foundation
@@ -40,7 +40,6 @@ struct WCSIdentitySnapshot: Sendable {
     let user: User
     let org: WCSOrgContext
 
-    nonisolated var isPremium: Bool { user.isPremium }
     nonisolated var isAdmin: Bool { user.isAdmin }
 
     nonisolated func telemetryAttributes() -> [String: String] {
@@ -145,9 +144,6 @@ enum WCSPlatformAccessPolicy: Sendable {
         case learningAssignmentSubmit(courseId: UUID, moduleId: UUID, lessonId: UUID, assignmentId: UUID)
         case communityFeed(topicID: String?)
         case communityPost(topicID: String)
-        case commerceEnroll(courseId: UUID)
-        case commercePlansRead
-        case commerceAdminFinanceRead
         case adminInfrastructureRead
         case adminInfrastructureWrite
     }
@@ -188,21 +184,6 @@ enum WCSPlatformAccessPolicy: Sendable {
             _ = try await courseProvider(courseId)
             return
 
-        case let .commerceEnroll(courseId):
-            try assertIdentityPresent(snapshot)
-            let course = try await courseProvider(courseId)
-            try assertCanPurchaseOrEnroll(snapshot: snapshot, course: course)
-
-        case .commercePlansRead:
-            try assertIdentityPresent(snapshot)
-            return
-
-        case .commerceAdminFinanceRead:
-            try assertIdentityPresent(snapshot)
-            guard snapshot.isAdmin else {
-                throw WCSAPIError(underlying: URLError(.dataNotAllowed), statusCode: 403, body: nil)
-            }
-            return
 
         case let .learningProgress(courseId, moduleId, lessonId):
             try assertIdentityPresent(snapshot)
@@ -280,8 +261,8 @@ enum WCSPlatformAccessPolicy: Sendable {
         guard !snapshot.user.email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 401, body: nil)
         }
-        let hasActiveMembership = snapshot.user.memberships.isEmpty || snapshot.user.memberships.contains(where: { $0.isActive })
-        guard hasActiveMembership else {
+        let hasActiveAccess = snapshot.user.accessRecords.isEmpty || snapshot.user.accessRecords.contains(where: { $0.isActive })
+        guard hasActiveAccess else {
             throw WCSAPIError(underlying: URLError(.userAuthenticationRequired), statusCode: 403, body: nil)
         }
     }
@@ -299,30 +280,15 @@ enum WCSPlatformAccessPolicy: Sendable {
         }
     }
 
-    private nonisolated static func assertCanPurchaseOrEnroll(snapshot: WCSIdentitySnapshot, course: Course) throws {
-        if course.price == nil { return }
-        guard snapshot.isPremium || snapshot.isAdmin else {
-            throw WCSAPIError(underlying: URLError(.dataNotAllowed), statusCode: 402, body: nil)
-        }
-    }
-
     private nonisolated static func canViewFullCourse(snapshot: WCSIdentitySnapshot, course: Course) -> Bool {
         if snapshot.isAdmin { return true }
         if course.isEnrolled || course.isOwned { return true }
-        if course.isUnlockedBySubscription && snapshot.isPremium { return true }
         return false
     }
 
     private nonisolated static func accessMode(snapshot: WCSIdentitySnapshot, course: Course, lesson: Lesson) -> CatalogAccessMode {
         if snapshot.isAdmin { return .full }
         if course.isEnrolled || course.isOwned { return .full }
-        if course.isUnlockedBySubscription {
-            return snapshot.isPremium ? .full : .preview
-        }
-        if course.price != nil {
-            return snapshot.isPremium ? .full : .preview
-        }
-        // Free courses: allow full read of marketing catalog surface, but still block writes elsewhere.
         return .preview
     }
 
@@ -362,10 +328,8 @@ enum WCSPlatformAccessPolicy: Sendable {
             thumbnailURL: course.thumbnailURL,
             coverURL: course.coverURL,
             durationSeconds: course.durationSeconds,
-            price: course.price,
             isEnrolled: false,
             isOwned: course.isOwned,
-            isUnlockedBySubscription: course.isUnlockedBySubscription,
             rating: course.rating,
             reviewCount: course.reviewCount,
             organizationName: course.organizationName,
@@ -388,7 +352,7 @@ enum WCSPlatformAccessPolicy: Sendable {
             isCompleted: false,
             isAvailable: lesson.isAvailable,
             isUnlocked: false,
-            reading: ReadingContent(markdown: "_Preview mode: enroll or upgrade to unlock this lesson._"),
+            reading: ReadingContent(markdown: "_Preview mode: this lesson becomes available when assigned by your organization._"),
             quiz: nil,
             assignment: nil,
             captionTracks: [],

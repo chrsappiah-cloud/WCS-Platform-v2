@@ -57,6 +57,14 @@ nonisolated enum LessonVideoGenerationSettings {
         nonEmptyString(forInfoPlistKey: providerBackendHintKey)
     }
 
+    /// Provider hint sent to BFF; defaults to `sora` when remote text-to-video is enabled.
+    static var effectiveProviderBackendHint: String? {
+        if let hint = providerBackendHint {
+            return hint
+        }
+        return isRemoteTextToVideoEnabled ? "sora" : nil
+    }
+
     /// Optional JSON object of extra headers, e.g. `{"X-Custom-Auth":"value"}`. Keys/values must be strings.
     static var remoteTextToVideoExtraHTTPHeaders: [String: String] {
         guard let raw = nonEmptyString(forInfoPlistKey: textToVideoExtraHTTPHeadersJSONKey),
@@ -95,6 +103,11 @@ nonisolated enum LessonVideoGenerationSettings {
         remoteTextToVideoEndpointURL != nil
     }
 
+    /// UI/E2E guard: when enabled, lesson video rendering must prove the live BFF/OpenAI path instead of falling back.
+    static var requiresLiveBackendVideoRender: Bool {
+        ProcessInfo.processInfo.environment["WCS_E2E_REQUIRE_LIVE_VIDEO_BACKEND"] == "1"
+    }
+
     /// Shared secret for `GET …/wcs-lesson-video-jobs` (must match Edge secret `WCS_JOB_LIST_SECRET`).
     static var lessonVideoJobListSecret: String? {
         nonEmptyString(forInfoPlistKey: lessonVideoJobListSecretKey)
@@ -118,11 +131,26 @@ nonisolated enum LessonVideoGenerationSettings {
     /// - imageSequenceAnimation: reliable Swift-native fallback
     /// - onDeviceExperimental: CoreML-only experimental path
     static var generationApproach: LessonVideoGenerationApproach {
+        if ProcessInfo.processInfo.arguments.contains("-uiTestMode"),
+           let override = uiTestGenerationApproachOverride {
+            return override
+        }
         guard let raw = nonEmptyString(forInfoPlistKey: generationApproachKey),
               let parsed = LessonVideoGenerationApproach(rawValue: raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
         else {
             return .hybridCloudNativeComposition
         }
+        return parsed
+    }
+
+    /// `WCS_UI_TEST_VIDEO_APPROACH` forces a deterministic pipeline during UI/E2E runs (e.g. `image_sequence_animation`).
+    private static var uiTestGenerationApproachOverride: LessonVideoGenerationApproach? {
+        guard let raw = ProcessInfo.processInfo.environment["WCS_UI_TEST_VIDEO_APPROACH"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased(),
+              !raw.isEmpty,
+              let parsed = LessonVideoGenerationApproach(rawValue: raw)
+        else { return nil }
         return parsed
     }
 
@@ -182,7 +210,7 @@ enum LessonVideoGenerationApproach: String, Codable, Sendable, CaseIterable {
         case .imageSequenceAnimation:
             return "Image-sequence animation (Swift-native reliable path)"
         case .onDeviceExperimental:
-            return "On-device CoreML generation (experimental)"
+            return "On-device Apple Intelligence (Foundation Models + Image Playground)"
         }
     }
 }

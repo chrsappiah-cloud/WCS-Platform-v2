@@ -2,8 +2,8 @@
 //  LessonManualVideoBackup.swift
 //  WCS-Platform
 //
-//  Structured HTTPS fallback for lesson videos when AI / BFF generation is unavailable.
-//  Stored on `AdminLessonDraft.notes` as a dedicated line: `wcs.manualVideoURL: https://…`
+//  Structured manual fallback for lesson videos when AI / BFF generation is unavailable.
+//  Stored on `AdminLessonDraft.notes` as a dedicated line: `wcs.manualVideoURL: https://…` or app-owned `file://…`
 //
 
 import Foundation
@@ -14,16 +14,16 @@ enum LessonManualVideoBackup {
     /// Optional provenance for externally-rendered masters (Mootion, Invideo AI, etc.).
     static let externalSourceLinePrefix = "wcs.externalVideoSource:"
 
-    /// Persists HTTPS playback URL and optional external tool provenance; strips prior machine lines first.
+    /// Persists HTTPS or app-owned local playback URL and optional external tool provenance; strips prior machine lines first.
     static func mergeManualVideoMachineLines(
         into notes: String,
-        httpsURL: String?,
+        playbackURL: String?,
         externalSource: ExternalLessonVideoSource?
     ) -> String {
         let body = stripMachineLines(from: notes)
         var headers: [String] = []
-        if let raw = httpsURL?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty,
-           let validated = validatedHTTPSURL(raw) {
+        if let raw = playbackURL?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty,
+           let validated = validatedPlaybackURL(raw) {
             headers.append("\(urlLinePrefix) \(validated)")
         }
         if let src = externalSource, !headers.isEmpty {
@@ -36,7 +36,7 @@ enum LessonManualVideoBackup {
     }
 
     static func mergeURLLine(into notes: String, url: String) -> String {
-        mergeManualVideoMachineLines(into: notes, httpsURL: url, externalSource: nil)
+        mergeManualVideoMachineLines(into: notes, playbackURL: url, externalSource: nil)
     }
 
     static func stripMachineLines(from notes: String) -> String {
@@ -64,14 +64,14 @@ enum LessonManualVideoBackup {
         return nil
     }
 
-    /// Returns a normalized `https` URL string when one is declared in notes.
-    static func extractHTTPSURL(from notes: String) -> String? {
+    /// Returns a normalized `https` or app-owned `file` URL string when one is declared in notes.
+    static func extractPlaybackURL(from notes: String) -> String? {
         for raw in notes.components(separatedBy: .newlines) {
             let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !t.isEmpty else { continue }
             if t.lowercased().hasPrefix(urlLinePrefix.lowercased()) {
                 let rest = String(t.dropFirst(urlLinePrefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
-                if let u = validatedHTTPSURL(rest) { return u }
+                if let u = validatedPlaybackURL(rest) { return u }
             }
             if t.lowercased().hasPrefix("manual video backup url:") {
                 let rest = String(t.dropFirst("Manual video backup URL:".count)).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -84,6 +84,20 @@ enum LessonManualVideoBackup {
             !ch.isWhitespace && ch != "\n" && ch != ")" && ch != "]" && ch != ">"
         }
         return validatedHTTPSURL(String(token))
+    }
+
+    static func extractHTTPSURL(from notes: String) -> String? {
+        guard let playbackURL = extractPlaybackURL(from: notes),
+              validatedHTTPSURL(playbackURL) != nil
+        else { return nil }
+        return playbackURL
+    }
+
+    static func validatedPlaybackURL(_ raw: String) -> String? {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let https = validatedHTTPSURL(s) { return https }
+        guard let url = URL(string: s), url.isFileURL else { return nil }
+        return url.absoluteString
     }
 
     static func validatedHTTPSURL(_ raw: String) -> String? {

@@ -4,7 +4,7 @@
 //
 //  Domain-level repository interfaces + live adapters.
 //
-//  Build membership: this file sits under the `WCS-Platform` synchronized root in Xcode, so it is
+//  Build access: this file sits under the `WCS-Platform` synchronized root in Xcode, so it is
 //  part of the WCS-Platform app target without a manual PBXFileReference. Use `WCSAppContainer`
 //  from SwiftUI/view models to reach the live `NetworkClient`-backed repositories.
 //
@@ -51,12 +51,6 @@ protocol CommunityRepository {
     func fetchPipelineHealthStatus() async throws -> PipelineHealthStatus
 }
 
-protocol CommerceRepository {
-    func canAccessProgram(_ course: Course, user: User) -> Bool
-    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan]
-    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot
-}
-
 protocol ContentOpsRepository {
     func publishDraft(_ id: UUID) async throws
 }
@@ -65,7 +59,7 @@ protocol AnalyticsRepository {
     func recentTelemetry(limit: Int) -> [String]
 }
 
-nonisolated struct WCSLiveRepositories: IdentityRepository, CatalogRepository, LearningRepository, CommunityRepository, CommerceRepository, ContentOpsRepository, AnalyticsRepository {
+nonisolated struct WCSLiveRepositories: IdentityRepository, CatalogRepository, LearningRepository, CommunityRepository, ContentOpsRepository, AnalyticsRepository {
     private let client: NetworkClient
 
     init(client: NetworkClient) {
@@ -141,17 +135,6 @@ nonisolated struct WCSLiveRepositories: IdentityRepository, CatalogRepository, L
         try await client.fetchPipelineHealthStatus()
     }
 
-    // Commerce
-    func canAccessProgram(_ course: Course, user: User) -> Bool {
-        client.canAccessProgram(course, user: user)
-    }
-    func fetchSubscriptionPlans() async throws -> [WCSSubscriptionPlan] {
-        try await client.fetchSubscriptionPlans()
-    }
-    func fetchAdminFinanceSnapshot() async throws -> WCSAdminFinanceSnapshot {
-        try await client.fetchAdminFinanceSnapshot()
-    }
-
     // Content ops
     func publishDraft(_ id: UUID) async throws {
         try await client.publishDraft(id)
@@ -170,7 +153,6 @@ nonisolated final class WCSAppContainer {
     let catalog: CatalogRepository
     let learning: LearningRepository
     let community: CommunityRepository
-    let commerce: CommerceRepository
     let contentOps: ContentOpsRepository
     let analytics: AnalyticsRepository
 
@@ -179,7 +161,6 @@ nonisolated final class WCSAppContainer {
         catalog: CatalogRepository,
         learning: LearningRepository,
         community: CommunityRepository,
-        commerce: CommerceRepository,
         contentOps: ContentOpsRepository,
         analytics: AnalyticsRepository
     ) {
@@ -187,7 +168,6 @@ nonisolated final class WCSAppContainer {
         self.catalog = catalog
         self.learning = learning
         self.community = community
-        self.commerce = commerce
         self.contentOps = contentOps
         self.analytics = analytics
     }
@@ -199,7 +179,6 @@ nonisolated final class WCSAppContainer {
             catalog: live,
             learning: live,
             community: live,
-            commerce: live,
             contentOps: live,
             analytics: live
         )

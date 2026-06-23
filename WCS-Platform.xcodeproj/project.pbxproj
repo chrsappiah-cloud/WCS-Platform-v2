@@ -24,26 +24,23 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 		5E4287412F9C54E100FC1A03 /* WCS-Platform.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WCS-Platform.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E4287522F9C54E300FC1A03 /* WCS-PlatformTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5E42875C2F9C54E300FC1A03 /* WCS-PlatformUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WCS-PlatformUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
-		5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5EE910D12FE80F6700458E2D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
+		5EE914762FE810A800458E2D /* WCS-Platform.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "WCS-Platform.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		5E4287642F9C54E300FC1A03 /* Exceptions for "WCS-Platform" folder in "WCS-Platform" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Core/Config/VideoGeneration-InfoPlistKeys.txt",
+				Docs/LessonVideoPipelineArchitecture.md,
 				Info.plist,
 				Logs,
 				LogStoreManifest.plist,
+				project.yml,
 			);
 			target = 5E4287402F9C54E100FC1A03 /* WCS-Platform */;
 		};
@@ -105,13 +102,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5E20D58C2F9E3D7E00813B49 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		5E4287382F9C54E100FC1A03 = {
 			isa = PBXGroup;
 			children = (
@@ -132,49 +122,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5E42882D2F9CB71C00FC1A03 /* Products */ = {
+		5EE910D22FE80F6700458E2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		5E42C4E82F9D320400FC1A03 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E6D49DC2F9E1A7300365907 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5E7D526F2FA0672200671A56 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5EA83AAC2F9DED2F009C6BBE /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5EAC84032FA010FD00CCCDC3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		5ED10C8B2FA0336D00886E59 /* Products */ = {
+		5EE914772FE810A800458E2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -290,36 +245,12 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 5E7D526F2FA0672200671A56 /* Products */;
-					ProjectRef = 5E7D526E2FA0672200671A56 /* WCS-Platform.xcodeproj */;
+					ProductGroup = 5EE910D22FE80F6700458E2D /* Products */;
+					ProjectRef = 5EE910D12FE80F6700458E2D /* WCS-Platform.xcodeproj */;
 				},
 				{
-					ProductGroup = 5EA83AAC2F9DED2F009C6BBE /* Products */;
-					ProjectRef = 5EA83AAB2F9DED2F009C6BBE /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E6D49DC2F9E1A7300365907 /* Products */;
-					ProjectRef = 5E6D49DB2F9E1A7300365907 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5EAC84032FA010FD00CCCDC3 /* Products */;
-					ProjectRef = 5EAC84022FA010FD00CCCDC3 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E42C4E82F9D320400FC1A03 /* Products */;
-					ProjectRef = 5E42C4E72F9D320400FC1A03 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5ED10C8B2FA0336D00886E59 /* Products */;
-					ProjectRef = 5ED10C8A2FA0336D00886E59 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E42882D2F9CB71C00FC1A03 /* Products */;
-					ProjectRef = 5E42882C2F9CB71C00FC1A03 /* WCS-Platform.xcodeproj */;
-				},
-				{
-					ProductGroup = 5E20D58C2F9E3D7E00813B49 /* Products */;
-					ProjectRef = 5E20D58B2F9E3D7E00813B49 /* WCS-Platform.xcodeproj */;
+					ProductGroup = 5EE914772FE810A800458E2D /* Products */;
+					ProjectRef = 5EE914762FE810A800458E2D /* WCS-Platform.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -398,14 +329,31 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					.DS_Store,
+					.git,
+					.gitignore,
+					.hg,
+					.svn,
+					CVS,
+					.idea,
+					"*.iml",
+					"*.md",
+					"*.yml",
+					build,
+					modules.xml,
+					output,
+					vcs.xml,
+					"WCS-Platform.xcodeproj",
+					workspace.xml,
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "wcs-platform";
@@ -419,8 +367,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -429,7 +376,6 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
 				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
@@ -442,14 +388,31 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CODE_SIGN_ENTITLEMENTS = "WCS-Platform/WCS_Platform.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				DOCC_EXTRACT_OBJC_INFO_FOR_DOCUMENTATION = NO;
 				DOCC_EXTRACT_SWIFT_INFO_FOR_DOCUMENTATION = NO;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = (
+					.DS_Store,
+					.git,
+					.gitignore,
+					.hg,
+					.svn,
+					CVS,
+					.idea,
+					"*.iml",
+					"*.md",
+					"*.yml",
+					build,
+					modules.xml,
+					output,
+					vcs.xml,
+					"WCS-Platform.xcodeproj",
+					workspace.xml,
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WCS-Platform/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "wcs-platform";
@@ -463,8 +426,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-Platform";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -473,7 +435,6 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WCS_LESSON_TEXT_TO_VIDEO_ENDPOINT = "https://qbmheroqblpcbuqwnzlp.supabase.co/functions/v1/wcs-lesson-text-to-video";
 				WCS_LESSON_VIDEO_JOB_LIST_SECRET = "";
@@ -486,7 +447,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -539,13 +499,11 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SYMROOT = "$(BUILD_DIR)/Products";
 			};
 			name = Debug;
 		};
@@ -554,7 +512,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUILD_DIR = "$(DERIVED_DATA_DIR)/Build";
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -601,11 +558,9 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				OBJROOT = "$(BUILD_DIR)/Intermediates.noindex";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				SYMROOT = "$(BUILD_DIR)/Products";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -615,11 +570,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -637,11 +592,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -658,10 +613,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -678,10 +633,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_TEAM = TM2WG7HH96;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "wcs.WCS-PlatformUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;

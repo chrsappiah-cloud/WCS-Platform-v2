@@ -9,7 +9,7 @@
   - reading rendering
   - progress persistence
 - Quiz submission and pass/fail state.
-- Upgrade flow with entitlement unlock.
+- Enroll flow with entitlement unlock.
 - Certificate generation record and profile attachment.
 - Profile screen with completion visibility.
 - Admin-lite:

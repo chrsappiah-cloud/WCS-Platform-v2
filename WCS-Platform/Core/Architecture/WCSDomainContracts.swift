@@ -12,7 +12,6 @@ enum WCSDomain: String, CaseIterable, Sendable {
     case catalog
     case learning
     case community
-    case commerce
     case profile
     case contentOps
     case analytics
@@ -21,7 +20,7 @@ enum WCSDomain: String, CaseIterable, Sendable {
 enum WCSDomainEntity: String, CaseIterable, Sendable {
     case signupLogin
     case roles
-    case organizationMembership
+    case organizationAccess
     case programs
     case tags
     case featuredPlacement
@@ -34,11 +33,6 @@ enum WCSDomainEntity: String, CaseIterable, Sendable {
     case replies
     case moderation
     case reporting
-    case pricing
-    case skus
-    case purchases
-    case subscriptions
-    case entitlements
     case learnerProfile
     case badges
     case certificates
@@ -47,7 +41,6 @@ enum WCSDomainEntity: String, CaseIterable, Sendable {
     case funnels
     case retention
     case completionMetrics
-    case monetizationMetrics
 }
 
 struct WCSDomainContract: Sendable, Hashable {
@@ -59,7 +52,7 @@ enum WCSDomainRegistry {
     static let contracts: [WCSDomainContract] = [
         WCSDomainContract(
             domain: .identity,
-            owns: [.signupLogin, .roles, .organizationMembership]
+            owns: [.signupLogin, .roles, .organizationAccess]
         ),
         WCSDomainContract(
             domain: .catalog,
@@ -74,10 +67,6 @@ enum WCSDomainRegistry {
             owns: [.threads, .replies, .moderation, .reporting]
         ),
         WCSDomainContract(
-            domain: .commerce,
-            owns: [.pricing, .skus, .purchases, .subscriptions, .entitlements]
-        ),
-        WCSDomainContract(
             domain: .profile,
             owns: [.learnerProfile, .badges, .certificates]
         ),
@@ -87,7 +76,7 @@ enum WCSDomainRegistry {
         ),
         WCSDomainContract(
             domain: .analytics,
-            owns: [.funnels, .retention, .completionMetrics, .monetizationMetrics]
+            owns: [.funnels, .retention, .completionMetrics]
         ),
     ]
 
@@ -137,10 +126,6 @@ protocol LearningService {
 protocol CommunityService {
     func loadDiscussion(topicID: String?) async throws -> DiscussionFeedResponse
     func postDiscussion(topicID: String, body: String, authorName: String) async throws -> DiscussionPost
-}
-
-protocol CommerceService {
-    func canAccessProgram(_ course: Course, user: User) -> Bool
 }
 
 protocol ContentOpsService {

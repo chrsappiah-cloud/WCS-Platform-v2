@@ -53,7 +53,7 @@ enum CrossrefWorksAPIClient {
             r.timeoutInterval = 14
             r.setValue("application/json", forHTTPHeaderField: "Accept")
             r.setValue(
-                "WCS-Platform/1.0 (mailto:support@wcs.education; https://github.com/CrossRef/rest-api-doc)",
+                "WCS-Platform/1.0 (mailto:\(WCSSupportContacts.primaryEmail); https://github.com/CrossRef/rest-api-doc)",
                 forHTTPHeaderField: "User-Agent"
             )
             return r

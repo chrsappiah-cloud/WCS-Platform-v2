@@ -25,11 +25,11 @@ supabase link --project-ref "$REF"
 echo "→ supabase db push --project-ref $REF (Storage bucket + wcs_lesson_video_render_jobs)"
 supabase db push --project-ref "$REF"
 
-echo "→ supabase functions deploy wcs-lesson-text-to-video --project-ref $REF"
-supabase functions deploy wcs-lesson-text-to-video --project-ref "$REF"
+echo "→ supabase functions deploy wcs-lesson-text-to-video --project-ref $REF --no-verify-jwt"
+supabase functions deploy wcs-lesson-text-to-video --project-ref "$REF" --no-verify-jwt
 
-echo "→ supabase functions deploy wcs-lesson-video-jobs --project-ref $REF"
-supabase functions deploy wcs-lesson-video-jobs --project-ref "$REF"
+echo "→ supabase functions deploy wcs-lesson-video-jobs --project-ref $REF --no-verify-jwt"
+supabase functions deploy wcs-lesson-video-jobs --project-ref "$REF" --no-verify-jwt
 
 ENDPOINT="https://${REF}.supabase.co/functions/v1/wcs-lesson-text-to-video"
 JOBS_URL="https://${REF}.supabase.co/functions/v1/wcs-lesson-video-jobs"

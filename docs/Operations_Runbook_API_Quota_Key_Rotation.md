@@ -6,7 +6,7 @@ This runbook covers:
 
 - YouTube Data API key outages/quota exhaustion
 - Crossref transient failures
-- External checkout/social link misconfiguration
+- External external link/social link misconfiguration
 
 ## 2) Detection Signals
 
@@ -22,7 +22,7 @@ This runbook covers:
 1. Confirm environment variables in active build target:
    - `YOUTUBE_DATA_API_KEY`
    - `SOCIAL_*`
-   - `STRIPE_MEMBERSHIP_CHECKOUT_URL`
+   - `SOCIAL_LINKEDIN_URL`
    - `ADMIN_MERCHANT_DASHBOARD_URL`
 2. Confirm network reachability from device/simulator.
 3. Check if fallback behavior is functioning (stale cache/fallback panel).

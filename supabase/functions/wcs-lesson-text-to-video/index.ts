@@ -55,6 +55,7 @@ type LessonTextToVideoRequest = {
   lessonId: string;
   lessonTitle: string;
   lessonNotes: string;
+  sourceScript?: string | null;
   targetAudience: string;
   level: string;
   textToVideoPrompt: string;
@@ -63,6 +64,7 @@ type LessonTextToVideoRequest = {
   clientAppVersion: string;
   storyboard?: LessonVideoStoryboard | null;
   pipelineMode?: string | null;
+  sceneBreakdownProvider?: string | null;
 };
 
 type LessonTextToVideoResponse = {
@@ -93,24 +95,241 @@ function resolveProvider(body: LessonTextToVideoRequest): string {
 
 /** Compose one provider prompt from legacy master text and/or Mootion-style scene list (iOS `scene_orchestration_v1`). */
 function buildGenerationPrompt(body: LessonTextToVideoRequest): string {
-  const master = (body.textToVideoPrompt ?? "").trim();
+  const master = compactForVideoPrompt((body.textToVideoPrompt ?? "").trim(), 900);
+  const sourceScript = compactForVideoPrompt(
+    (body.sourceScript ?? body.lessonNotes ?? "").trim(),
+    Number(Deno.env.get("SOURCE_SCRIPT_PROMPT_MAX_CHARS") ?? "1200"),
+  );
   const scenes = body.storyboard?.scenes ?? [];
   if (
     body.pipelineMode === "scene_orchestration_v1" && scenes.length > 0
   ) {
     const sceneBlock = scenes
+      .slice(0, Number(Deno.env.get("SORA_PROMPT_SCENE_LIMIT") ?? "3"))
       .map((s) => {
-        const vp = (s.visualPrompt ?? "").trim();
-        const nt = (s.narrationText ?? "").trim();
+        const vp = compactForVideoPrompt((s.visualPrompt ?? "").trim(), 360);
+        const nt = compactForVideoPrompt((s.narrationText ?? "").trim(), 260);
         return `[${s.sceneId}] ${vp}${nt ? ` (narration: ${nt})` : ""}`;
       })
       .join("\n");
     const head = master ||
-      (body.storyboard?.masterVisualPrompt ?? "").trim() ||
+      compactForVideoPrompt((body.storyboard?.masterVisualPrompt ?? "").trim(), 900) ||
       `Educational lesson video for "${body.lessonTitle}"`;
-    return `${head}\n\nScenes:\n${sceneBlock}`;
+    const renderBrief =
+      `Create a concise educational video lesson for ${body.targetAudience || "learners"} at ${body.level || "the requested"} level.`;
+    const scriptBlock = sourceScript
+      ? `\n\nGenerated lesson script to teach from:\n${sourceScript}`
+      : "";
+    return `${renderBrief}\n${head}${scriptBlock}\n\nVisual beats:\n${sceneBlock}`;
   }
-  return master;
+  if (sourceScript && master) {
+    return `${master}\n\nGenerated lesson script to teach from:\n${sourceScript}`;
+  }
+  return master || sourceScript;
+}
+
+function compactForVideoPrompt(value: string, maxChars: number): string {
+  const compacted = value
+    .replace(/\s+/g, " ")
+    .replace(/\bhttps?:\/\/\S+/gi, "")
+    .trim();
+  if (compacted.length <= maxChars) return compacted;
+  return `${compacted.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
+function shouldUseOpenAISceneBreakdown(body: LessonTextToVideoRequest): boolean {
+  const requested = (body.sceneBreakdownProvider ?? "").trim().toLowerCase() === "openai_gpt41";
+  const enabledByEnv = (Deno.env.get("OPENAI_SCENE_BREAKDOWN_ENABLED") ?? "").trim().toLowerCase() === "true";
+  return (requested || enabledByEnv) && !!(body.sourceScript ?? body.lessonNotes ?? "").trim();
+}
+
+async function applyOpenAISceneBreakdown(body: LessonTextToVideoRequest): Promise<LessonTextToVideoRequest> {
+  if (!shouldUseOpenAISceneBreakdown(body)) return body;
+
+  try {
+    const scenes = await buildScenesWithGPT41(body);
+    if (scenes.length === 0) return body;
+
+    const storyboard: LessonVideoStoryboard = {
+      storyboardId: body.storyboard?.storyboardId ?? crypto.randomUUID(),
+      pipelineVersion: body.storyboard?.pipelineVersion ?? "scene_orchestration_v1",
+      moduleId: body.storyboard?.moduleId ?? body.moduleId,
+      moduleTitle: body.storyboard?.moduleTitle ?? body.moduleTitle,
+      lessonId: body.storyboard?.lessonId ?? body.lessonId,
+      lessonTitle: body.storyboard?.lessonTitle ?? body.lessonTitle,
+      masterVisualPrompt: body.storyboard?.masterVisualPrompt ?? body.textToVideoPrompt,
+      scenes,
+    };
+
+    return {
+      ...body,
+      storyboard,
+      pipelineMode: "scene_orchestration_v1",
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`OpenAI scene breakdown skipped: ${message}`);
+    return body;
+  }
+}
+
+async function buildScenesWithGPT41(body: LessonTextToVideoRequest): Promise<LessonVideoScenePlan[]> {
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key) throw new Error("OPENAI_API_KEY not set");
+
+  const model = Deno.env.get("OPENAI_SCENE_MODEL") ?? "gpt-4.1";
+  const sourceScript = compactForVideoPrompt(
+    (body.sourceScript ?? body.lessonNotes ?? "").trim(),
+    Number(Deno.env.get("OPENAI_SCENE_SCRIPT_MAX_CHARS") ?? "4500"),
+  );
+  if (!sourceScript) return [];
+
+  const maxScenes = Number(Deno.env.get("OPENAI_SCENE_LIMIT") ?? "4");
+  const prompt = `
+Break this lesson script into scenes with visual descriptions.
+
+Course: ${body.courseTitle}
+Module: ${body.moduleTitle}
+Lesson: ${body.lessonTitle}
+Audience: ${body.targetAudience}
+Level: ${body.level}
+
+Lesson script:
+${sourceScript}
+
+Return only JSON with this shape:
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "narration_text": "short narration",
+      "visual_description": "specific educational visual for video generation",
+      "duration_seconds": 5,
+      "key_concepts": ["concept"]
+    }
+  ]
+}
+Use ${maxScenes} or fewer scenes. Keep narration factual and suitable for the Apple app lesson player.
+`.trim();
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      input: [{
+        role: "user",
+        content: [{ type: "input_text", text: prompt }],
+      }],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "lesson_scene_breakdown",
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              scenes: {
+                type: "array",
+                maxItems: maxScenes,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    scene_number: { type: "integer" },
+                    narration_text: { type: "string" },
+                    visual_description: { type: "string" },
+                    duration_seconds: { type: "integer" },
+                    key_concepts: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: [
+                    "scene_number",
+                    "narration_text",
+                    "visual_description",
+                    "duration_seconds",
+                    "key_concepts",
+                  ],
+                },
+              },
+            },
+            required: ["scenes"],
+          },
+          strict: true,
+        },
+      },
+    }),
+  });
+
+  const responseText = await response.text();
+  if (!response.ok) throw new Error(`OpenAI scene breakdown: ${response.status} ${responseText}`);
+
+  const parsed = JSON.parse(responseText) as Record<string, unknown>;
+  const sceneJSON = parseResponsesOutputText(parsed);
+  const breakdown = JSON.parse(sceneJSON) as {
+    scenes?: Array<{
+      scene_number?: number;
+      narration_text?: string;
+      visual_description?: string;
+      duration_seconds?: number;
+      key_concepts?: string[];
+    }>;
+  };
+
+  return (breakdown.scenes ?? [])
+    .slice(0, maxScenes)
+    .map((scene, index): LessonVideoScenePlan | null => {
+      const narrationText = (scene.narration_text ?? "").trim();
+      const visualPrompt = (scene.visual_description ?? "").trim();
+      if (!narrationText || !visualPrompt) return null;
+      const concepts = (scene.key_concepts ?? [])
+        .map((concept) => concept.trim())
+        .filter(Boolean);
+      return {
+        sceneId: `gpt41-scene-${scene.scene_number ?? index + 1}`,
+        learningObjective: concepts.length > 0 ? concepts.join(", ") : body.lessonTitle,
+        narrationText,
+        visualPrompt,
+        shotType: "educational_explain",
+        durationSeconds: clampDuration(scene.duration_seconds ?? 5),
+        onScreenText: concepts.slice(0, 3).join(" • ") || body.lessonTitle,
+        needsDiagram: true,
+        assessmentCheckpoint: concepts.length > 0 ? `Check understanding of ${concepts[0]}.` : null,
+      };
+    })
+    .filter((scene): scene is LessonVideoScenePlan => scene !== null);
+}
+
+function parseResponsesOutputText(response: Record<string, unknown>): string {
+  const direct = response.output_text;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const output = response.output;
+  if (Array.isArray(output)) {
+    for (const item of output) {
+      if (!item || typeof item !== "object") continue;
+      const content = (item as Record<string, unknown>).content;
+      if (!Array.isArray(content)) continue;
+      for (const block of content) {
+        if (!block || typeof block !== "object") continue;
+        const value = block as Record<string, unknown>;
+        if (typeof value.text === "string" && value.text.trim()) return value.text.trim();
+        if (typeof value.output_text === "string" && value.output_text.trim()) return value.output_text.trim();
+      }
+    }
+  }
+
+  throw new Error("OpenAI scene breakdown response missing output text");
+}
+
+function clampDuration(value: number): number {
+  if (!Number.isFinite(value)) return 5;
+  return Math.min(12, Math.max(3, Math.round(value)));
 }
 
 async function persistRenderJob(
@@ -150,16 +369,34 @@ async function persistBytes(
   bytes: Uint8Array,
 ): Promise<string> {
   const path = `courses/${courseId}/lessons/${lessonId}.mp4`;
-  const { error: upErr } = await admin.storage.from("lesson-videos").upload(path, bytes, {
+  let { error: upErr } = await admin.storage.from("lesson-videos").upload(path, bytes, {
     contentType: "video/mp4",
     upsert: true,
   });
+  if (upErr && upErr.message.toLowerCase().includes("bucket not found")) {
+    await ensureLessonVideosBucket(admin);
+    const retry = await admin.storage.from("lesson-videos").upload(path, bytes, {
+      contentType: "video/mp4",
+      upsert: true,
+    });
+    upErr = retry.error;
+  }
   if (upErr) throw new Error(`storage upload: ${upErr.message}`);
 
   const ttl = Number(Deno.env.get("SIGNED_URL_TTL_SECONDS") ?? "604800"); // 7d
   const { data, error: signErr } = await admin.storage.from("lesson-videos").createSignedUrl(path, ttl);
   if (signErr || !data?.signedUrl) throw new Error(`signed url: ${signErr?.message ?? "empty"}`);
   return data.signedUrl;
+}
+
+async function ensureLessonVideosBucket(admin: SupabaseClient): Promise<void> {
+  const { error } = await admin.storage.createBucket("lesson-videos", {
+    public: false,
+    allowedMimeTypes: ["video/mp4"],
+  });
+  if (error && !error.message.toLowerCase().includes("already exists")) {
+    throw new Error(`create storage bucket: ${error.message}`);
+  }
 }
 
 async function fetchBytesFromUrl(url: string): Promise<Uint8Array> {
@@ -207,7 +444,13 @@ async function providerSora(prompt: string): Promise<Uint8Array> {
       headers: { Authorization: `Bearer ${key}` },
     });
     const stText = await st.text();
-    if (!st.ok) throw new Error(`OpenAI poll: ${st.status} ${stText}`);
+    if (!st.ok) {
+      if (isRetryableOpenAIStatus(st.status)) {
+        console.warn(`OpenAI poll retryable ${st.status}: ${stText.slice(0, 300)}`);
+        continue;
+      }
+      throw new Error(`OpenAI poll: ${st.status} ${stText}`);
+    }
     const j = JSON.parse(stText) as { status: string; error?: { message?: string } };
     if (j.status === "completed") {
       completed = true;
@@ -221,14 +464,28 @@ async function providerSora(prompt: string): Promise<Uint8Array> {
     );
   }
 
-  const content = await fetch(`https://api.openai.com/v1/videos/${jobId}/content`, {
-    headers: { Authorization: `Bearer ${key}` },
-  });
+  const content = await fetchOpenAIWithRetries(`https://api.openai.com/v1/videos/${jobId}/content`, key);
   if (!content.ok) {
     const t = await content.text();
     throw new Error(`OpenAI content: ${content.status} ${t}`);
   }
   return new Uint8Array(await content.arrayBuffer());
+}
+
+async function fetchOpenAIWithRetries(url: string, key: string, attempts = 4): Promise<Response> {
+  let last: Response | null = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+    if (!isRetryableOpenAIStatus(response.status)) return response;
+    last = response;
+    console.warn(`OpenAI fetch retryable ${response.status} on attempt ${attempt + 1}`);
+    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+  }
+  return last ?? fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+}
+
+function isRetryableOpenAIStatus(status: number): boolean {
+  return status === 429 || status >= 500;
 }
 
 // --- Luma Dream Machine Ray2 ---
@@ -403,7 +660,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    const body = (await req.json()) as LessonTextToVideoRequest;
+    const requestedBody = (await req.json()) as LessonTextToVideoRequest;
+    const body = await applyOpenAISceneBreakdown(requestedBody);
     const hasMasterPrompt = !!(body?.textToVideoPrompt?.trim());
     const sceneCount = body?.storyboard?.scenes?.length ?? 0;
     const hasStoryboard =

@@ -84,6 +84,8 @@ struct RemoteLessonTextToVideoRequest: Encodable {
     let lessonId: String
     let lessonTitle: String
     let lessonNotes: String
+    /// Clean instructional script sent to the BFF/OpenAI adapter; strips local machine metadata from notes.
+    let sourceScript: String
     let targetAudience: String
     let level: String
     /// Single prompt suitable for frontier text-to-video models (Sora, Luma Ray2, LTX, etc.).
@@ -96,12 +98,51 @@ struct RemoteLessonTextToVideoRequest: Encodable {
     /// Structured scenes for orchestrated render; when set with `pipelineMode == .sceneOrchestrationV1`, BFF should prefer clip + compose flow.
     let storyboard: LessonVideoStoryboard?
     let pipelineMode: LessonVideoClientPipelineMode?
+    /// Optional BFF planner hint. `openai_gpt41` asks the backend to turn the generated lesson script into render scenes.
+    let sceneBreakdownProvider: String?
 }
 
 /// Expected JSON from the BFF after generation (or signed redirect to CDN).
 struct RemoteLessonTextToVideoResponse: Decodable {
     let playbackURL: String
     let message: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case playbackURL
+        case playbackUrl
+        case videoURL
+        case videoUrl
+        case url
+        case signedURL
+        case signedUrl
+        case message
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        playbackURL = try container.decodeFirstString(
+            forKeys: [.playbackURL, .playbackUrl, .videoURL, .videoUrl, .url, .signedURL, .signedUrl]
+        )
+        message = try container.decodeIfPresent(String.self, forKey: .message)
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func decodeFirstString(forKeys keys: [Key]) throws -> String {
+        for key in keys {
+            if let value = try decodeIfPresent(String.self, forKey: key),
+               !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return value
+            }
+        }
+        throw DecodingError.keyNotFound(
+            keys[0],
+            DecodingError.Context(
+                codingPath: codingPath,
+                debugDescription: "Expected one of: \(keys.map(\.stringValue).joined(separator: ", "))"
+            )
+        )
+    }
 }
 
 /// Calls your HTTPS BFF (e.g. Supabase Edge Function) for each lesson; falls back to sample MP4s / YouTube discovery when the BFF returns no usable URL.
@@ -154,22 +195,26 @@ struct RemoteLessonVideoGenerator: AIVideoGenerating {
                     module: module,
                     lesson: lesson
                 )
-                let defaultURL = await mock.resolveDefaultPlaybackURL(
-                    lesson: lesson,
-                    module: module,
-                    draft: draft,
-                    seed: seed
-                )
                 seed += 1
 
                 let chosenURL: String
                 let remoteNote: String?
-                if let remoteURL, remoteURL.lowercased().hasPrefix("https://") {
+                if let remoteURL,
+                   let url = URL(string: remoteURL),
+                   LessonVideoSafetyPolicy.validateGeneratedLessonVideoURL(url) == nil {
                     chosenURL = remoteURL
-                    remoteNote = "BFF text-to-video (generative)."
+                    remoteNote = "BFF text-to-video (generative) from cleaned lesson script."
+                } else if LessonVideoGenerationSettings.isRemoteTextToVideoEnabled {
+                    continue
                 } else {
+                    let defaultURL = await mock.resolveDefaultPlaybackURL(
+                        lesson: lesson,
+                        module: module,
+                        draft: draft,
+                        seed: seed
+                    )
                     chosenURL = defaultURL
-                    remoteNote = remoteURL == nil ? nil : "BFF text-to-video returned no HTTPS URL; using default discovery."
+                    remoteNote = nil
                 }
 
                 let asset = await mock.makeGeneratedVideoAsset(
@@ -194,10 +239,10 @@ struct RemoteLessonVideoGenerator: AIVideoGenerating {
         lesson: AdminLessonDraft
     ) async -> String? {
         let motionKit = mock.makeMotionTextToVideoKitForRemote(
-                    lesson: lesson,
-                    module: module,
-                    draft: draft
-                )
+            lesson: lesson,
+            module: module,
+            draft: draft
+        )
         let storyboard = LessonVideoStoryboard.sceneOrchestrationV1(
             moduleId: module.id,
             moduleTitle: module.title,
@@ -205,51 +250,15 @@ struct RemoteLessonVideoGenerator: AIVideoGenerating {
             lessonTitle: lesson.title,
             motionKit: motionKit
         )
-        let body = RemoteLessonTextToVideoRequest(
-            courseId: draft.id.uuidString,
-            courseTitle: draft.title,
-            moduleId: module.id.uuidString,
-            moduleTitle: module.title,
-            lessonId: lesson.id.uuidString,
-            lessonTitle: lesson.title,
-            lessonNotes: lesson.notes,
-            targetAudience: draft.targetAudience,
-            level: draft.level,
-            textToVideoPrompt: motionKit.shotPrompt,
-            sourceReferences: draft.sourceReferences,
-            providerBackendHint: LessonVideoGenerationSettings.providerBackendHint,
-            clientAppVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0",
-            storyboard: storyboard,
-            pipelineMode: .sceneOrchestrationV1
-        )
-
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let apiKey, !apiKey.isEmpty {
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        } else if let supabaseAnonKey, !supabaseAnonKey.isEmpty {
-            // Supabase Edge Functions expect `Authorization: Bearer` for anon/publishable invokes when no user JWT.
-            request.setValue("Bearer \(supabaseAnonKey)", forHTTPHeaderField: "Authorization")
-        }
-        if let supabaseAnonKey, !supabaseAnonKey.isEmpty {
-            request.setValue(supabaseAnonKey, forHTTPHeaderField: "apikey")
-        }
-        for (headerName, value) in LessonVideoGenerationSettings.remoteTextToVideoExtraHTTPHeaders {
-            request.setValue(value, forHTTPHeaderField: headerName)
-        }
-        do {
-            request.httpBody = try JSONEncoder().encode(body)
-            let (data, response) = try await urlSession.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                return nil
-            }
-            let decoded = try JSONDecoder().decode(RemoteLessonTextToVideoResponse.self, from: data)
-            let url = decoded.playbackURL.trimmingCharacters(in: .whitespacesAndNewlines)
-            return url.isEmpty ? nil : url
-        } catch {
+        guard let url = await RemoteLessonVideoClient.requestPlaybackURL(
+            draft: draft,
+            module: module,
+            lesson: lesson,
+            storyboard: storyboard
+        ) else {
             return nil
         }
+        return url.absoluteString
     }
 }
 
@@ -308,11 +317,11 @@ struct MockAIVideoGenerator: AIVideoGenerating {
         return assets
     }
 
-    fileprivate func upsertCached(asset: GeneratedVideoAsset, for courseId: UUID) async {
+    func upsertCached(asset: GeneratedVideoAsset, for courseId: UUID) async {
         await cache.upsert(asset: asset, for: courseId)
     }
 
-    fileprivate func resolveDefaultPlaybackURL(
+    func resolveDefaultPlaybackURL(
         lesson: AdminLessonDraft,
         module: AdminModuleDraft,
         draft: AdminCourseDraft,
@@ -326,7 +335,7 @@ struct MockAIVideoGenerator: AIVideoGenerating {
             ?? fallbackURL
     }
 
-    fileprivate func makeMotionTextToVideoKitForRemote(
+    func makeMotionTextToVideoKitForRemote(
         lesson: AdminLessonDraft,
         module: AdminModuleDraft,
         draft: AdminCourseDraft
@@ -347,7 +356,7 @@ struct MockAIVideoGenerator: AIVideoGenerating {
         )
     }
 
-    fileprivate func makeGeneratedVideoAsset(
+    func makeGeneratedVideoAsset(
         draft: AdminCourseDraft,
         module: AdminModuleDraft,
         lesson: AdminLessonDraft,

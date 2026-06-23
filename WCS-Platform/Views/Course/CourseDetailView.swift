@@ -7,6 +7,7 @@ import SwiftUI
 
 struct CourseDetailView: View {
     let courseId: UUID
+    @EnvironmentObject private var appViewModel: AppViewModel
     @StateObject private var viewModel: CourseDetailViewModel
 
     init(courseId: UUID) {
@@ -95,6 +96,7 @@ struct CourseDetailView: View {
                                     } label: {
                                         LessonRowView(lesson: lesson)
                                     }
+                                    .accessibilityIdentifier("lessonRow-\(lesson.title)")
                                     if index < module.lessons.count - 1 {
                                         Divider()
                                             .padding(.leading, 52)
@@ -118,6 +120,7 @@ struct CourseDetailView: View {
                             .padding(DesignTokens.Spacing.md)
                             .background(DesignTokens.brandMuted, in: RoundedRectangle(cornerRadius: DesignTokens.Radius.md, style: .continuous))
                         }
+                        .accessibilityIdentifier("courseModule-\(module.title)")
                         .tint(DesignTokens.brandAccent)
                     }
                 }
@@ -455,10 +458,6 @@ struct CourseDetailView: View {
     }
 
     private func enrollButtonTitle(for course: Course) -> String {
-        if let price = course.price {
-            let money = price.formatted(.currency(code: Locale.current.currency?.identifier ?? "USD"))
-            return "Enroll · \(money)"
-        }
         return "Enroll for free"
     }
 
@@ -714,5 +713,6 @@ private struct AssignmentLessonView: View {
 #Preview {
     NavigationStack {
         CourseDetailView(courseId: MockCourseCatalog.courses[0].id)
+            .environmentObject(AppViewModel())
     }
 }

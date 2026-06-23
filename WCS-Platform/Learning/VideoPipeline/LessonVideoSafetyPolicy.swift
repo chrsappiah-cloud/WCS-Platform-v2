@@ -26,8 +26,11 @@ enum LessonVideoSafetyPolicy {
 
     static func validatePlaybackURLString(_ raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let url = URL(string: trimmed), url.isFileURL {
+            return nil
+        }
         guard let url = URL(string: trimmed), url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else {
-            return "Playback URL must be a valid https:// URL."
+            return "Playback URL must be a valid https:// URL or app-owned local video file."
         }
         guard allowedHosts.contains(host) else {
             return "Host \(host) is not allowlisted for lesson playback."
@@ -39,6 +42,31 @@ enum LessonVideoSafetyPolicy {
            !publicUnsignedHosts.contains(host),
            !hasSignedQuery(url) {
             return "Playback URL must include a signed query (token/signature/expires)."
+        }
+        return nil
+    }
+
+    static func validateGeneratedLessonVideoURL(_ url: URL) -> String? {
+        if url.isFileURL {
+            return nil
+        }
+        guard url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else {
+            return "Generated lesson video must be a local file or a valid https:// URL."
+        }
+        if LessonVideoPlaybackPolicy.youTubeVideoID(from: url) != nil || host.contains("youtube") {
+            return "Generated lesson video cannot be a YouTube page or companion link."
+        }
+        if host == "storage.googleapis.com",
+           url.path.lowercased().contains("/gtv-videos-bucket/sample/") {
+            return "Generated lesson video cannot use public sample video fixtures."
+        }
+        if host == "devstreaming-cdn.apple.com",
+           url.path.lowercased().contains("/streaming/examples/") {
+            return "Generated lesson video cannot use Apple sample streaming fixtures."
+        }
+        if LessonVideoGenerationSettings.requireSignedPlaybackURLs,
+           !hasSignedQuery(url) {
+            return "Generated lesson video must use a signed playback URL or local Apple-rendered file."
         }
         return nil
     }
@@ -57,4 +85,3 @@ enum LessonVideoSafetyPolicy {
         return accepted.contains { $0.isSubset(of: names) }
     }
 }
-

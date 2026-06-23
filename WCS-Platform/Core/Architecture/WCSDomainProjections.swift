@@ -17,7 +17,7 @@ struct IdentityProjection: Sendable {
     let userId: UUID
     let role: UserRole
     let activeOrganizationId: UUID?
-    let memberships: [OrganizationMembership]
+    let accessRecords: [OrganizationAccess]
 }
 
 struct CatalogProjection: Sendable {
@@ -43,14 +43,6 @@ struct CommunityProjection: Sendable {
     let reportingEnabled: Bool
 }
 
-struct CommerceProjection: Sendable {
-    let courseId: UUID
-    let sku: String
-    let price: Decimal?
-    let freeToAudit: Bool
-    let entitled: Bool
-}
-
 struct ProfileProjection: Sendable {
     let userId: UUID
     let completedCourseCount: Int
@@ -69,7 +61,6 @@ struct AnalyticsProjection: Sendable {
     let funnelEvents: Int
     let retentionSignals: Int
     let completionSignals: Int
-    let monetizationSignals: Int
 }
 
 enum WCSDomainProjector {
@@ -78,7 +69,7 @@ enum WCSDomainProjector {
             userId: user.id,
             role: user.role,
             activeOrganizationId: user.activeOrganizationId,
-            memberships: user.memberships
+            accessRecords: user.accessRecords
         )
     }
 
@@ -127,19 +118,6 @@ enum WCSDomainProjector {
         }
     }
 
-    static func commerce(from course: Course, user: User) -> CommerceProjection {
-        let sku = "course-\(course.id.uuidString.lowercased())"
-        let entitled = user.isPremium || course.isOwned || course.isEnrolled || (course.price == nil)
-        let freeToAudit = course.price != nil && !entitled
-        return CommerceProjection(
-            courseId: course.id,
-            sku: sku,
-            price: course.price,
-            freeToAudit: freeToAudit,
-            entitled: entitled
-        )
-    }
-
     static func profile(from user: User) -> ProfileProjection {
         let completed = user.enrollments.filter { $0.status == .completed }.count
         let badges = completed > 0 ? ["Course Completer"] : []
@@ -167,12 +145,10 @@ enum WCSDomainProjector {
         let funnel = recentTelemetry.filter { $0.contains("course.load.") || $0.contains("enroll") }.count
         let retention = recentTelemetry.filter { $0.contains("heartbeat") || $0.contains("load.success") }.count
         let completion = recentTelemetry.filter { $0.contains("lesson.video") || $0.contains("certificate_earned") }.count
-        let monetization = recentTelemetry.filter { $0.contains("checkout") || $0.contains("purchase") || $0.contains("subscription") }.count
         return AnalyticsProjection(
             funnelEvents: funnel,
             retentionSignals: retention,
-            completionSignals: completion,
-            monetizationSignals: monetization
+            completionSignals: completion
         )
     }
 }

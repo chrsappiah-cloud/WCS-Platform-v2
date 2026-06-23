@@ -34,6 +34,26 @@ struct LessonVideoSceneRenderRequest: Codable, Sendable {
     let moduleTitle: String?
     let scene: LessonVideoScenePlan
     let providerBackendHint: String?
+    let backendModel: VideoBackendModel?
+    let postProcessing: PostProcessingOptions?
+
+    init(
+        lessonId: String,
+        moduleId: String?,
+        moduleTitle: String?,
+        scene: LessonVideoScenePlan,
+        providerBackendHint: String? = nil,
+        backendModel: VideoBackendModel? = nil,
+        postProcessing: PostProcessingOptions? = nil
+    ) {
+        self.lessonId = lessonId
+        self.moduleId = moduleId
+        self.moduleTitle = moduleTitle
+        self.scene = scene
+        self.providerBackendHint = providerBackendHint
+        self.backendModel = backendModel
+        self.postProcessing = postProcessing
+    }
 }
 
 struct LessonVideoRenderJobResponse: Codable, Sendable {

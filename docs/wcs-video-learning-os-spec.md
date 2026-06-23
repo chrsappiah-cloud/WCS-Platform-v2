@@ -4,13 +4,13 @@
 **Audience:** iOS, backend, and content-ops engineers  
 **Scope:** Udemy-inspired *learning operations* (streaming, curriculum, progress, captions, offline, analytics) for a **curated WCS academy**, not a public instructor marketplace at launch.
 
-Related repo docs: `docs/analytics-taxonomy.md`, `docs/Payments_Entitlement_Decision_Record.md`, `docs/mvp-scope-lock.md`.
+Related repo docs: `docs/analytics-taxonomy.md`, `docs/Access_Entitlement_Decision_Record.md`, `docs/mvp-scope-lock.md`.
 
 ---
 
 ## 1. Executive summary
 
-WCS ships a **mobile-first learning OS** built on **HLS VOD**, **AVPlayer**, **WebVTT captions**, **signed playback access**, optional **FairPlay** for premium/offline, and an **internal CMS** for staff-approved programs. Learners get resume playback, speed/quality controls, curriculum navigation, reflection/resources/discussion hooks, and (phased) offline downloads. Staff manage ingest, encoding status, captions, publish gates, and cohort links.
+WCS ships a **mobile-first learning OS** built on **HLS VOD**, **AVPlayer**, **WebVTT captions**, **signed playback access**, optional **FairPlay** for assigned/offline, and an **internal CMS** for staff-approved programs. Learners get resume playback, speed/quality controls, curriculum navigation, reflection/resources/discussion hooks, and (phased) offline downloads. Staff manage ingest, encoding status, captions, publish gates, and cohort links.
 
 ---
 
@@ -177,7 +177,7 @@ items:
     title: { type: string }
     subtitle: { type: string, nullable: true }
     status: { type: string, enum: [draft, published, archived] }
-    pricingModel: { type: string, enum: [audit, paid, membership] }
+    pricingModel: { type: string, enum: [audit, restricted, access] }
     thumbnailUrl: { type: string, format: uri, nullable: true }
     progressPercent: { type: number, minimum: 0, maximum: 1, nullable: true }
 ```

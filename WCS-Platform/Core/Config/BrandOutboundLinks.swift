@@ -2,16 +2,13 @@
 //  BrandOutboundLinks.swift
 //  WCS-Platform
 //
-//  Social, hosted checkout, and merchant dashboard URLs via environment variables (scheme / CI).
+//  Social URLs via environment variables (scheme / CI).
 //
 
 import Foundation
 
 enum OutboundLinkCategory: String {
     case social
-    case checkout
-    case admin
-    case policy
 }
 
 enum OutboundLinkPolicy {
@@ -22,8 +19,6 @@ enum OutboundLinkPolicy {
         "x.com", "www.x.com", "twitter.com", "www.twitter.com",
         "youtube.com", "www.youtube.com", "youtu.be",
         "linkedin.com", "www.linkedin.com",
-        "stripe.com", "dashboard.stripe.com", "checkout.stripe.com",
-        "developer.apple.com", "apps.apple.com", "apple.com"
     ]
 
     static var allowedHosts: Set<String> {
@@ -42,10 +37,6 @@ enum OutboundLinkPolicy {
               let host = url.host?.lowercased()
         else { return nil }
 
-        // Checkout/admin routes are stricter by default.
-        if category == .checkout || category == .admin {
-            return allowedHosts.contains(host) ? url : nil
-        }
         return allowedHosts.contains(host) ? url : nil
     }
 }
@@ -57,13 +48,6 @@ struct BrandOutboundLinks: Sendable {
     let xURL: URL?
     let youtubeChannelURL: URL?
     let linkedInURL: URL?
-    let membershipCardCheckoutURL: URL?
-    let enterpriseSalesCheckoutURL: URL?
-    let investorRelationsPaymentURL: URL?
-    let merchantFinancialDashboardURL: URL?
-    let adminBankSettlementDashboardURL: URL?
-    let appleSubscriptionsMarketingURL: URL?
-
     static let current: BrandOutboundLinks = {
         func envURL(_ key: String, category: OutboundLinkCategory) -> URL? {
             OutboundLinkPolicy.validatedURL(
@@ -89,13 +73,6 @@ struct BrandOutboundLinks: Sendable {
                 ?? fallbackSocialURL("https://www.youtube.com/@worldclassscholars"),
             linkedInURL: envURL("SOCIAL_LINKEDIN_URL", category: .social)
                 ?? fallbackSocialURL("https://www.linkedin.com/company/worldclassscholars"),
-            membershipCardCheckoutURL: envURL("STRIPE_MEMBERSHIP_CHECKOUT_URL", category: .checkout),
-            enterpriseSalesCheckoutURL: envURL("ENTERPRISE_SALES_CHECKOUT_URL", category: .checkout),
-            investorRelationsPaymentURL: envURL("INVESTOR_RELATIONS_PAYMENT_URL", category: .checkout),
-            merchantFinancialDashboardURL: envURL("ADMIN_MERCHANT_DASHBOARD_URL", category: .admin),
-            adminBankSettlementDashboardURL: envURL("ADMIN_BANK_SETTLEMENT_DASHBOARD_URL", category: .admin),
-            appleSubscriptionsMarketingURL: envURL("APPLE_IAP_GUIDE_URL", category: .policy)
-                ?? URL(string: "https://developer.apple.com/in-app-purchase/")
         )
     }()
 

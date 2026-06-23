@@ -80,9 +80,42 @@ final class AdminCourseCreatorViewModel: ObservableObject {
 
     private let lessonComposer = AVFoundationLessonComposer()
     private let imageSequenceRenderer = AVFoundationImageSequenceRenderer()
+    private let hybridVideoOrchestrator = HybridLessonVideoOrchestrator()
+    private let instructionalVideoPipeline = InstructionalLessonVideoPipeline()
 
     init() {
         loadSavedConfiguration()
+        applyUITestUnlockIfNeeded()
+        applyUITestManualBackupPrefillIfNeeded()
+    }
+
+    /// Deterministic admin unlock for UI-test and device E2E runs.
+    func applyUITestUnlockIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestMode") else { return }
+        let injected = ProcessInfo.processInfo.environment["WCS_UI_TEST_ADMIN_ACCESS_CODE"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let code = injected.isEmpty ? AppEnvironment.adminAccessCode : injected
+        accessCodeInput = code
+        if !isUnlocked {
+            unlock()
+        }
+    }
+
+    func applyUITestManualBackupPrefillIfNeeded() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestMode") else { return }
+        let env = ProcessInfo.processInfo.environment
+        guard env["WCS_UI_TEST_PREFILL_MANUAL_BACKUP"] == "1" else { return }
+        manualCourseTitle = env["WCS_UI_TEST_MANUAL_COURSE_TITLE"] ?? manualCourseTitle
+        manualSummary = env["WCS_UI_TEST_MANUAL_SUMMARY"] ?? "Manual backup summary."
+        manualModuleTitle = env["WCS_UI_TEST_MANUAL_MODULE_TITLE"] ?? "Continuity module"
+        manualVideoTitle = env["WCS_UI_TEST_MANUAL_VIDEO_TITLE"] ?? "Manual lesson video"
+        manualVideoURL = env["WCS_UI_TEST_MANUAL_VIDEO_URL"] ?? manualVideoURL
+        manualReadingTitle = env["WCS_UI_TEST_MANUAL_READING_TITLE"] ?? "Manual reading"
+        manualReadingMaterial = env["WCS_UI_TEST_MANUAL_READING_BODY"] ?? "Manual reading body."
+        manualQuizTitle = env["WCS_UI_TEST_MANUAL_QUIZ_TITLE"] ?? "Manual quiz"
+        manualQuizPrompt = env["WCS_UI_TEST_MANUAL_QUIZ_PROMPT"] ?? "Q1?"
+        manualAssignmentTitle = env["WCS_UI_TEST_MANUAL_ASSIGNMENT_TITLE"] ?? "Manual assignment"
+        manualAssignmentBrief = env["WCS_UI_TEST_MANUAL_ASSIGNMENT_BRIEF"] ?? "Submit reflection."
     }
 
     func unlock() {
@@ -239,9 +272,12 @@ final class AdminCourseCreatorViewModel: ObservableObject {
                 styleProfileId: nil,
                 referenceAssetIds: []
             )
-            let planned = try await NetworkClient.shared.planLessonVideo(req)
-            plannedStoryboardByDraftID[draftID] = planned.storyboard
-            pipelineStatusByDraftID[draftID] = "Planned \(planned.storyboard.scenes.count) scene(s)"
+            let planned = try await hybridVideoOrchestrator.planStoryboard(req)
+            var storyboard = planned.storyboard
+            storyboard.ensureStructuredPlansForAllScenes(stylePreset: draft.level)
+            plannedStoryboardByDraftID[draftID] = storyboard
+            pipelineStatusByDraftID[draftID] =
+                "Planned \(planned.storyboard.scenes.count) scene(s) via \(planned.source)"
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -249,10 +285,43 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         }
     }
 
+    /// Renders instructional video directly from lesson text (notes) with Supabase/OpenAI → Apple → AVFoundation fallbacks.
+    func renderInstructionalVideoFromLessonText(for draftID: UUID) async {
+        guard let draft = drafts.first(where: { $0.id == draftID }),
+              let (module, lesson) = firstVideoLesson(in: draft)
+        else {
+            errorMessage = "No video lesson with instructional text found."
+            return
+        }
+        pipelineBusyDraftIDs.insert(draftID)
+        defer { pipelineBusyDraftIDs.remove(draftID) }
+        do {
+            let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
+            let result = try await instructionalVideoPipeline.renderInstructionalLessonVideo(
+                draft: draft,
+                module: module,
+                lesson: lesson,
+                settings: settings
+            )
+            plannedStoryboardByDraftID[draftID] = result.storyboard
+            localImageSequenceClipByDraftID[draftID] = result.clipURL
+            if let composed = result.composedURL {
+                localComposedVideoByDraftID[draftID] = composed
+            }
+            pipelineStatusByDraftID[draftID] =
+                "Instructional video from lesson text via \(result.renderSource). Planned via \(result.planSource)."
+            errorMessage = nil
+            await loadLessonVideoRenderJobs()
+        } catch {
+            errorMessage = error.localizedDescription
+            pipelineStatusByDraftID[draftID] = error.localizedDescription
+        }
+    }
+
     func renderFirstPlannedScene(for draftID: UUID) async {
         guard let draft = drafts.first(where: { $0.id == draftID }),
-              let storyboard = plannedStoryboardByDraftID[draftID],
-              let scene = storyboard.scenes.first,
+              var storyboard = plannedStoryboardByDraftID[draftID],
+              !storyboard.scenes.isEmpty,
               let (module, lesson) = firstVideoLesson(in: draft)
         else {
             errorMessage = "Plan a storyboard before rendering scenes."
@@ -262,28 +331,51 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         defer { pipelineBusyDraftIDs.remove(draftID) }
         do {
             let strategy = LessonVideoGenerationSettings.generationApproach
+            let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
+            storyboard.ensureStructuredPlansForAllScenes(stylePreset: draft.level)
+            var scene = storyboard.scenes[0]
+            scene.ensureStructuredPlans(stylePreset: draft.level)
+            if strategy == .imageSequenceAnimation {
+                scene.backendModel = .imageSequence
+            }
+
+            storyboard.scenes[0] = scene
+            plannedStoryboardByDraftID[draftID] = storyboard
+
             if strategy == .onDeviceExperimental {
-                pipelineStatusByDraftID[draftID] = "On-device video generation is experimental and not enabled in this build."
-                errorMessage = "Switch strategy to hybrid or image-sequence for production rendering."
+                let enriched = try await AppleFoundationLessonVideoService()
+                    .enrichStoryboardWithReferenceImages(storyboard)
+                var renderScene = enriched.scenes.first ?? scene
+                renderScene.ensureStructuredPlans(stylePreset: draft.level)
+                let localClip = try await imageSequenceRenderer.renderSceneClip(
+                    scene: renderScene,
+                    settings: settings
+                )
+                localImageSequenceClipByDraftID[draftID] = localClip
+                pipelineStatusByDraftID[draftID] =
+                    "On-device clip rendered (Apple FM + Image Playground): \(localClip.lastPathComponent)"
+                errorMessage = nil
                 return
             }
+
             if strategy == .imageSequenceAnimation {
-                let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
                 let localClip = try await imageSequenceRenderer.renderSceneClip(scene: scene, settings: settings)
                 localImageSequenceClipByDraftID[draftID] = localClip
                 pipelineStatusByDraftID[draftID] = "Image-sequence clip rendered locally (\(settings.resolution.label), \(settings.fps) fps): \(localClip.lastPathComponent)"
                 errorMessage = nil
                 return
             }
-            let req = LessonVideoSceneRenderRequest(
-                lessonId: lesson.id.uuidString,
-                moduleId: module.id.uuidString,
-                moduleTitle: module.title,
+
+            let rendered = try await hybridVideoOrchestrator.renderFirstScene(
+                draft: draft,
+                module: module,
+                lesson: lesson,
+                storyboard: storyboard,
                 scene: scene,
-                providerBackendHint: LessonVideoGenerationSettings.providerBackendHint
+                settings: settings
             )
-            let job = try await NetworkClient.shared.renderLessonScene(scene.sceneId, request: req)
-            pipelineStatusByDraftID[draftID] = "Render job \(job.renderJobId): \(job.normalizedStatus?.displayLabel ?? job.status)"
+            localImageSequenceClipByDraftID[draftID] = rendered.clipURL
+            pipelineStatusByDraftID[draftID] = "Render complete via \(rendered.source): \(rendered.clipURL.lastPathComponent)"
             errorMessage = nil
             await loadLessonVideoRenderJobs()
         } catch {
@@ -324,9 +416,17 @@ final class AdminCourseCreatorViewModel: ObservableObject {
         defer { pipelineBusyDraftIDs.remove(draftID) }
         do {
             let strategy = LessonVideoGenerationSettings.generationApproach
-            if strategy == .onDeviceExperimental {
-                pipelineStatusByDraftID[draftID] = "On-device composition path not configured for full text-to-video yet."
-                errorMessage = "On-device experimental mode is currently limited."
+            if strategy == .onDeviceExperimental,
+               let storyboard = plannedStoryboardByDraftID[draftID] {
+                let settings = imageSequenceSettingsByDraftID[draftID] ?? .default
+                let output = try await hybridVideoOrchestrator.renderOnDeviceLesson(
+                    storyboard: storyboard,
+                    settings: settings
+                )
+                localComposedVideoByDraftID[draftID] = output
+                pipelineStatusByDraftID[draftID] =
+                    "On-device lesson composed (Apple Intelligence): \(output.lastPathComponent)"
+                errorMessage = nil
                 return
             }
 
@@ -623,7 +723,7 @@ enum KajabiBlueprintTemplate: String, CaseIterable, Identifiable {
     }
 
     var defaultLaunch: String {
-        "premium yet accessible positioning, strong social proof, and conversion-first webinar funnel"
+        "assigned yet accessible positioning, strong social proof, and conversion-first webinar funnel"
     }
 
     var defaultProductionNotes: String {

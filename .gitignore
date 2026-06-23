@@ -7,6 +7,10 @@
 # Local build artifacts
 build/
 DerivedData/
+.DS_Store
+.idea/
+**/.idea/
+supabase/.temp/
 
 # Supabase CLI local credentials (scripts/supabase-bootstrap-lesson-video.sh)
 .env.supabase.local
@@ -17,4 +21,3 @@ LocalSecrets.xcconfig
 # Xcode archives and local export trees (do not commit binaries)
 *.xcarchive/
 production/WCS-Platform-Prod.xcarchive/
-

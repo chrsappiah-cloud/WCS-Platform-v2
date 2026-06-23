@@ -32,14 +32,14 @@ Compliance narrative and outbound-link policy live in **`docs/AppStore_Review_Co
 - Privacy Policy URL and Terms (as applicable) in App Store Connect
 - **App Privacy** questionnaire matches `PrivacyInfo.xcprivacy` and runtime behavior
 - **Export compliance** (encryption) answered; see `Info.plist` / entitlements as needed
-- **External links / checkout:** allowlist validated — `bash scripts/validate-external-links-config.sh`
+- **External links / external link:** allowlist validated — `bash scripts/validate-external-links-config.sh`
 - Launch hardening: **`docs/Launch_Compliance_Hardening_Checklist.md`**
 
 ## 5) Metadata (App Store Connect)
 
 - Subtitle, description, keywords, support URL, marketing URL (optional)
 - Age rating, categories, **What’s New** for the attached build
-- If subscriptions or external purchase flows exist, disclosure matches reviewer narrative (`AppStore_Review_Compliance_Packet.md`)
+- If access records or external commerce action flows exist, disclosure matches reviewer narrative (`AppStore_Review_Compliance_Packet.md`)
 
 ## 6) Build, validate, upload
 
@@ -51,7 +51,7 @@ Compliance narrative and outbound-link policy live in **`docs/AppStore_Review_Co
 ## 7) TestFlight
 
 - Internal testing first; then external beta if needed (beta App Review)
-- Test notes: sign-in, payments (if any), admin studio / demo account steps
+- Test notes: sign-in, access (if any), admin studio / demo account steps
 
 ### Automated TestFlight delivery (GitHub Actions)
 

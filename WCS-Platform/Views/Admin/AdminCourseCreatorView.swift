@@ -11,9 +11,13 @@ struct AdminCourseCreatorView: View {
     @EnvironmentObject private var appViewModel: AppViewModel
     @StateObject private var viewModel = AdminCourseCreatorViewModel()
 
+    private var isUITestHarness: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestMode")
+    }
+
     var body: some View {
         Group {
-            if !viewModel.isUnlocked {
+            if !viewModel.isUnlocked && !isUITestHarness {
                 lockedGate
             } else {
                 console
@@ -23,6 +27,9 @@ struct AdminCourseCreatorView: View {
         .navigationTitle("WCS AI Course Generation")
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .onAppear {
+            viewModel.applyUITestUnlockIfNeeded()
+        }
         .task { await viewModel.loadDrafts() }
         .task { await viewModel.loadLessonVideoRenderJobs() }
         .task { await viewModel.startRealtimeVideoPolling() }
@@ -57,7 +64,7 @@ struct AdminCourseCreatorView: View {
                 .simulatorStableTextSelection()
                 .padding(.horizontal, 24)
 
-            Button("Unlock Studio") {
+            Button("Verify Admin Access") {
                 viewModel.unlock()
             }
             .buttonStyle(.borderedProminent)
@@ -94,6 +101,7 @@ struct AdminCourseCreatorView: View {
                     }
                     .buttonStyle(.bordered)
                     .font(.caption)
+                    .accessibilityIdentifier("adminRefreshVideoJobsButton")
                     Spacer()
                 }
 
@@ -154,6 +162,7 @@ struct AdminCourseCreatorView: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 Text("WCS AI Course Generation Studio")
                     .wcsSectionTitle()
+                    .accessibilityIdentifier("adminStudioConsoleTitle")
 
                 lessonVideoJobAuditPanel
 
@@ -198,6 +207,7 @@ struct AdminCourseCreatorView: View {
                     TextField("Product name", text: $viewModel.productName)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled(AppEnvironment.simulatorStabilityMode)
+                        .accessibilityIdentifier("adminProductNameField")
                     TextField("Ideal learner avatar", text: $viewModel.idealLearner)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled(AppEnvironment.simulatorStabilityMode)
@@ -256,6 +266,7 @@ struct AdminCourseCreatorView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(DesignTokens.brandAccent)
                     .disabled(!viewModel.canGenerate || viewModel.isGenerating)
+                    .accessibilityIdentifier("adminGenerateDraftButton")
 
                     Text("WCS AI Course Generation uses retrieval planning, reranking, and citation-grounded synthesis with Open Library + OpenAlex evidence.")
                         .font(.caption2)
@@ -389,6 +400,9 @@ struct AdminCourseCreatorView: View {
                             onRenderScene: {
                                 Task { await viewModel.renderFirstPlannedScene(for: draft.id) }
                             },
+                            onRenderInstructionalFromText: {
+                                Task { await viewModel.renderInstructionalVideoFromLessonText(for: draft.id) }
+                            },
                             onPreviewScene: {
                                 Task { await viewModel.previewFirstPlannedScene(for: draft.id) }
                             },
@@ -443,6 +457,7 @@ private struct ManualLessonVideoBackupRow: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
                 .font(.caption)
+                .accessibilityIdentifier("manualLessonVideoBackupURLField")
             Picker("Prepared with", selection: $externalSource) {
                 ForEach(ExternalLessonVideoSource.allCases) { src in
                     Text(src.displayLabel).tag(src)
@@ -451,11 +466,12 @@ private struct ManualLessonVideoBackupRow: View {
             .pickerStyle(.menu)
             .font(.caption2)
 
-            Button("Probe local export (validation only)") {
+            Button("Import local video backup") {
                 showFileImporter = true
             }
             .buttonStyle(.bordered)
             .font(.caption2)
+            .accessibilityIdentifier("manualLessonVideoProbeLocalButton")
 
             if let probe = lastProbe {
                 Text(
@@ -470,7 +486,7 @@ private struct ManualLessonVideoBackupRow: View {
                     .foregroundStyle(lastProbe == nil ? Color.red : Color.secondary)
             }
 
-            Text("Learners stream from the HTTPS URL. Host the exported file on your CDN or storage, then paste the public or signed link here.")
+            Text("Learners use the active manual backup first. Paste an HTTPS URL or import a local export into app storage.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
 
@@ -481,6 +497,7 @@ private struct ManualLessonVideoBackupRow: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
                 .font(.caption2)
+                .accessibilityIdentifier("manualLessonVideoSaveBackupButton")
                 Button("Clear backup") {
                     urlText = ""
                     lastProbe = nil
@@ -489,6 +506,7 @@ private struct ManualLessonVideoBackupRow: View {
                 }
                 .buttonStyle(.bordered)
                 .font(.caption2)
+                .accessibilityIdentifier("manualLessonVideoClearBackupButton")
             }
         }
         .padding(8)
@@ -502,7 +520,7 @@ private struct ManualLessonVideoBackupRow: View {
             handleFileImport(result)
         }
         .task(id: "\(lesson.id.uuidString)|\(lesson.notes)") {
-            urlText = LessonManualVideoBackup.extractHTTPSURL(from: lesson.notes) ?? ""
+            urlText = LessonManualVideoBackup.extractPlaybackURL(from: lesson.notes) ?? ""
             externalSource = LessonManualVideoBackup.extractExternalSource(from: lesson.notes) ?? .manual
         }
     }
@@ -536,10 +554,16 @@ private struct ManualLessonVideoBackupRow: View {
                     return
                 }
                 do {
-                    let probe = try await ManualVideoFileValidator.probe(fileURL: url)
+                    let imported = try await ManualVideoFileValidator.importToLocalBackupStorage(
+                        fileURL: url,
+                        lessonId: lesson.id
+                    )
                     await MainActor.run {
-                        lastProbe = probe
-                        probeMessage = "Ready for upload — copy to your host and paste the HTTPS URL above."
+                        lastProbe = imported.probe
+                        urlText = imported.url.absoluteString
+                        externalSource = .manual
+                        probeMessage = "Local video imported and activated as this lesson backup."
+                        onSave(moduleId, lesson.id, imported.url.absoluteString, .manual)
                     }
                 } catch {
                     await MainActor.run {
@@ -566,12 +590,19 @@ private struct DraftCard: View {
     let onRegenerateVideos: (_ clearCache: Bool) -> Void
     let onPlanStoryboard: () -> Void
     let onRenderScene: () -> Void
+    let onRenderInstructionalFromText: () -> Void
     let onPreviewScene: () -> Void
     let onComposeLesson: () -> Void
     let onUpdateImageSequenceSettings: (ImageSequenceRenderSettings) -> Void
     let onSaveManualLessonVideo: (_ moduleId: UUID, _ lessonId: UUID, _ url: String, _ source: ExternalLessonVideoSource) -> Void
     @State private var showingRegenerateConfirmation = false
     @State private var localImageSettings: ImageSequenceRenderSettings = .default
+
+    private var hasVideoLessons: Bool {
+        draft.modules.contains { module in
+            module.lessons.contains { $0.kind == .video || $0.kind == .live }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
@@ -639,7 +670,9 @@ private struct DraftCard: View {
                 Text("Debug assets: \(generatedAssets.count)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+            }
 
+            if hasVideoLessons {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Scene pipeline controls")
                         .font(.caption.weight(.semibold))
@@ -647,6 +680,7 @@ private struct DraftCard: View {
                         Text(pipelineStatusText)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("adminVideoPipelineStatusLabel")
                     }
                     HStack {
                         Button("Plan storyboard") {
@@ -655,6 +689,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminPlanStoryboardButton")
 
                         Button("Render first scene") {
                             onRenderScene()
@@ -662,6 +697,15 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy || !hasPlannedStoryboard)
+                        .accessibilityIdentifier("adminRenderFirstSceneButton")
+
+                        Button("Render lesson text") {
+                            onRenderInstructionalFromText()
+                        }
+                        .buttonStyle(.bordered)
+                        .font(.caption2)
+                        .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminRenderInstructionalVideoButton")
 
                         Button("Preview frame") {
                             onPreviewScene()
@@ -669,6 +713,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy || !hasPlannedStoryboard)
+                        .accessibilityIdentifier("adminPreviewSceneButton")
 
                         Button("Compose lesson") {
                             onComposeLesson()
@@ -676,6 +721,7 @@ private struct DraftCard: View {
                         .buttonStyle(.bordered)
                         .font(.caption2)
                         .disabled(isPipelineBusy)
+                        .accessibilityIdentifier("adminComposeLessonButton")
                     }
                     HStack(spacing: 8) {
                         Picker("Resolution", selection: Binding(
@@ -730,10 +776,12 @@ private struct DraftCard: View {
                     if let localComposedVideoURL {
                         Link("Open local composed video", destination: localComposedVideoURL)
                             .font(.caption2)
+                            .accessibilityIdentifier("adminLocalComposedVideoLink")
                     }
                     if let localImageSequenceClipURL {
                         Link("Open local image-sequence clip", destination: localImageSequenceClipURL)
                             .font(.caption2)
+                            .accessibilityIdentifier("adminLocalImageSequenceClipLink")
                     }
                     if let localImageSequencePreviewURL {
                         Link("Open preview frame", destination: localImageSequencePreviewURL)
@@ -745,7 +793,7 @@ private struct DraftCard: View {
             DisclosureGroup {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                     Text(
-                        "Paste an HTTPS playback URL per video or live lesson (exports from Mootion, Invideo AI, or any host). This overrides AI-generated URLs for learners when a backup is set. Use “Probe local export” to validate a file before you upload it to your CDN or Supabase Storage."
+                        "Paste an HTTPS playback URL per video or live lesson, or import a local MP4/MOV/M4V/WebM export. Manual backups override AI-generated URLs for learners when set."
                     )
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -790,7 +838,7 @@ private struct DraftCard: View {
                                             .frame(width: 220, height: 124)
                                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                     } else if let playback = URL(string: asset.playbackURL),
-                                              LessonVideoPlaybackPolicy.isNativeAVPlayerHTTPSURL(playback) {
+                                              LessonVideoPlaybackPolicy.isNativeAVPlayerURL(playback) {
                                         AdminInlineAVVideoPreview(
                                             url: playback,
                                             courseId: draft.id,

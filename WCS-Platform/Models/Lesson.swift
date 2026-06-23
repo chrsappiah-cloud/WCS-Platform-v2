@@ -27,7 +27,7 @@ struct Lesson: Identifiable, Hashable {
     let reading: ReadingContent?
     let quiz: Quiz?
     let assignment: Assignment?
-    /// Investor / LMS path: out-of-band WebVTT URLs (parsed in-app, overlaid on `VideoPlayer`).
+    /// WebVTT caption URLs parsed in-app and overlaid on `VideoPlayer`.
     let captionTracks: [LessonCaptionTrack]
     /// Server-hydrated resume position (seconds). Merged with local `UserDefaults` in the lesson player.
     let serverResumePositionSeconds: Double?

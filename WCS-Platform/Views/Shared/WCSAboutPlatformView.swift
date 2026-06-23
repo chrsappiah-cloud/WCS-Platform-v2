@@ -35,7 +35,7 @@ struct WCSAboutPlatformView: View {
                 featureRow(title: "Discover", detail: "Home feed, discovery, and entry into programs.")
                 featureRow(title: "Programs", detail: "Course catalog and navigation into lessons and media.")
                 featureRow(title: "Discussion", detail: "Community discussion feed backed by the community repository.")
-                featureRow(title: "Profile", detail: "Account, membership, and subscription context.")
+                featureRow(title: "Profile", detail: "Account and organization-assigned access context.")
             }
         }
         .navigationTitle("About WCS")

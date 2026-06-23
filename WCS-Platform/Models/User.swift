@@ -12,7 +12,7 @@ enum UserRole: String, Codable, Hashable {
     case admin
 }
 
-struct OrganizationMembership: Codable, Hashable, Identifiable, Sendable {
+struct OrganizationAccess: Codable, Hashable, Identifiable, Sendable {
     let id: UUID
     let organizationId: UUID
     let organizationName: String
@@ -28,13 +28,8 @@ struct User: Codable, Identifiable, Hashable {
     let photoURL: String?
     var role: UserRole
     var activeOrganizationId: UUID?
-    var memberships: [OrganizationMembership]
-    var subscriptions: [Subscription]
+    var accessRecords: [OrganizationAccess]
     var enrollments: [Enrollment]
-
-    nonisolated var isPremium: Bool {
-        subscriptions.contains { $0.status == .active }
-    }
 
     nonisolated var isAdmin: Bool {
         role == .admin || role == .orgAdmin
@@ -51,8 +46,7 @@ struct User: Codable, Identifiable, Hashable {
         case photoURL
         case role
         case activeOrganizationId
-        case memberships
-        case subscriptions
+        case accessRecords
         case enrollments
     }
 
@@ -63,8 +57,7 @@ struct User: Codable, Identifiable, Hashable {
         photoURL: String?,
         role: UserRole = .learner,
         activeOrganizationId: UUID? = nil,
-        memberships: [OrganizationMembership] = [],
-        subscriptions: [Subscription],
+        accessRecords: [OrganizationAccess] = [],
         enrollments: [Enrollment]
     ) {
         self.id = id
@@ -73,8 +66,7 @@ struct User: Codable, Identifiable, Hashable {
         self.photoURL = photoURL
         self.role = role
         self.activeOrganizationId = activeOrganizationId
-        self.memberships = memberships
-        self.subscriptions = subscriptions
+        self.accessRecords = accessRecords
         self.enrollments = enrollments
     }
 
@@ -86,8 +78,7 @@ struct User: Codable, Identifiable, Hashable {
         photoURL = try c.decodeIfPresent(String.self, forKey: .photoURL)
         role = try c.decodeIfPresent(UserRole.self, forKey: .role) ?? .learner
         activeOrganizationId = try c.decodeIfPresent(UUID.self, forKey: .activeOrganizationId)
-        memberships = try c.decodeIfPresent([OrganizationMembership].self, forKey: .memberships) ?? []
-        subscriptions = try c.decodeIfPresent([Subscription].self, forKey: .subscriptions) ?? []
+        accessRecords = try c.decodeIfPresent([OrganizationAccess].self, forKey: .accessRecords) ?? []
         enrollments = try c.decodeIfPresent([Enrollment].self, forKey: .enrollments) ?? []
     }
 }

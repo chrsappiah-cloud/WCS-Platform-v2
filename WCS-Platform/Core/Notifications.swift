@@ -11,4 +11,5 @@ extension Notification.Name {
 
     /// Posted when private admin AI drafts change.
     static let wcsAdminDraftsDidChange = Notification.Name("wcs.adminDrafts.didChange")
+
 }
