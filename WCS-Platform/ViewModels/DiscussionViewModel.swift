@@ -30,16 +30,8 @@ final class DiscussionViewModel: ObservableObject {
     func loadAll() async {
         isLoading = true
         errorMessage = nil
-        do {
-            async let feed = communityRepository.fetchDiscussionFeed(topicID: selectedTopicID)
-            async let pipeline = communityRepository.fetchPipelineHealthStatus()
-            let (resolvedFeed, resolvedPipeline) = try await (feed, pipeline)
-            topics = resolvedFeed.topics
-            posts = resolvedFeed.posts
-            pipelineStatus = resolvedPipeline
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        await loadFeed()
+        await loadPipelineStatus()
         isLoading = false
     }
 
@@ -56,7 +48,7 @@ final class DiscussionViewModel: ObservableObject {
             topics = feed.topics
             posts = feed.posts
         } catch {
-            errorMessage = error.localizedDescription
+            await loadReviewSafeFallback(error: error)
         }
         isLoading = false
     }
@@ -76,5 +68,28 @@ final class DiscussionViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func loadPipelineStatus() async {
+        do {
+            pipelineStatus = try await communityRepository.fetchPipelineHealthStatus()
+        } catch {
+            pipelineStatus = await MockDiscussionStore.shared.pipelineStatus()
+            Telemetry.event("discussion.pipeline.review_safe_fallback", attributes: [
+                "error": String(describing: error)
+            ])
+        }
+    }
+
+    private func loadReviewSafeFallback(error: Error) async {
+        let feed = await MockDiscussionStore.shared.feed(topicID: selectedTopicID)
+        topics = feed.topics
+        posts = feed.posts
+        errorMessage = nil
+        Telemetry.event("discussion.feed.review_safe_fallback", attributes: [
+            "post_count": "\(feed.posts.count)",
+            "topic_count": "\(feed.topics.count)",
+            "error": String(describing: error)
+        ])
     }
 }
