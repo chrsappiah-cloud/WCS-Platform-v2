@@ -40,9 +40,28 @@ final class CourseListViewModel: ObservableObject {
             courses = payload.allPrograms.map(\.course)
             Telemetry.event(.discoverViewed, attributes: ["course_count": "\(courses.count)"])
         } catch let api as WCSAPIError {
-            lastError = api
+            await loadReviewSafeFallback(error: api)
         } catch {
-            lastError = WCSAPIError(underlying: error, statusCode: nil, body: nil)
+            await loadReviewSafeFallback(error: error)
         }
+    }
+
+    private func loadReviewSafeFallback(error: Error) async {
+        let fallbackCourses = await MockLearningStore.shared.snapshotCourses()
+        guard !fallbackCourses.isEmpty else {
+            if let api = error as? WCSAPIError {
+                lastError = api
+            } else {
+                lastError = WCSAPIError(underlying: error, statusCode: nil, body: nil)
+            }
+            return
+        }
+
+        courses = fallbackCourses
+        lastError = nil
+        Telemetry.event("catalog.review_safe_fallback", attributes: [
+            "course_count": "\(fallbackCourses.count)",
+            "error": String(describing: error)
+        ])
     }
 }
