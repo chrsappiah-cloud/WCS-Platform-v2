@@ -1,0 +1,21 @@
+{
+  "flags": [
+    {
+      "key": "wcsLessonSyncV2",
+      "enabled": false,
+      "rolloutPercentage": 0
+    },
+    {
+      "key": "wcsLessonSyncShadowMode",
+      "enabled": false,
+      "rolloutPercentage": 0,
+      "buildChannels": ["dev", "testflight"]
+    },
+    {
+      "key": "wcsLessonSyncCanary",
+      "enabled": false,
+      "rolloutPercentage": 0,
+      "buildChannels": ["dev", "testflight"]
+    }
+  ]
+}
